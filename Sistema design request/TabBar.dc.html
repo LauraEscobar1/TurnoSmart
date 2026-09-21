@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);align-items:stretch;border-top:1px solid var(--color-divider);background:var(--color-bg);height:62px;font-family:var(--font-body)">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color: {{ c1 }}">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>
+    <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Inicio</span>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:relative;color: {{ c2 }}">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.4"></circle></svg>
+    <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Ofertas</span>
+    <span style="position:absolute;top:9px;left:calc(50% + 7px);min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;background:var(--color-accent);color:var(--color-bg);font-size:9px;font-weight:700;padding:0 3px">{{ badgeOffers }}</span>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color: {{ c3 }}">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16.5" rx="0"></rect><path d="M3 9.5h18M8 2.5v4M16 2.5v4"></path></svg>
+    <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Mis citas</span>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:relative;color: {{ c4 }}">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+    <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Avisos</span>
+    <span style="position:absolute;top:9px;left:calc(50% + 7px);min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;background:var(--color-accent);color:var(--color-bg);font-size:9px;font-weight:700;padding:0 3px">{{ badgeNotifs }}</span>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color: {{ c5 }}">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Perfil</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:62},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inicio&quot;,&quot;ofertas&quot;,&quot;citas&quot;,&quot;avisos&quot;,&quot;perfil&quot;],&quot;default&quot;:&quot;inicio&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;badgeOffers&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;},&quot;badgeNotifs&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const on = "var(--color-accent-700)";
+    const off = "var(--color-neutral-600)";
+    const a = this.props.active ?? "inicio";
+    const pick = (k) => (a === k ? on : off);
+    return {
+      c1: pick("inicio"), c2: pick("ofertas"), c3: pick("citas"),
+      c4: pick("avisos"), c5: pick("perfil"),
+      badgeOffers: this.props.badgeOffers ?? 1,
+      badgeNotifs: this.props.badgeNotifs ?? 3
+    };
+  }
+}
+</script>
+</body>
+</html>
