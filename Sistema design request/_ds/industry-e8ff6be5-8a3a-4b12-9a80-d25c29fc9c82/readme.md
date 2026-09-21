@@ -1,82 +1,82 @@
-# Industry design system
+# Sistema de diseño Industry
 
-Industry is a wireframe: steel-blue on a light technical ground, Barlow Condensed headings over Barlow, a modular grid, and cards, figures and buttons framed as blueprint objects — square-cornered, hairline-bordered, with "+" registration marks at the corners. Cards and figures stay transparent line drawings; the primary button is the one solid object on the board, an accent fill that keeps the square corners and the marks. Photography is duotoned into the steel accent and icons are thin-stroke.
+Industry es un wireframe: azul acero sobre un fondo técnico claro, encabezados Barlow Condensed sobre Barlow, una cuadrícula modular, y tarjetas, figuras y botones enmarcados como objetos de plano — esquinas cuadradas, borde de línea fina, con marcas de registro "+" en las esquinas. Las tarjetas y figuras permanecen como dibujos transparentes; el botón principal es el único objeto sólido del tablero, un relleno de acento que conserva las esquinas cuadradas y las marcas. La fotografía se convierte en duotono en el acento de acero y los iconos tienen trazo fino.
 
-## How to use this
+## Cómo usar esto
 
-- Link the one stylesheet from every page — `<link rel="stylesheet" href="styles.css">` (adjust the relative path) — and take every color, font, spacing, radius and shadow from its variables (`var(--color-*)`, `var(--font-*)`, `var(--space-*)`, `var(--radius-*)`, `var(--shadow-*)`). Never hard-code a hex, a font name or a px value the tokens already carry.
-- Build with the classes below rather than inventing parallel ones; the component pages are plain HTML, so view source and copy the markup.
-- `templates/` holds starting points a consuming project can copy whole.
-- The whole system was derived from `theme.json`. To change the look, edit the tokens at the top of `styles.css` — every page, the thumbnail and this guide read from them — and keep `theme.json` and the written guidance in step so they don't drift from what the CSS actually does.
+- Vincula la única hoja de estilos desde cada página — `<link rel="stylesheet" href="styles.css">` (ajusta la ruta relativa) — y toma cada color, fuente, espaciado, radio y sombra de sus variables (`var(--color-*)`, `var(--font-*)`, `var(--space-*)`, `var(--radius-*)`, `var(--shadow-*)`). Nunca codifiques a mano un hex, un nombre de fuente o un valor px que los tokens ya aporten.
+- Construye con las clases de abajo en lugar de inventar paralelas; las páginas de componentes son HTML plano, así que ve el código fuente y copia el marcado.
+- `templates/` contiene puntos de partida que un proyecto consumidor puede copiar completos.
+- Todo el sistema se derivó de `theme.json`. Para cambiar el aspecto, edita los tokens al principio de `styles.css` — cada página, la miniatura y esta guía leen de ellos — y mantén `theme.json` y la guía escrita al día para que no se separen de lo que realmente hace el CSS.
 
-## Direction
+## Dirección
 
-Modular grid layouts — content in equal-width cells, strong horizontal and vertical rhythm, visible structure. Cards, buttons and major sections are wireframe objects: square-cornered, thin-bordered, with `+` crosshair corner marks (the `.blueprint` class + four `<i class="corner tl/tr/bl/br">` children) — never soft filled rounded blocks. Images and figures get the same treatment: square, hairline-framed and marked, never rounded or clipped. Wrap hero and inline images in the `.duotone` class — they are desaturated and washed in the accent, like a screen print that re-colors with the theme.
+Diseños de cuadrícula modular — contenido en celdas de igual ancho, fuerte ritmo horizontal y vertical, estructura visible. Las tarjetas, los botones y las secciones principales son objetos de wireframe: esquinas cuadradas, borde fino, con marcas cruzadas en las esquinas `+` (la clase `.blueprint` + cuatro elementos hijos `<i class="corner tl/tr/bl/br">`) — nunca bloques redondeados rellenos y suaves. Las imágenes y figuras reciben el mismo tratamiento: cuadradas, enmarcadas con línea fina y marcadas, nunca redondeadas ni recortadas. Envuelve las imágenes hero e inline en la clase `.duotone` — están desaturadas y lavadas en el acento, como una serigrafía que recolorea con el tema.
 
 ## Color
 
-A light ground (`--color-bg` #f2f2f3) with `--color-text` #1d1f20 and a single accent #5980a6 (this is a mono scheme: no second accent was chosen — the `--color-accent-2-*` variables carry a machine-derived stand-in kept only so both sets resolve; treat them as one role). Each role carries a 100–900 tonal ramp (`--color-neutral-100` … `--color-accent-2-900`) generated in OKLCH on a shared perceptual lightness scale, so the same step of any ramp has the same visual weight. Use the light steps (100–300) for tinted fills, hovers and subtle borders, 500 as the role's base, and the dark steps (700–900) for text on tinted fills and for pressed states; prefer ramp steps over ad-hoc `color-mix()`. For elevation use `--shadow-sm/md/lg` (already tuned to the ground) rather than ad-hoc box-shadows.
+Un fondo claro (`--color-bg` #f2f2f3) con `--color-text` #1d1f20 y un único acento #5980a6 (este es un esquema mono: no se eligió un segundo acento — las variables `--color-accent-2-*` llevan un sustituto derivado por máquina mantenido solo para que ambos conjuntos resuelvan; trátalos como un solo rol). Cada rol lleva una escala tonal 100–900 (`--color-neutral-100` … `--color-accent-2-900`) generada en OKLCH en una escala de luminosidad perceptual compartida, de modo que el mismo paso de cualquier escala tenga el mismo peso visual. Usa los pasos claros (100–300) para rellenos tintados, hover y bordes sutiles, 500 como base del rol, y los pasos oscuros (700–900) para texto sobre rellenos tintados y para estados presionados; prefiera los pasos de escala frente a un `color-mix()` ad hoc. Para la elevación usa `--shadow-sm/md/lg` (ya ajustados al fondo) en lugar de box-shadows ad hoc.
 
-## Type
+## Tipo
 
-Barlow Condensed for headings over Barlow for body text, loaded as `--font-heading` / `--font-body`. Density 0.85× and radius 4px are already baked into the `--space-*` / `--radius-*` scales — use the variables, not raw numbers.
+Barlow Condensed para encabezados sobre Barlow para texto del cuerpo, cargados como `--font-heading` / `--font-body`. La densidad 0.85× y el radio 4px ya están integrados en las escalas `--space-*` / `--radius-*` — usa las variables, no números sin procesar.
 
-## Icons
+## Iconos
 
-Use Lucide icons (https://lucide.dev), at stroke-width 1.5 for a lighter, more technical look throughout.
+Usa iconos Lucide (https://lucide.dev), con stroke-width 1.5 para un aspecto más ligero y técnico en toda la interfaz.
 
-## Interaction states
+## Estados de interacción
 
-Interactive states are themed, never browser defaults: give every interactive element a `:hover` tint and a pressed state from the accent ramp (one step past the base — `--color-accent-600` on a light ground, `--color-accent-400` on a dark one, or a `color-mix()` tint for outlined/ghost variants), and style keyboard focus with `:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }` — never leave the default blue focus ring.
+Los estados interactivos están tematizados, nunca son los valores predeterminados del navegador: da a cada elemento interactivo un tinte en `:hover` y un estado presionado desde la escala del acento (un paso por encima de la base — `--color-accent-600` sobre un fondo claro, `--color-accent-400` sobre uno oscuro, o un tinte `color-mix()` para variantes outlined/ghost), y estiliza el foco del teclado con `:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }` — nunca dejes el anillo de foco azul predeterminado.
 
-## Components
+## Componentes
 
-| Class | What it is | Shown in |
+| Class | Qué es | Se muestra en |
 | --- | --- | --- |
-| `.btn` with `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-icon`, `.btn-block` | Actions — the primary is a solid accent fill | components/buttons.html |
-| `.tag` with `.tag-accent`, `.tag-accent-2`, `.tag-neutral`, `.tag-outline` | Small labels tinted from the ramps (mono palette: accent-2 reads the same as accent) | components/buttons.html |
-| `.field` + `label`, `.input`, `.radio` + `.dot`, `.seg` + `.seg-opt` | Form fields and choices on native elements — no script | components/forms.html |
-| `.card` with `.card-kicker`, `.card-title`, `.card-body`, `.card-meta`; `.elev-sm/md/lg` | Transparent, hairline-bordered cards with corner registration marks | components/cards.html |
-| `.nav` + `.nav-brand` | The header bar | components/navigation.html |
-| `.table` | Data tables with themed header and row rules | components/table.html |
-| `.dialog-backdrop` + `.dialog` (+ `.dialog-title/-body/-actions`) | A modal at the top elevation | components/dialog.html |
-| `.hr` | A horizontal rule — present, but this system prefers whitespace; avoid it | — |
-| `.blueprint` + four `<i class="corner tl/tr/bl/br">` children | The wireframe frame every card, figure and primary button wears | components/cards.html |
-| `.duotone` | The image wrapper — every content photograph goes through it | foundations/image.html |
+| `.btn` con `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-icon`, `.btn-block` | Acciones — la primara es un relleno sólido de acento | components/buttons.html |
+| `.tag` con `.tag-accent`, `.tag-accent-2`, `.tag-neutral`, `.tag-outline` | Etiquetas pequeñas tintadas desde las escalas (paleta mono: accent-2 lee igual que accent) | components/buttons.html |
+| `.field` + `label`, `.input`, `.radio` + `.dot`, `.seg` + `.seg-opt` | Campos de formulario y opciones en elementos nativos — sin script | components/forms.html |
+| `.card` con `.card-kicker`, `.card-title`, `.card-body`, `.card-meta`; `.elev-sm/md/lg` | Tarjetas transparentes con borde fino y marcas de registro en las esquinas | components/cards.html |
+| `.nav` + `.nav-brand` | La barra de encabezado | components/navigation.html |
+| `.table` | Tablas de datos con cabecera temática y reglas de filas | components/table.html |
+| `.dialog-backdrop` + `.dialog` (+ `.dialog-title/-body/-actions`) | Un modal en la elevación superior | components/dialog.html |
+| `.hr` | Una regla horizontal — presente, pero este sistema prefiere el espacio en blanco; evítala | — |
+| `.blueprint` + cuatro hijos `<i class="corner tl/tr/bl/br">` | El marco de wireframe que llevan cada tarjeta, figura y botón principal | components/cards.html |
+| `.duotone` | El contenedor de imagen — cada fotografía de contenido pasa por él | foundations/image.html |
 
-States are built in: hovers and pressed states come from the accent ramp, keyboard focus is the 2px accent `:focus-visible` ring, `::selection` is an accent tint, and disabled controls drop to 45% opacity. Don't restyle them per page. The accent-to-ground pair is tuned to at least 3:1 — enough for icons, large text and interface chrome, not for body copy — so for paragraph-size text in the accent use a deep ramp step (`--color-accent-700` on this ground) rather than the accent itself.
+Los estados están integrados: hover y estados presionados provienen de la escala del acento, el foco del teclado es el anillo `:focus-visible` de 2px en acento, `::selection` es un tinte de acento, y los controles deshabilitados bajan a 45% de opacidad. No los rediseñes por página. El par acento-fondo está ajustado a al menos 3:1 — suficiente para iconos, texto grande y chrome de interfaz, no para texto del cuerpo — así que para texto de tamaño de párrafo en acento usa un paso profundo de la escala (`--color-accent-700` sobre este fondo) en lugar del acento en sí.
 
-## Do
+## Haz
 
-- Frame cards, figures and primary buttons as blueprint objects: the `.blueprint` class plus four `<i class="corner …">` marks.
-- Keep the grid visible — equal cells, strong horizontal and vertical rhythm.
-- Condense headings (Barlow Condensed) and keep body copy in Barlow.
-- Duotone photographs with the `.duotone` wrapper so they take the accent.
+- Enmarca tarjetas, figuras y botones principales como objetos de plano: la clase `.blueprint` más cuatro marcas `<i class="corner …">`.
+- Mantén la cuadrícula visible — celdas iguales, fuerte ritmo horizontal y vertical.
+- Condensa los encabezados (Barlow Condensed) y mantén el texto del cuerpo en Barlow.
+- Duotona las fotografías con el contenedor `.duotone` para que adopten el acento.
 
-## Don't
+## No
 
-- Do not round cards, figures or buttons, and do not give cards or figures a surface fill — they are line drawings (the solid accent primary button is the one deliberate exception).
-- Do not drop the registration marks from a framed element.
-- Do not use thick icon strokes; the set is Lucide at 1.5.
-- Do not add decorative color beyond the steel accent. The accent's own deep step (`--color-accent-900`) may carry a full field where the deck's section dividers use it — steel as ground, type reversed to paper. (The landing's numbers sit on a drawn spec-sheet plate on the paper ground instead — its own grammar, not a field.)
+- No redondees tarjetas, figuras ni botones, y no des a las tarjetas ni a las figuras un relleno superficial — son dibujos de línea (el botón primario sólido de acento es la única excepción deliberada).
+- No elimines las marcas de registro de un elemento enmarcado.
+- No uses golpes gruesos en los iconos; el conjunto es Lucide a 1.5.
+- No añadas color decorativo más allá del acento de acero. El propio paso profundo del acento (`--color-accent-900`) puede llevar un campo completo donde los separadores de sección de la cubierta lo usan — acero como fondo, tipo invertido a papel. (Los números de la portada se sitúan sobre una placa de hoja de especificaciones dibujada sobre el fondo de papel en su lugar — su propia gramática, no un campo.)
 
-## Files
+## Archivos
 
-- `styles.css` — the only stylesheet: the token sheet (`:root` variables, ramps, base type) plus the component layer. Link it from every page.
-- `readme.md` — this guide.
-- `theme.json` — the parameters these files were derived from (a machine-readable record of the theme).
-- `thumbnail.html` — the project cover (brand mark + swatches).
-- `foundations/type.html` — the type scale and the heading/body pairing at real sizes.
-- `foundations/color.html` — color roles and the 100-900 tonal ramps, with usage notes.
-- `foundations/layout.html` — the spacing scale, the grid and how edges are drawn.
-- `foundations/icons.html` — the icon set at interface sizes, inline and in buttons.
-- `foundations/image.html` — how photographs and figures are treated.
-- `components/buttons.html` — buttons, icon buttons and tags in every variant and state.
-- `components/forms.html` — text fields, radios and the segmented control on native elements.
-- `components/cards.html` — content cards and the elevation steps.
-- `components/navigation.html` — the header bar pattern.
-- `components/table.html` — a data table with the themed header and row rules.
-- `components/dialog.html` — a modal over its backdrop at the top elevation.
-- `theme.html` — the theme's parameters rendered as a reference sheet.
-- `templates/landing/` — a starter page consuming the system the intended way (`index.html`, its `ds-base.js` loader, and the vendored `image-slot.js` its photograph mounts).
-- `assets/photo.jpg` — the reference photograph the imagery page treats.
+- `styles.css` — la única hoja de estilos: la hoja de tokens (`:root` variables, escalas, tipo base) más la capa de componentes. Enlázala desde cada página.
+- `readme.md` — esta guía.
+- `theme.json` — los parámetros a partir de los cuales se derivaron estos archivos (un registro legible por máquina del tema).
+- `thumbnail.html` — la portada del proyecto (marca + muestras de color).
+- `foundations/type.html` — la escala tipográfica y la combinación de encabezado/cuerpo a tamaños reales.
+- `foundations/color.html` — roles de color y las escalas tonales 100-900, con notas de uso.
+- `foundations/layout.html` — la escala de espaciado, la cuadrícula y cómo se dibujan los bordes.
+- `foundations/icons.html` — el conjunto de iconos en tamaños de interfaz, en línea y en botones.
+- `foundations/image.html` — cómo se tratan las fotografías y las figuras.
+- `components/buttons.html` — botones, botones con icono y etiquetas en cada variante y estado.
+- `components/forms.html` — campos de texto, radios y el control segmentado en elementos nativos.
+- `components/cards.html` — tarjetas de contenido y los pasos de elevación.
+- `components/navigation.html` — el patrón de la barra de encabezado.
+- `components/table.html` — una tabla de datos con la cabecera temática y las reglas de filas.
+- `components/dialog.html` — un modal sobre su fondo en la elevación superior.
+- `theme.html` — los parámetros del tema representados como hoja de referencia.
+- `templates/landing/` — una página inicial que consume el sistema de la manera prevista (`index.html`, su cargador `ds-base.js` y el `image-slot.js` empotrado que monta la fotografía).
+- `assets/photo.jpg` — la fotografía de referencia que trata la página de imágenes.
