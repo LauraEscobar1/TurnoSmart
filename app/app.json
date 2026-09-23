@@ -5,9 +5,6 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "backgroundColor": "#0B5FFF"
-    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
@@ -19,6 +16,14 @@
       },
       "package": "com.turnosmart.app"
     },
-    "plugins": []
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B5FFF"
+        }
+      ]
+    ]
   }
 }
