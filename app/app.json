@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "TurnoSmart",
+    "slug": "turnosmart-app",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#0B5FFF"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.turnosmart.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B5FFF"
+      },
+      "package": "com.turnosmart.app"
+    },
+    "plugins": []
+  }
+}
