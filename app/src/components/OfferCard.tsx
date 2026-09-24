@@ -7,16 +7,17 @@ import { Badge, BadgeVariant } from "@/components/Badge";
 import { Blueprint } from "@/components/Blueprint";
 import { Countdown, useCountdown } from "@/components/Countdown";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { fechaConDia, fechaCorta, hora, diaRelativo } from "@/utils/format";
+import { fechaConDia, hora, diaRelativo } from "@/utils/format";
 
 interface OfferCardProps {
   oferta: OfertaCupo;
   /**
    * home:      tarjeta tintada de Home con «Ver oferta» (01 · Home).
    * full:      tarjeta completa con Rechazar / Aceptar cupo (componente primario).
+   * pendiente: fila compacta de la lista de Ofertas, abre el detalle.
    * historial: fila atenuada de ofertas ya resueltas.
    */
-  variant?: "home" | "full" | "historial";
+  variant?: "home" | "full" | "pendiente" | "historial";
   onPress?: () => void;
   onAceptar?: () => void;
   onRechazar?: () => void;
@@ -28,6 +29,7 @@ interface OfferCardProps {
  */
 export function OfferCard({ oferta, variant = "full", onPress, onAceptar, onRechazar }: OfferCardProps) {
   if (variant === "historial") return <OfferHistoryRow oferta={oferta} />;
+  if (variant === "pendiente") return <PendingOfferRow oferta={oferta} onPress={onPress} />;
   return variant === "home" ? (
     <HomeOffer oferta={oferta} onPress={onPress} />
   ) : (
@@ -96,25 +98,40 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
   );
 }
 
+function PendingOfferRow({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress">) {
+  const segundos = useCountdown(oferta.expiraEnISO);
+  return (
+    <Blueprint onPress={onPress} style={styles.row}>
+      <View style={styles.rowTop}>
+        <Text style={heading(19)}>{oferta.especialidad}</Text>
+        {segundos > 0 ? (
+          <Countdown segundos={segundos} size={18} caption="" hideCaption />
+        ) : (
+          <Badge label="Expirada" variant="lost" />
+        )}
+      </View>
+      <Text style={body(12, colors.neutral700)}>
+        {diaRelativo(oferta.fechaHoraISO)} {hora(oferta.fechaHoraISO)} · {oferta.consultorio}
+      </Text>
+    </Blueprint>
+  );
+}
+
 const estadoHistorial: Record<EstadoOferta, { label: string; variant: BadgeVariant }> = {
   pendiente: { label: "Pendiente", variant: "tint" },
-  aceptada: { label: "Aceptada", variant: "solid" },
+  aceptada: { label: "Aceptada", variant: "neutral" },
   rechazada: { label: "Rechazada", variant: "neutral" },
   expirada: { label: "Expirada", variant: "lost" },
 };
 
+/** Historial: atenuado al 55%, especialidad y estado. */
 function OfferHistoryRow({ oferta }: { oferta: OfertaCupo }) {
   const estado = estadoHistorial[oferta.estado];
   return (
-    <Blueprint style={[styles.history, oferta.estado !== "aceptada" && styles.expired]}>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={heading(17)}>
-          {oferta.especialidad} · {fechaCorta(oferta.fechaHoraISO)} {hora(oferta.fechaHoraISO)}
-        </Text>
-        <Text style={body(12, colors.neutral700)}>
-          {oferta.profesional} · {oferta.consultorio}
-        </Text>
-      </View>
+    <Blueprint style={[styles.row, styles.rowTop, styles.expired]}>
+      <Text style={[heading(17), { flex: 1 }]} numberOfLines={1}>
+        {oferta.especialidad}
+      </Text>
       <Badge label={estado.label} variant={estado.variant} style={styles.centered} />
     </Blueprint>
   );
@@ -162,11 +179,14 @@ const styles = StyleSheet.create({
   action: {
     flex: 1,
   },
-  history: {
+  row: {
     padding: 14,
+  },
+  rowTop: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
   },
   centered: {
     alignSelf: "center",
