@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator<AppointmentsStackParamList>();
 
 export function AppointmentsNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
       <Stack.Screen
         name="AppointmentsList"
         component={AppointmentsListScreen}
