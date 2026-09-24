@@ -11,6 +11,8 @@ interface BlueprintProps {
   borderless?: boolean;
   onPress?: () => void;
   disabled?: boolean;
+  accessibilityRole?: "button";
+  accessibilityLabel?: string;
 }
 
 /**
@@ -18,7 +20,16 @@ interface BlueprintProps {
  * y las cuatro marcas de registro "+" en las esquinas.
  * Toda tarjeta, figura y botón primario lo lleva — no se omite.
  */
-export function Blueprint({ children, style, cornerColor = colors.corner, borderless, onPress, disabled }: BlueprintProps) {
+export function Blueprint({
+  children,
+  style,
+  cornerColor = colors.corner,
+  borderless,
+  onPress,
+  disabled,
+  accessibilityRole,
+  accessibilityLabel,
+}: BlueprintProps) {
   const corners = (
     <>
       <Corner color={cornerColor} style={styles.tl} />
@@ -34,6 +45,9 @@ export function Blueprint({ children, style, cornerColor = colors.corner, border
       <Pressable
         onPress={onPress}
         disabled={disabled}
+        accessibilityRole={accessibilityRole}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={disabled ? { disabled } : undefined}
         style={({ pressed }) => [frameStyle, pressed && styles.pressed]}
       >
         {children}
