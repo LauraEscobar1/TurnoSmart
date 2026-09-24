@@ -5,6 +5,9 @@ import { Cita, Notificacion, OfertaCupo, Paciente } from "@/types/domain";
  * Reemplazar por llamadas reales en src/services/* cuando exista la API.
  */
 
+const MIN = 1000 * 60;
+const DIA = MIN * 60 * 24;
+
 export const pacienteActual: Paciente = {
   id: "p-001",
   nombre: "Laura Escobar",
@@ -13,6 +16,7 @@ export const pacienteActual: Paciente = {
   especialidadesInteres: ["Odontología", "Dermatología"],
   horariosPreferidos: ["Mañana", "Tarde"],
   radioKm: 10,
+  listaEspera: { dias: 34, puesto: 3 },
 };
 
 export const ofertasMock: OfertaCupo[] = [
@@ -22,10 +26,16 @@ export const ofertasMock: OfertaCupo[] = [
     especialidad: "Odontología",
     profesional: "Dr. Camilo Rojas",
     consultorio: "Sede Norte",
-    fechaHoraISO: new Date(Date.now() + 1000 * 60 * 90).toISOString(),
+    fechaHoraISO: new Date(Date.now() + 90 * MIN).toISOString(),
     estado: "pendiente",
-    segundosParaExpirar: 60 * 8,
+    expiraEnISO: new Date(Date.now() + 8 * MIN).toISOString(),
     scorePrioridad: 0.87,
+    factores: [
+      { etiqueta: "Tiempo en espera", valor: "34 días", peso: 0.92 },
+      { etiqueta: "Tu especialidad", valor: "Odontología", peso: 1 },
+      { etiqueta: "Horario preferido", valor: "Tarde", peso: 0.64 },
+      { etiqueta: "Distancia a la sede", valor: "2,1 km", peso: 0.48 },
+    ],
   },
 ];
 
@@ -35,7 +45,7 @@ export const citasMock: Cita[] = [
     especialidad: "Dermatología",
     profesional: "Dra. Ana Ibarra",
     consultorio: "Sede Chapinero",
-    fechaHoraISO: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5).toISOString(),
+    fechaHoraISO: new Date(Date.now() + 5 * DIA).toISOString(),
     estado: "confirmada",
     origen: "reserva-directa",
   },
@@ -44,7 +54,7 @@ export const citasMock: Cita[] = [
     especialidad: "Odontología",
     profesional: "Dr. Camilo Rojas",
     consultorio: "Sede Norte",
-    fechaHoraISO: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+    fechaHoraISO: new Date(Date.now() - 10 * DIA).toISOString(),
     estado: "no-show",
     origen: "reserva-directa",
   },
@@ -54,8 +64,8 @@ export const notificacionesMock: Notificacion[] = [
   {
     id: "n-001",
     tipo: "cupo-ultimo-minuto",
-    titulo: "¡Nuevo cupo disponible!",
-    cuerpo: "Odontología con Dr. Camilo Rojas, hoy a las 4:30 PM.",
+    titulo: "Odontología hoy",
+    cuerpo: "Respondé antes de que expire.",
     fechaISO: new Date().toISOString(),
     leida: false,
     referenciaId: "of-001",
@@ -63,9 +73,9 @@ export const notificacionesMock: Notificacion[] = [
   {
     id: "n-002",
     tipo: "recordatorio",
-    titulo: "Recordatorio de cita",
-    cuerpo: "Tu cita de Dermatología es en 2 días.",
-    fechaISO: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+    titulo: "Dermatología en 5 días",
+    cuerpo: "Dra. Ana Ibarra · Sede Chapinero.",
+    fechaISO: new Date(Date.now() - 3 * 60 * MIN).toISOString(),
     leida: true,
     referenciaId: "c-050",
   },
