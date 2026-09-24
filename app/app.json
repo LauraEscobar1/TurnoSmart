@@ -26,7 +26,13 @@
           "backgroundColor": "#f2f2f3"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "TurnoSmart usa Face ID para que ingreses sin escribir tu contraseña."
+        }
+      ]
     ]
   }
 }
