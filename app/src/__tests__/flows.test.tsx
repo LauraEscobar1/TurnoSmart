@@ -142,7 +142,7 @@ describe("Secciones", () => {
     expect(screen.getByText("3")).toBeTruthy(); // especialidades en espera
 
     await fireEvent.press(screen.getByText("Cerrar sesión"));
-    expect(await screen.findByText("Crear cuenta con tu teléfono")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
   });
 });
 
