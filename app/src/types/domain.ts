@@ -28,10 +28,23 @@ export interface OfertaCupo {
   consultorio: string;
   fechaHoraISO: string;
   estado: EstadoOferta;
-  /** Segundos restantes para responder antes de que el cupo se reasigne. */
-  segundosParaExpirar: number;
-  /** Score de la IA (0-1) que estimó qué tan probable era que este paciente aceptara. */
+  /** Momento en que la oferta expira y el cupo se ofrece a otro paciente. */
+  expiraEnISO: string;
+  /**
+   * Score de la IA (0-1) que estimó qué tan probable era que este paciente aceptara.
+   * Nunca se muestra al paciente: la interfaz muestra `factores`.
+   */
   scorePrioridad: number;
+  /** Razones de la priorización, ordenadas por peso (máximo 4). */
+  factores: FactorPrioridad[];
+}
+
+export interface FactorPrioridad {
+  etiqueta: string;
+  /** Dato concreto que se muestra a la derecha: "34 días", "Tarde"... */
+  valor: string;
+  /** Peso relativo 0-1, solo para dibujar la barra. */
+  peso: number;
 }
 
 export interface Paciente {
@@ -42,6 +55,7 @@ export interface Paciente {
   especialidadesInteres: string[];
   horariosPreferidos: string[];
   radioKm: number;
+  listaEspera: { dias: number; puesto: number };
 }
 
 export type TipoNotificacion =
