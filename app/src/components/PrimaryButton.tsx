@@ -25,6 +25,8 @@ export function PrimaryButton({ label, onPress, variant = "primary", disabled, s
       <Blueprint
         onPress={onPress}
         disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={label}
         cornerColor={isInverse ? colors.bg : colors.corner}
         style={[styles.base, isInverse ? styles.inverse : styles.primary, disabled && styles.disabled, style]}
       >
@@ -37,6 +39,9 @@ export function PrimaryButton({ label, onPress, variant = "primary", disabled, s
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={disabled ? { disabled } : undefined}
       style={({ pressed }) => [
         styles.base,
         variant === "secondary" ? styles.secondary : styles.ghost,
