@@ -1,16 +1,18 @@
-import React, { useCallback, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React, { useCallback, useEffect, useState } from "react";
+import { FlatList, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { EmptyState } from "@/components/EmptyState";
+import { ScreenHeader } from "@/components/ScreenHeader";
+import { SubTabs } from "@/components/SubTabs";
 import { Cita } from "@/types/domain";
 import { getCitasPasadas, getCitasProximas } from "@/services/appointmentsService";
 import { AppointmentsStackParamList } from "@/navigation/types";
 
-type Nav = NativeStackNavigationProp<AppointmentsStackParamList>;
+type Props = NativeStackScreenProps<AppointmentsStackParamList, "AppointmentsList">;
 
 type Tab = "proximas" | "pasadas";
 
@@ -18,11 +20,14 @@ type Tab = "proximas" | "pasadas";
  * Mis citas — Nivel 1, con sub-tabs Próximas/Pasadas
  * (docs/02-jerarquia.md §2).
  */
-export function AppointmentsListScreen() {
-  const navigation = useNavigation<Nav>();
-  const [tab, setTab] = useState<Tab>("proximas");
+export function AppointmentsListScreen({ navigation, route }: Props) {
+  const [tab, setTab] = useState<Tab>(route.params?.tab ?? "proximas");
   const [proximas, setProximas] = useState<Cita[]>([]);
   const [pasadas, setPasadas] = useState<Cita[]>([]);
+
+  useEffect(() => {
+    if (route.params?.tab) setTab(route.params.tab);
+  }, [route.params?.tab]);
 
   useFocusEffect(
     useCallback(() => {
@@ -31,70 +36,45 @@ export function AppointmentsListScreen() {
     }, [])
   );
 
-  const data = tab === "proximas" ? proximas : pasadas;
+  const esPasada = tab === "pasadas";
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabRow}>
-        <Text
-          style={[styles.tabItem, tab === "proximas" && styles.tabItemActive]}
-          onPress={() => setTab("proximas")}
-        >
-          Próximas
-        </Text>
-        <Text
-          style={[styles.tabItem, tab === "pasadas" && styles.tabItemActive]}
-          onPress={() => setTab("pasadas")}
-        >
-          Pasadas
-        </Text>
-      </View>
-
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <ScreenHeader title="Mis citas" />
+      <SubTabs
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "proximas", label: "Próximas" },
+          { value: "pasadas", label: "Pasadas" },
+        ]}
+      />
       <FlatList
         contentContainerStyle={styles.content}
-        data={data}
+        data={esPasada ? pasadas : proximas}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <AppointmentCard
             cita={item}
+            past={esPasada}
             onPress={() => navigation.navigate("AppointmentDetail", { citaId: item.id })}
           />
         )}
         ListEmptyComponent={
-          <EmptyState
-            title={tab === "proximas" ? "No tienes citas próximas" : "Aún no tienes historial"}
-          />
+          <EmptyState title={esPasada ? "Todavía no tenés historial" : "No tenés citas próximas"} />
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.bg,
   },
   content: {
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  tabRow: {
-    flexDirection: "row",
-    gap: spacing.lg,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  tabItem: {
-    paddingBottom: spacing.sm,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  tabItemActive: {
-    color: colors.primary,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
+    padding: 18,
+    gap: 16,
   },
 });
