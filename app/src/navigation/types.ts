@@ -1,3 +1,5 @@
+import { NavigatorScreenParams } from "@react-navigation/native";
+
 /**
  * Tipos de navegación. Reflejan el mapa jerárquico de
  * docs/02-jerarquia.md y los flujos de docs/03-navegacion.md.
@@ -6,7 +8,7 @@
 export type RootTabParamList = {
   Inicio: undefined;
   Ofertas: undefined;
-  MisCitas: undefined;
+  MisCitas: NavigatorScreenParams<AppointmentsStackParamList> | undefined;
   Notificaciones: undefined;
   Perfil: undefined;
 };
@@ -16,7 +18,7 @@ export type OffersStackParamList = {
 };
 
 export type AppointmentsStackParamList = {
-  AppointmentsList: undefined;
+  AppointmentsList: { tab?: "proximas" | "pasadas" } | undefined;
   AppointmentDetail: { citaId: string };
 };
 
@@ -33,7 +35,7 @@ export type ProfileStackParamList = {
  * docs/03-navegacion.md §2.3 y §2.4.
  */
 export type RootStackParamList = {
-  Tabs: undefined;
+  Tabs: NavigatorScreenParams<RootTabParamList> | undefined;
   OfferDetail: { ofertaId: string };
   OfferConfirmation: { ofertaId: string; resultado: "aceptada" | "rechazada" };
 };
