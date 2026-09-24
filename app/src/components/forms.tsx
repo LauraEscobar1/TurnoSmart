@@ -1,5 +1,6 @@
 import React, { forwardRef, useState } from "react";
 import { Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
 import { fonts } from "@/theme/typography";
 
@@ -14,37 +15,55 @@ interface TextFieldProps extends TextInputProps {
   error?: string;
   hint?: string;
   style?: StyleProp<ViewStyle>;
+  /** Contraseña con el ojo para mostrarla u ocultarla. */
+  revelable?: boolean;
 }
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { label, error, hint, style, onFocus, onBlur, ...input },
-  ref
+  { label, error, hint, style, onFocus, onBlur, revelable, secureTextEntry, ...input },
+  ref,
 ) {
   const [focused, setFocused] = useState(false);
+  const [visible, setVisible] = useState(false);
   return (
     <View style={style}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        ref={ref}
-        accessibilityLabel={label}
-        placeholderTextColor={colors.neutral600}
-        selectionColor={colors.accent}
-        {...input}
-        onFocus={(e) => {
-          setFocused(true);
-          onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFocused(false);
-          onBlur?.(e);
-        }}
-        style={[styles.input, focused && styles.inputFocused, !!error && styles.inputError]}
-      />
-      {error ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : hint ? (
-        <Text style={styles.hint}>{hint}</Text>
-      ) : null}
+      <View>
+        <TextInput
+          ref={ref}
+          accessibilityLabel={label}
+          placeholderTextColor={colors.neutral600}
+          selectionColor={colors.accent}
+          {...input}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
+          secureTextEntry={revelable ? !visible : secureTextEntry}
+          style={[
+            styles.input,
+            revelable && styles.inputConOjo,
+            focused && styles.inputFocused,
+            !!error && styles.inputError,
+          ]}
+        />
+        {revelable ? (
+          <Pressable
+            onPress={() => setVisible((v) => !v)}
+            hitSlop={8}
+            style={styles.ojo}
+            accessibilityRole="button"
+            accessibilityLabel={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+          >
+            <Ionicons name={visible ? "eye-off-outline" : "eye-outline"} size={18} color={colors.accent700} />
+          </Pressable>
+        ) : null}
+      </View>
+      {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </View>
   );
 });
@@ -145,7 +164,9 @@ export function CheckRow({ checked, onChange, children }: CheckRowProps) {
       accessibilityState={{ checked }}
       style={styles.checkRow}
     >
-      <View style={[styles.dot, checked && styles.dotChecked]}>{checked ? <View style={styles.dotInner} /> : null}</View>
+      <View style={[styles.dot, checked && styles.dotChecked]}>
+        {checked ? <View style={styles.dotInner} /> : null}
+      </View>
       <Text style={styles.checkText}>{children}</Text>
     </Pressable>
   );
@@ -169,8 +190,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.divider,
     borderRadius: 0,
-    // Web: sin el anillo de foco del navegador; el foco es el borde de acero.
-    outlineWidth: 0,
+    // Web: el anillo de foco del navegador va en acero, como pide el sistema
+    // (:focus-visible con contorno en acento), no en el azul por defecto.
+    outlineColor: colors.accent,
+  },
+  inputConOjo: {
+    paddingRight: 42,
+  },
+  ojo: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 42,
+    alignItems: "center",
+    justifyContent: "center",
   },
   inputFocused: {
     borderColor: colors.accent,
