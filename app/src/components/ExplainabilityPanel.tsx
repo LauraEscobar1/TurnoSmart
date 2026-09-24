@@ -51,12 +51,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   track: {
-    height: 4,
-    marginTop: 5,
-    backgroundColor: colors.neutral200,
+    height: 6,
+    marginTop: 6,
+    borderRadius: 3,
+    backgroundColor: colors.accent100,
+    overflow: "hidden",
   },
   fill: {
-    height: 4,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: colors.accent,
   },
 });
