@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { colors } from "@/theme/colors";
+import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 
 /**
@@ -34,14 +35,14 @@ export function Badge({ label, variant = "neutral", style }: BadgeProps) {
 const styles = StyleSheet.create({
   container: {
     alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 0,
+    paddingHorizontal: 11,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: "transparent",
   },
   text: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.bodyMedium,
     fontSize: 11,
     letterSpacing: 0.2,
   },
