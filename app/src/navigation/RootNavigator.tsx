@@ -1,6 +1,7 @@
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { DefaultTheme, NavigationContainer, Theme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { colors } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { TabNavigator } from "@/navigation/TabNavigator";
 import { OfferDetailScreen } from "@/screens/Offers/OfferDetailScreen";
@@ -8,27 +9,36 @@ import { OfferConfirmationScreen } from "@/screens/Offers/OfferConfirmationScree
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const theme: Theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: colors.accent,
+    background: colors.bg,
+    card: colors.bg,
+    text: colors.text,
+    border: colors.divider,
+    notification: colors.accent,
+  },
+};
+
 /**
  * Navegador raíz.
- * "OfferDetail" y "OfferConfirmation" se presentan como modal
+ * "OfferDetail" y "OfferConfirmation" se presentan a pantalla completa
  * porque interrumpen el flujo normal — llegan desde una notificación
  * push, desde Home o desde Ofertas (docs/03-navegacion.md §1, regla 1).
  */
 export function RootNavigator() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-        <Stack.Group screenOptions={{ presentation: "modal" }}>
-          <Stack.Screen
-            name="OfferDetail"
-            component={OfferDetailScreen}
-            options={{ title: "Cupo disponible" }}
-          />
+    <NavigationContainer theme={theme}>
+      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+        <Stack.Screen name="Tabs" component={TabNavigator} />
+        <Stack.Group screenOptions={{ presentation: "fullScreenModal" }}>
+          <Stack.Screen name="OfferDetail" component={OfferDetailScreen} />
           <Stack.Screen
             name="OfferConfirmation"
             component={OfferConfirmationScreen}
-            options={{ headerShown: false }}
+            options={{ animation: "fade", gestureEnabled: false }}
           />
         </Stack.Group>
       </Stack.Navigator>
