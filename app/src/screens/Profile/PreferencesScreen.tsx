@@ -1,9 +1,13 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
+import { heading, label, body } from "@/theme/typography";
 import { pacienteActual } from "@/data/mockData";
 import { Badge } from "@/components/Badge";
+import { Blueprint } from "@/components/Blueprint";
+import { ScreenHeader } from "@/components/ScreenHeader";
 
 /**
  * Preferencias del paciente: especialidades, horarios y radio.
@@ -11,48 +15,67 @@ import { Badge } from "@/components/Badge";
  * (docs/01-arquitectura-informacion.md §2.2).
  */
 export function PreferencesScreen() {
+  const navigation = useNavigation();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Especialidades de interés</Text>
-      <View style={styles.tagRow}>
-        {pacienteActual.especialidadesInteres.map((e) => (
-          <Badge key={e} label={e} variant="neutral" />
-        ))}
-      </View>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <ScreenHeader title="Preferencias" onBack={navigation.goBack} />
+      <ScrollView contentContainerStyle={styles.content}>
+        <Blueprint style={styles.card}>
+          <View style={styles.section}>
+            <Text style={label(9)}>Especialidades de interés</Text>
+            <View style={styles.tagRow}>
+              {pacienteActual.especialidadesInteres.map((e) => (
+                <Badge key={e} label={e} variant="outline" />
+              ))}
+            </View>
+          </View>
 
-      <Text style={styles.label}>Horarios preferidos</Text>
-      <View style={styles.tagRow}>
-        {pacienteActual.horariosPreferidos.map((h) => (
-          <Badge key={h} label={h} variant="neutral" />
-        ))}
-      </View>
+          <View style={[styles.section, styles.divided]}>
+            <Text style={label(9)}>Horarios preferidos</Text>
+            <View style={styles.tagRow}>
+              {pacienteActual.horariosPreferidos.map((h) => (
+                <Badge key={h} label={h} variant="outline" />
+              ))}
+            </View>
+          </View>
 
-      <Text style={styles.label}>Radio de búsqueda</Text>
-      <Text style={styles.value}>{pacienteActual.radioKm} km</Text>
-    </View>
+          <View style={[styles.section, styles.divided]}>
+            <Text style={label(9)}>Radio de búsqueda</Text>
+            <Text style={heading(22)}>{pacienteActual.radioKm} km</Text>
+          </View>
+        </Blueprint>
+        <Text style={body(13, colors.neutral700)}>
+          Usamos estas preferencias para decidir a quién ofrecer cada cupo liberado.
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.md,
+    backgroundColor: colors.bg,
   },
-  label: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textTransform: "uppercase",
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+  content: {
+    padding: 18,
+    gap: 14,
   },
-  value: {
-    fontSize: 16,
-    color: colors.textPrimary,
+  card: {
+    paddingHorizontal: 16,
+  },
+  section: {
+    paddingVertical: 14,
+    gap: 8,
+  },
+  divided: {
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
   },
   tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.xs,
+    gap: 6,
   },
 });
