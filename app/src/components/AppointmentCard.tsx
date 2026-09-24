@@ -2,9 +2,10 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Cita } from "@/types/domain";
 import { colors } from "@/theme/colors";
+import { radius } from "@/theme/spacing";
 import { body, heading, label } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
-import { Blueprint } from "@/components/Blueprint";
+import { Card } from "@/components/Card";
 import { dia, hora, mes } from "@/utils/format";
 
 export const estadoCita: Record<Cita["estado"], { label: string; variant: BadgeVariant }> = {
@@ -32,13 +33,10 @@ export function AppointmentCard({ cita, onPress, past, compact }: AppointmentCar
   const e = estadoCita[cita.estado];
 
   return (
-    <Blueprint
-      onPress={past ? undefined : onPress}
-      style={[styles.card, compact && styles.compact, past && styles.past]}
-    >
+    <Card onPress={past ? undefined : onPress} style={[styles.card, compact && styles.compact, past && styles.past]}>
       <View style={[styles.date, compact && styles.dateCompact]}>
-        <Text style={[heading(compact ? 26 : 30), styles.day]}>{dia(cita.fechaHoraISO)}</Text>
-        <Text style={label(compact ? 9 : 10)}>{mes(cita.fechaHoraISO)}</Text>
+        <Text style={[heading(compact ? 24 : 28, colors.accent900), styles.day]}>{dia(cita.fechaHoraISO)}</Text>
+        <Text style={label(compact ? 9 : 10, colors.accent700)}>{mes(cita.fechaHoraISO)}</Text>
       </View>
       <View style={styles.info}>
         <Text style={heading(compact ? 17 : 19)} numberOfLines={1}>
@@ -49,34 +47,35 @@ export function AppointmentCard({ cita, onPress, past, compact }: AppointmentCar
         </Text>
       </View>
       {!compact && <Badge label={e.label} variant={e.variant} style={styles.centered} />}
-    </Blueprint>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
+    padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 14,
   },
   compact: {
-    padding: 14,
-    gap: 14,
+    padding: 12,
+    gap: 12,
   },
   past: {
     opacity: 0.55,
   },
   date: {
     alignItems: "center",
-    minWidth: 52,
-    paddingRight: 16,
-    borderRightWidth: 1,
-    borderRightColor: colors.divider,
+    justifyContent: "center",
+    width: 58,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+    backgroundColor: colors.accent100,
   },
   dateCompact: {
-    minWidth: 46,
-    paddingRight: 14,
+    width: 52,
+    paddingVertical: 6,
   },
   day: {
     lineHeight: undefined,
