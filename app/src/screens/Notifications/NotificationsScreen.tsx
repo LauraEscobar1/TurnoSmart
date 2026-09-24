@@ -1,86 +1,126 @@
 import React, { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
-import { radius, spacing } from "@/theme/spacing";
+import { body, heading, label } from "@/theme/typography";
 import { EmptyState } from "@/components/EmptyState";
-import { Notificacion } from "@/types/domain";
+import { ScreenHeader } from "@/components/ScreenHeader";
+import { Notificacion, TipoNotificacion } from "@/types/domain";
 import { getNotificaciones, marcarComoLeida } from "@/services/notificationsService";
 import { RootStackParamList } from "@/navigation/types";
+import { haceCuanto } from "@/utils/format";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
+const kicker: Record<TipoNotificacion, string> = {
+  "cupo-ultimo-minuto": "Cupo disponible",
+  recordatorio: "Recordatorio",
+  confirmacion: "Confirmación",
+  expiracion: "Oferta expirada",
+};
+
 /**
- * Notificaciones — Nivel 1.
+ * Notificaciones (Avisos) — Nivel 1 (04 · Notificaciones).
  * Es también un punto de entrada de navegación transversal
  * (docs/03-navegacion.md §4): tocar una notificación de tipo
  * "cupo-ultimo-minuto" lleva directo al detalle de la oferta.
+ *
+ * No leída: marca cuadrada de acero. Cupo disponible sin leer: además,
+ * fila tintada. Leída: baja a 60% de opacidad.
  */
 export function NotificationsScreen() {
   const navigation = useNavigation<Nav>();
   const [items, setItems] = useState<Notificacion[]>([]);
 
-  useFocusEffect(
-    useCallback(() => {
-      getNotificaciones().then(setItems);
-    }, [])
-  );
+  const cargar = useCallback(() => {
+    getNotificaciones().then(setItems);
+  }, []);
+
+  useFocusEffect(cargar);
 
   async function handlePress(n: Notificacion) {
     await marcarComoLeida(n.id);
+    cargar();
     if (n.tipo === "cupo-ultimo-minuto" && n.referenciaId) {
       navigation.navigate("OfferDetail", { ofertaId: n.referenciaId });
     }
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <ScreenHeader title="Notificaciones" />
       <FlatList
-        contentContainerStyle={styles.content}
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Pressable
-            style={[styles.item, !item.leida && styles.itemUnread]}
-            onPress={() => handlePress(item)}
-          >
-            <Text style={styles.itemTitle}>{item.titulo}</Text>
-            <Text style={styles.itemBody}>{item.cuerpo}</Text>
-          </Pressable>
-        )}
-        ListEmptyComponent={<EmptyState title="No tienes notificaciones" />}
+        renderItem={({ item }) => {
+          const destacada = !item.leida && item.tipo === "cupo-ultimo-minuto";
+          const meta = destacada ? colors.accent800 : colors.neutral600;
+          return (
+            <Pressable
+              style={[styles.item, destacada && styles.itemHighlighted, item.leida && styles.itemRead]}
+              onPress={() => handlePress(item)}
+            >
+              <View style={[styles.dot, !item.leida && styles.dotUnread]} />
+              <View style={styles.itemBody}>
+                <View style={styles.metaRow}>
+                  <Text style={label(9, meta)}>{kicker[item.tipo]}</Text>
+                  <Text style={label(9, meta)}>{haceCuanto(item.fechaISO)}</Text>
+                </View>
+                <Text style={heading(17, destacada ? colors.accent900 : colors.text)}>{item.titulo}</Text>
+                <Text style={body(12, destacada ? colors.accent800 : colors.neutral700)}>{item.cuerpo}</Text>
+              </View>
+            </Pressable>
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <EmptyState title="No tenés notificaciones" />
+          </View>
+        }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    gap: spacing.sm,
+    backgroundColor: colors.bg,
   },
   item: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    flexDirection: "row",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
   },
-  itemUnread: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
+  itemHighlighted: {
+    backgroundColor: colors.accent100,
   },
-  itemTitle: {
-    fontWeight: "700",
-    color: colors.textPrimary,
-    marginBottom: 2,
+  itemRead: {
+    opacity: 0.6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    marginTop: 6,
+  },
+  dotUnread: {
+    backgroundColor: colors.accent,
   },
   itemBody: {
-    color: colors.textSecondary,
+    flex: 1,
+    minWidth: 0,
+  },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  empty: {
+    padding: 18,
   },
 });
