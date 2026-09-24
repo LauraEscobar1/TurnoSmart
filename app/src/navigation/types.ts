@@ -5,6 +5,14 @@ import { NavigatorScreenParams } from "@react-navigation/native";
  * docs/02-jerarquia.md y los flujos de docs/03-navegacion.md.
  */
 
+/** Acceso: iniciar sesión y registro en 3 pasos (sistema de diseño §04). */
+export type AuthStackParamList = {
+  Login: undefined;
+  RegistroDatos: undefined;
+  RegistroPreferencias: undefined;
+  RegistroVerificacion: undefined;
+};
+
 export type RootTabParamList = {
   Inicio: undefined;
   Ofertas: undefined;
@@ -35,6 +43,7 @@ export type ProfileStackParamList = {
  * docs/03-navegacion.md §2.3 y §2.4.
  */
 export type RootStackParamList = {
+  Acceso: undefined;
   Tabs: NavigatorScreenParams<RootTabParamList> | undefined;
   OfferDetail: { ofertaId: string };
   OfferConfirmation: { ofertaId: string; resultado: "aceptada" | "rechazada" };

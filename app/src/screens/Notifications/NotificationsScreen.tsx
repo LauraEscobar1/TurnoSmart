@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
+import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, heading, label } from "@/theme/typography";
@@ -38,7 +39,7 @@ export function NotificationsScreen() {
     getNotificaciones().then(setItems);
   }, []);
 
-  useFocusEffect(cargar);
+  useCargarDatos(cargar);
 
   async function handlePress(n: Notificacion) {
     await marcarComoLeida(n.id);
@@ -50,7 +51,7 @@ export function NotificationsScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Notificaciones" />
+      <ScreenHeader title="Notificaciones" seccion={4} />
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -69,7 +70,9 @@ export function NotificationsScreen() {
                   <Text style={label(9, meta)}>{haceCuanto(item.fechaISO)}</Text>
                 </View>
                 <Text style={heading(17, destacada ? colors.accent900 : colors.text)}>{item.titulo}</Text>
-                <Text style={body(12, destacada ? colors.accent800 : colors.neutral700)}>{item.cuerpo}</Text>
+                {item.cuerpo ? (
+                  <Text style={body(12, destacada ? colors.accent800 : colors.neutral700)}>{item.cuerpo}</Text>
+                ) : null}
               </View>
             </Pressable>
           );

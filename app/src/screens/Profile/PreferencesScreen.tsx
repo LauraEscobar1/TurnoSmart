@@ -1,54 +1,65 @@
-import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "@/theme/colors";
-import { heading, label, body } from "@/theme/typography";
-import { pacienteActual } from "@/data/mockData";
-import { Badge } from "@/components/Badge";
-import { Blueprint } from "@/components/Blueprint";
+import { body } from "@/theme/typography";
+import { useAuth, usePaciente } from "@/auth/AuthContext";
+import { PreferenciasCupo } from "@/services/authService";
+import { PreferenciasForm } from "@/components/PreferenciasForm";
+import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScreenHeader } from "@/components/ScreenHeader";
 
 /**
- * Preferencias del paciente: especialidades, horarios y radio.
- * Estos campos alimentan directamente al motor de priorización de IA
- * (docs/01-arquitectura-informacion.md §2.2).
+ * Preferencias del paciente: especialidades, franja, distancia y obra social.
+ * Es el mismo formulario del paso 2 del registro, y alimenta directamente
+ * al motor de priorización de IA (docs/01-arquitectura-informacion.md §2.2).
  */
 export function PreferencesScreen() {
   const navigation = useNavigation();
+  const paciente = usePaciente();
+  const { actualizar } = useAuth();
+  const [form, setForm] = useState<PreferenciasCupo>({
+    especialidadesInteres: paciente.especialidadesInteres,
+    franjaPreferida: paciente.franjaPreferida,
+    distanciaMaxKm: paciente.distanciaMaxKm,
+    obraSocial: paciente.obraSocial,
+  });
+  const [error, setError] = useState<string>();
+  const [guardando, setGuardando] = useState(false);
+
+  async function guardar() {
+    if (form.especialidadesInteres.length === 0) {
+      setError("Elegí al menos una especialidad.");
+      return;
+    }
+    setGuardando(true);
+    await actualizar({ ...form, obraSocial: form.obraSocial.trim() });
+    setGuardando(false);
+    navigation.goBack();
+  }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
       <ScreenHeader title="Preferencias" onBack={navigation.goBack} />
-      <ScrollView contentContainerStyle={styles.content}>
-        <Blueprint style={styles.card}>
-          <View style={styles.section}>
-            <Text style={label(9)}>Especialidades de interés</Text>
-            <View style={styles.tagRow}>
-              {pacienteActual.especialidadesInteres.map((e) => (
-                <Badge key={e} label={e} variant="outline" />
-              ))}
-            </View>
-          </View>
-
-          <View style={[styles.section, styles.divided]}>
-            <Text style={label(9)}>Horarios preferidos</Text>
-            <View style={styles.tagRow}>
-              {pacienteActual.horariosPreferidos.map((h) => (
-                <Badge key={h} label={h} variant="outline" />
-              ))}
-            </View>
-          </View>
-
-          <View style={[styles.section, styles.divided]}>
-            <Text style={label(9)}>Radio de búsqueda</Text>
-            <Text style={heading(22)}>{pacienteActual.radioKm} km</Text>
-          </View>
-        </Blueprint>
-        <Text style={body(13, colors.neutral700)}>
-          Usamos estas preferencias para decidir a quién ofrecer cada cupo liberado.
-        </Text>
-      </ScrollView>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <Text style={body(13, colors.neutral700)}>
+            Usamos estas preferencias para decidir a quién ofrecer cada cupo liberado.
+          </Text>
+          <PreferenciasForm
+            value={form}
+            onChange={(v) => {
+              setForm(v);
+              if (v.especialidadesInteres.length) setError(undefined);
+            }}
+            errorEspecialidades={error}
+          />
+        </ScrollView>
+        <View style={styles.footer}>
+          <PrimaryButton label="Guardar" onPress={guardar} disabled={guardando} />
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -60,22 +71,12 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    gap: 14,
+    gap: 16,
   },
-  card: {
-    paddingHorizontal: 16,
-  },
-  section: {
+  footer: {
     paddingVertical: 14,
-    gap: 8,
-  },
-  divided: {
+    paddingHorizontal: 18,
     borderTopWidth: 1,
     borderTopColor: colors.divider,
-  },
-  tagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
   },
 });

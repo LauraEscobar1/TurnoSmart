@@ -1,5 +1,6 @@
 import React, { useReducer } from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import { getFocusedRouteNameFromRoute, RouteProp } from "@react-navigation/native";
 import { colors } from "@/theme/colors";
 import { RootTabParamList } from "@/navigation/types";
 import { HomeScreen } from "@/screens/Home/HomeScreen";
@@ -12,40 +13,53 @@ import { contarNoLeidas } from "@/services/notificationsService";
 import { contarOfertasPendientes } from "@/services/offersService";
 import { notificacionesMock, ofertasMock } from "@/data/mockData";
 
-const Tab = createBottomTabNavigator<RootTabParamList>();
+const Tab = createMaterialTopTabNavigator<RootTabParamList>();
 
 /**
- * Navegación primaria (tab bar) — docs/03-navegacion.md §2.1.
- * Máximo 5 destinos, uno por sección de Nivel 1. Solo Ofertas y Avisos
+ * Deslizar entre secciones solo en la pantalla raíz de cada una: dentro de
+ * un detalle, el gesto horizontal es el «volver» de la pila.
+ */
+const soloEnRaiz = (route: RouteProp<RootTabParamList>, raiz: string) => ({
+  swipeEnabled: (getFocusedRouteNameFromRoute(route) ?? raiz) === raiz,
+});
+
+/**
+ * Navegación primaria deslizable — docs/03-navegacion.md §2.1 y
+ * "NavDeslizable.dc.html". Cinco destinos: se cambia de sección tocando
+ * un ícono o arrastrando el contenido a los lados. Solo Ofertas y Avisos
  * llevan badge; el de Ofertas cuenta ofertas pendientes de respuesta.
  */
 export function TabNavigator() {
-  // Los contadores se leen de los datos en cada foco de pestaña,
+  // Los contadores se leen de los datos en cada cambio de sección,
   // así el badge baja apenas se lee un aviso o se responde una oferta.
   const [, refrescar] = useReducer((n: number) => n + 1, 0);
-  const noLeidas = contarNoLeidas(notificacionesMock);
-  const pendientes = contarOfertasPendientes(ofertasMock);
+  const badges = {
+    Ofertas: contarOfertasPendientes(ofertasMock),
+    Notificaciones: contarNoLeidas(notificacionesMock),
+  };
 
   return (
     <Tab.Navigator
-      tabBar={(props) => <TabBar {...props} />}
-      sceneContainerStyle={{ backgroundColor: colors.bg }}
-      screenOptions={{ headerShown: false }}
+      tabBarPosition="bottom"
+      tabBar={(props) => <TabBar {...props} badges={badges} />}
+      screenOptions={{ lazy: false, swipeEnabled: true }}
       screenListeners={{ focus: refrescar, state: refrescar }}
+      style={{ backgroundColor: colors.bg }}
+      sceneContainerStyle={{ backgroundColor: colors.bg }}
     >
       <Tab.Screen name="Inicio" component={HomeScreen} options={{ title: "Inicio" }} />
+      <Tab.Screen name="Ofertas" component={OffersNavigator} options={{ title: "Ofertas" }} />
       <Tab.Screen
-        name="Ofertas"
-        component={OffersNavigator}
-        options={{ title: "Ofertas", tabBarBadge: pendientes > 0 ? pendientes : undefined }}
+        name="MisCitas"
+        component={AppointmentsNavigator}
+        options={({ route }) => ({ title: "Mis citas", ...soloEnRaiz(route, "AppointmentsList") })}
       />
-      <Tab.Screen name="MisCitas" component={AppointmentsNavigator} options={{ title: "Mis citas" }} />
+      <Tab.Screen name="Notificaciones" component={NotificationsScreen} options={{ title: "Avisos" }} />
       <Tab.Screen
-        name="Notificaciones"
-        component={NotificationsScreen}
-        options={{ title: "Avisos", tabBarBadge: noLeidas > 0 ? noLeidas : undefined }}
+        name="Perfil"
+        component={ProfileNavigator}
+        options={({ route }) => ({ title: "Perfil", ...soloEnRaiz(route, "ProfileHome") })}
       />
-      <Tab.Screen name="Perfil" component={ProfileNavigator} options={{ title: "Perfil" }} />
     </Tab.Navigator>
   );
 }

@@ -6,7 +6,7 @@
  * a los usados en el panel, para no romper el vocabulario controlado.
  */
 
-export type EstadoCita = "confirmada" | "cancelada" | "reasignada" | "no-show";
+export type EstadoCita = "confirmada" | "asistida" | "cancelada" | "reasignada" | "no-show";
 
 export interface Cita {
   id: string;
@@ -47,15 +47,30 @@ export interface FactorPrioridad {
   peso: number;
 }
 
+export type FranjaHoraria = "Mañana" | "Tarde" | "Indistinto";
+
+/** Distancia máxima al consultorio en km; `null` = sin límite. */
+export type DistanciaMaxima = 3 | 10 | null;
+
 export interface Paciente {
   id: string;
   nombre: string;
+  apellido: string;
+  dni: string;
   email: string;
   telefono: string;
+  /**
+   * Preferencias del registro (paso 2). Son los mismos factores que luego
+   * muestra el panel de explicabilidad de cada oferta.
+   */
   especialidadesInteres: string[];
-  horariosPreferidos: string[];
-  radioKm: number;
-  listaEspera: { dias: number; puesto: number };
+  franjaPreferida: FranjaHoraria;
+  distanciaMaxKm: DistanciaMaxima;
+  obraSocial: string;
+  notificacionesActivas: boolean;
+  /** Alta en la lista de espera; de acá sale «34 días». */
+  registradoEnISO: string;
+  puestoEspera: number;
 }
 
 export type TipoNotificacion =
