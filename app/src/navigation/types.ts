@@ -5,9 +5,16 @@ import { NavigatorScreenParams } from "@react-navigation/native";
  * docs/02-jerarquia.md y los flujos de docs/03-navegacion.md.
  */
 
-/** Acceso: iniciar sesión y registro en 3 pasos (sistema de diseño §04). */
+/**
+ * Acceso: intro (solo la primera vez) → bienvenida → iniciar sesión,
+ * registro en 3 pasos o restablecer contraseña.
+ */
 export type AuthStackParamList = {
-  Login: undefined;
+  Intro: undefined;
+  Bienvenida: undefined;
+  /** `aviso`: mensaje al volver, p. ej. tras restablecer la contraseña. */
+  Login: { aviso?: string } | undefined;
+  RestablecerPassword: { email?: string } | undefined;
   RegistroDatos: undefined;
   RegistroPreferencias: undefined;
   RegistroVerificacion: undefined;
