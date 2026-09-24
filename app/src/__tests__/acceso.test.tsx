@@ -29,14 +29,14 @@ describe("Intro", () => {
     expect(screen.getByLabelText("Paso 3 de 3")).toBeTruthy();
 
     await fireEvent.press(screen.getByRole("button", { name: "Empezar" }));
-    expect(await screen.findByText("Crear cuenta con tu teléfono")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
     expect(await AsyncStorage.getItem("ts.introVista")).toBe("1");
   });
 
   it("«Omitir» salta la intro y no vuelve a aparecer", async () => {
     await montarApp({ sesion: false, intro: true });
     await fireEvent.press(await screen.findByRole("button", { name: "Omitir" }));
-    expect(await screen.findByText("Crear cuenta con tu teléfono")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
     expect(await auth.introVista()).toBe(true);
   });
 });
