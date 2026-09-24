@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "@/theme/colors";
 import { body, heading } from "@/theme/typography";
 import { mmss } from "@/utils/format";
+import { radius } from "@/theme/spacing";
 
 export const LARGO_CODIGO = 6;
 const ESPERA_REENVIO = 60;
@@ -75,7 +76,11 @@ export function CodeInput({ value, onChange, autoFocus, testID = "codigo-input" 
   const inputRef = useRef<TextInput>(null);
 
   return (
-    <Pressable onPress={() => inputRef.current?.focus()} style={styles.cells} accessibilityLabel="Código de verificación">
+    <Pressable
+      onPress={() => inputRef.current?.focus()}
+      style={styles.cells}
+      accessibilityLabel="Código de verificación"
+    >
       {Array.from({ length: LARGO_CODIGO }, (_, i) => (
         <View key={i} style={[styles.cell, i === Math.min(value.length, LARGO_CODIGO - 1) && styles.cellActive]}>
           <Text style={heading(24)}>{value[i] ?? ""}</Text>
@@ -108,14 +113,17 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
-    height: 48,
+    height: 54,
     borderWidth: 1,
-    borderColor: colors.divider,
+    borderRadius: radius.md,
+    backgroundColor: colors.superficie,
+    borderColor: "rgba(29,45,61,0.16)",
     alignItems: "center",
     justifyContent: "center",
   },
   cellActive: {
     borderColor: colors.accent,
+    borderWidth: 1.5,
   },
   hiddenInput: {
     position: "absolute",
