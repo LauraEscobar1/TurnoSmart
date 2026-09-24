@@ -44,8 +44,8 @@ export function TabNavigator() {
       tabBar={(props) => <TabBar {...props} badges={badges} />}
       screenOptions={{ lazy: false, swipeEnabled: true }}
       screenListeners={{ focus: refrescar, state: refrescar }}
-      style={{ backgroundColor: colors.bg }}
-      sceneContainerStyle={{ backgroundColor: colors.bg }}
+      style={{ backgroundColor: colors.fondo }}
+      sceneContainerStyle={{ backgroundColor: colors.fondo }}
     >
       <Tab.Screen name="Inicio" component={HomeScreen} options={{ title: "Inicio" }} />
       <Tab.Screen name="Ofertas" component={OffersNavigator} options={{ title: "Ofertas" }} />
