@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
+import { sombra } from "@/theme/spacing";
 import { label } from "@/theme/typography";
 
 interface StepHeaderProps {
@@ -42,7 +43,7 @@ export function StepProgress({ step, total }: { step: number; total: number }) {
   return (
     <View style={styles.progress} accessibilityLabel={`Paso ${step} de ${total}`}>
       {Array.from({ length: total }, (_, i) => (
-        <View key={i} style={[styles.segment, { backgroundColor: i < step ? colors.accent : colors.neutral300 }]} />
+        <View key={i} style={[styles.segment, { backgroundColor: i < step ? colors.accent : colors.accent200 }]} />
       ))}
     </View>
   );
@@ -53,20 +54,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
   },
   backBar: {
-    paddingTop: 12,
+    paddingTop: 10,
     paddingHorizontal: 18,
   },
   back: {
-    width: 20,
-    height: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.superficie,
+    borderWidth: 1,
+    borderColor: colors.borde,
     alignItems: "center",
     justifyContent: "center",
+    ...sombra.sm,
   },
   count: {
     marginLeft: "auto",
@@ -74,10 +78,11 @@ const styles = StyleSheet.create({
   },
   progress: {
     flexDirection: "row",
-    gap: 4,
+    gap: 6,
   },
   segment: {
     flex: 1,
-    height: 3,
+    height: 5,
+    borderRadius: 3,
   },
 });
