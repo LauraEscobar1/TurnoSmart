@@ -6,7 +6,7 @@ import { colors } from "@/theme/colors";
 import { body, label } from "@/theme/typography";
 import { usePaciente } from "@/auth/AuthContext";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { Blueprint } from "@/components/Blueprint";
+import { Card } from "@/components/Card";
 
 /** "35482910" → "35.482.910" */
 const formatearDni = (dni: string) => dni.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -27,14 +27,14 @@ export function PersonalDataScreen() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <ScreenHeader title="Datos personales" onBack={navigation.goBack} />
       <View style={styles.content}>
-        <Blueprint>
+        <Card>
           {campos.map((c, i) => (
             <View key={c.label} style={[styles.row, i > 0 && styles.rowDivider]}>
               <Text style={label(9)}>{c.label}</Text>
               <Text style={body(15)}>{c.value}</Text>
             </View>
           ))}
-        </Blueprint>
+        </Card>
       </View>
     </SafeAreaView>
   );
@@ -43,7 +43,7 @@ export function PersonalDataScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
   },
   content: {
     padding: 18,
