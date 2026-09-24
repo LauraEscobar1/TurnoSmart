@@ -10,7 +10,7 @@ import { getCitaPorId } from "@/services/appointmentsService";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Badge } from "@/components/Badge";
 import { estadoCita } from "@/components/AppointmentCard";
-import { Blueprint } from "@/components/Blueprint";
+import { Card } from "@/components/Card";
 import { DataRow } from "@/components/OfferCard";
 import { fechaConDia, hora } from "@/utils/format";
 
@@ -31,7 +31,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
       <ScreenHeader title="Detalle de cita" onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("AppointmentsList"))} />
       {cita && e && (
         <ScrollView contentContainerStyle={styles.content}>
-          <Blueprint style={styles.card}>
+          <Card style={styles.card}>
             <Badge label={e.label} variant={e.variant} />
             <View>
               <Text style={heading(32)}>{cita.especialidad}</Text>
@@ -46,7 +46,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
                 {cita.origen === "cupo-recuperado" ? "Cupo de último minuto" : "Reserva directa"}
               </Text>
             </View>
-          </Blueprint>
+          </Card>
         </ScrollView>
       )}
     </SafeAreaView>
@@ -56,7 +56,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
   },
   content: {
     padding: 18,
