@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
+import { sombra } from "@/theme/spacing";
 import { heading, label } from "@/theme/typography";
 
 interface ScreenHeaderProps {
@@ -30,7 +31,7 @@ export function ScreenHeader({ title, onBack, seccion }: ScreenHeaderProps) {
 
   return (
     <View style={[styles.bar, styles.titleBar]}>
-      <Text style={heading(24)}>{title}</Text>
+      <Text style={heading(28)}>{title}</Text>
       {seccion ? <Text style={label(9)}>{seccion} / 5 · deslizá</Text> : null}
     </View>
   );
@@ -39,25 +40,29 @@ export function ScreenHeader({ title, onBack, seccion }: ScreenHeaderProps) {
 const styles = StyleSheet.create({
   bar: {
     paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
   },
   titleBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingTop: 14,
+    paddingBottom: 6,
   },
   backBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 12,
+    gap: 12,
+    paddingVertical: 10,
   },
   backButton: {
-    width: 20,
-    height: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.superficie,
+    borderWidth: 1,
+    borderColor: colors.borde,
     alignItems: "center",
     justifyContent: "center",
+    ...sombra.sm,
   },
 });
