@@ -8,7 +8,7 @@ import { AuthStackParamList } from "@/navigation/types";
 import { useAuth } from "@/auth/AuthContext";
 import { AuthError, enviarCodigo } from "@/services/authService";
 import { pedirPermisoNotificaciones } from "@/services/permisosService";
-import { Blueprint } from "@/components/Blueprint";
+import { Card } from "@/components/Card";
 import { CodeInput, LARGO_CODIGO, ReenviarCodigo, useEnvioCodigo } from "@/components/CodeInput";
 import { CheckRow } from "@/components/forms";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -71,13 +71,13 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <ReenviarCodigo restante={envio.restante} codigoPrueba={envio.codigoPrueba} onReenviar={envio.reenviar} />
 
-      <Blueprint style={styles.notice}>
+      <Card style={styles.notice}>
         <Ionicons name="notifications-outline" size={18} color={colors.accent700} style={{ marginTop: 1 }} />
         <Text style={[body(13, colors.neutral700), { flex: 1 }]}>
           <Text style={styles.strong}>Activá las notificaciones.</Text> Las ofertas de cupo duran minutos: sin push, te
           las perdés.
         </Text>
-      </Blueprint>
+      </Card>
 
       <CheckRow checked={acepta} onChange={setAcepta}>
         Acepto términos y política de privacidad
