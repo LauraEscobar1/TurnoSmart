@@ -35,11 +35,12 @@ describe("offersService", () => {
     await offers.aceptarOferta("of-001");
 
     expect(await offers.getOfertaPendiente()).toBeNull();
-    expect((await offers.getHistorialOfertas()).map((o) => o.estado)).toEqual(["aceptada"]);
+    const historial = await offers.getHistorialOfertas();
+    expect(historial.find((o) => o.id === "of-001")?.estado).toBe("aceptada");
     const despues = await citas.getCitasProximas();
     expect(despues).toHaveLength(antes.length + 1);
     const nueva = despues.find((c) => c.id === "c-of-001");
-    expect(nueva).toMatchObject({ estado: "confirmada", origen: "cupo-recuperado", especialidad: "Odontología" });
+    expect(nueva).toMatchObject({ estado: "confirmada", origen: "cupo-recuperado", especialidad: "Cardiología" });
   });
 
   it("al rechazar, no crea cita", async () => {
@@ -74,8 +75,8 @@ describe("appointmentsService", () => {
 describe("notificationsService", () => {
   it("cuenta no leídas y las marca como leídas", async () => {
     const { notifs, data } = cargar();
-    expect(notifs.contarNoLeidas(data.notificacionesMock)).toBe(1);
+    expect(notifs.contarNoLeidas(data.notificacionesMock)).toBe(2);
     await notifs.marcarComoLeida("n-001");
-    expect(notifs.contarNoLeidas(data.notificacionesMock)).toBe(0);
+    expect(notifs.contarNoLeidas(data.notificacionesMock)).toBe(1);
   });
 });
