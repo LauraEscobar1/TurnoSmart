@@ -1,7 +1,8 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
+import { body, heading } from "@/theme/typography";
+import { Blueprint } from "@/components/Blueprint";
 
 interface EmptyStateProps {
   title: string;
@@ -10,28 +11,21 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description }: EmptyStateProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      {description ? <Text style={styles.description}>{description}</Text> : null}
-    </View>
+    <Blueprint style={styles.container}>
+      <Text style={[heading(20), styles.center]}>{title}</Text>
+      {description ? <Text style={[body(13, colors.neutral700), styles.center]}>{description}</Text> : null}
+    </Blueprint>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: spacing.xl,
+    paddingVertical: 26,
+    paddingHorizontal: 18,
     alignItems: "center",
-    gap: spacing.xs,
+    gap: 6,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.textPrimary,
-    textAlign: "center",
-  },
-  description: {
-    fontSize: 14,
-    color: colors.textSecondary,
+  center: {
     textAlign: "center",
   },
 });
