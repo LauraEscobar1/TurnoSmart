@@ -9,6 +9,7 @@ import { dia, hora, mes } from "@/utils/format";
 
 export const estadoCita: Record<Cita["estado"], { label: string; variant: BadgeVariant }> = {
   confirmada: { label: "Confirmada", variant: "solid" },
+  asistida: { label: "Asistida", variant: "neutral" },
   cancelada: { label: "Cancelada", variant: "lost" },
   reasignada: { label: "Reasignada", variant: "outline" },
   "no-show": { label: "No asistió", variant: "neutral" },
