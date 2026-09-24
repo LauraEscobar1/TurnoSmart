@@ -2,9 +2,10 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { EstadoOferta, OfertaCupo } from "@/types/domain";
 import { colors } from "@/theme/colors";
+import { radius } from "@/theme/spacing";
 import { body, heading, label } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
-import { Blueprint } from "@/components/Blueprint";
+import { Card } from "@/components/Card";
 import { Countdown, useCountdown } from "@/components/Countdown";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { fechaConDia, hora, diaRelativo } from "@/utils/format";
@@ -49,7 +50,7 @@ function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress
   const expirada = segundos === 0;
 
   return (
-    <Blueprint style={[styles.home, expirada && styles.expired]}>
+    <Card tono="acento" style={[styles.home, expirada && styles.expired]}>
       <View style={styles.topRow}>
         <Badge label={expirada ? "Oferta expirada" : "Oferta para vos"} variant={expirada ? "lost" : "accent"} />
         {!expirada && (
@@ -69,7 +70,7 @@ function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress
         </Text>
       </View>
       <PrimaryButton label="Ver oferta" onPress={onPress} disabled={expirada} />
-    </Blueprint>
+    </Card>
   );
 }
 
@@ -78,7 +79,7 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
   const expirada = segundos === 0;
 
   return (
-    <Blueprint style={styles.full}>
+    <Card style={styles.full}>
       <View style={styles.topRow}>
         <Badge label={expirada ? "Oferta expirada" : "Oferta para vos"} variant={expirada ? "lost" : "tint"} />
         {!expirada && <Countdown segundos={segundos} size={26} caption="para responder" />}
@@ -91,17 +92,23 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
       </View>
       <DataRow fecha={fechaConDia(oferta.fechaHoraISO)} hora={hora(oferta.fechaHoraISO)} size={19} />
       <View style={styles.actions}>
-        <PrimaryButton label="Rechazar" variant="secondary" onPress={onRechazar} disabled={expirada} style={styles.action} />
+        <PrimaryButton
+          label="Rechazar"
+          variant="secondary"
+          onPress={onRechazar}
+          disabled={expirada}
+          style={styles.action}
+        />
         <PrimaryButton label="Aceptar cupo" onPress={onAceptar} disabled={expirada} style={styles.action} />
       </View>
-    </Blueprint>
+    </Card>
   );
 }
 
 function PendingOfferRow({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress">) {
   const segundos = useCountdown(oferta.expiraEnISO);
   return (
-    <Blueprint onPress={onPress} style={styles.row}>
+    <Card onPress={onPress} style={styles.row}>
       <View style={styles.rowTop}>
         <Text style={heading(19)}>{oferta.especialidad}</Text>
         {segundos > 0 ? (
@@ -113,7 +120,7 @@ function PendingOfferRow({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "o
       <Text style={body(12, colors.neutral700)}>
         {diaRelativo(oferta.fechaHoraISO)} {hora(oferta.fechaHoraISO)} · {oferta.consultorio}
       </Text>
-    </Blueprint>
+    </Card>
   );
 }
 
@@ -128,12 +135,12 @@ const estadoHistorial: Record<EstadoOferta, { label: string; variant: BadgeVaria
 function OfferHistoryRow({ oferta }: { oferta: OfertaCupo }) {
   const estado = estadoHistorial[oferta.estado];
   return (
-    <Blueprint style={[styles.row, styles.rowTop, styles.expired]}>
+    <Card tono="plana" style={[styles.row, styles.rowTop, styles.expired]}>
       <Text style={[heading(17), { flex: 1 }]} numberOfLines={1}>
         {oferta.especialidad}
       </Text>
       <Badge label={estado.label} variant={estado.variant} style={styles.centered} />
-    </Blueprint>
+    </Card>
   );
 }
 
@@ -155,12 +162,11 @@ export function DataRow({ fecha, hora: h, size }: { fecha: string; hora: string;
 
 const styles = StyleSheet.create({
   home: {
-    padding: 14,
-    gap: 10,
-    backgroundColor: colors.accent100,
+    padding: 16,
+    gap: 12,
   },
   full: {
-    padding: 18,
+    padding: 20,
     gap: 14,
   },
   expired: {
@@ -180,7 +186,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   row: {
-    padding: 14,
+    padding: 16,
   },
   rowTop: {
     flexDirection: "row",
@@ -193,17 +199,14 @@ const styles = StyleSheet.create({
   },
   dataRow: {
     flexDirection: "row",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.divider,
+    gap: 10,
   },
   dataCell: {
     flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    backgroundColor: colors.accent100,
   },
-  dataCellRight: {
-    paddingLeft: 14,
-    borderLeftWidth: 1,
-    borderLeftColor: colors.divider,
-  },
+  dataCellRight: {},
 });
