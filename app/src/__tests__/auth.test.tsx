@@ -3,7 +3,7 @@ import * as Notifications from "expo-notifications";
 import { fireEvent, screen } from "@testing-library/react-native";
 import * as auth from "@/services/authService";
 import { CUENTA_DEMO } from "@/data/mockData";
-import { montarApp, reiniciarDatos } from "@/test-utils/app";
+import { irALogin, montarApp, reiniciarDatos } from "@/test-utils/app";
 
 beforeEach(async () => {
   await reiniciarDatos();
@@ -84,20 +84,22 @@ describe("authService", () => {
 describe("Acceso en pantalla", () => {
   it("sin sesión muestra el inicio de sesión; con credenciales válidas entra a Home", async () => {
     await montarApp({ sesion: false });
-    expect(await screen.findByText("Bienvenido\nde nuevo")).toBeTruthy();
+    expect(await screen.findByText("Crear cuenta con tu teléfono")).toBeTruthy();
+    await irALogin();
 
     await fireEvent.changeText(screen.getByLabelText("Correo electrónico"), CUENTA_DEMO.email);
     await fireEvent.changeText(screen.getByLabelText("Contraseña"), "mala");
-    await fireEvent.press(screen.getByText("Iniciar sesión"));
+    await fireEvent.press(screen.getByRole("button", { name: "Iniciar sesión" }));
     expect(await screen.findByText("El correo o la contraseña no coinciden.")).toBeTruthy();
 
     await fireEvent.changeText(screen.getByLabelText("Contraseña"), CUENTA_DEMO.password);
-    await fireEvent.press(screen.getByText("Iniciar sesión"));
+    await fireEvent.press(screen.getByRole("button", { name: "Iniciar sesión" }));
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
   });
 
   it("Face ID: pide ingresar una vez con correo si no hay usuario recordado", async () => {
     await montarApp({ sesion: false });
+    await irALogin();
     await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
     expect(await screen.findByText("Ingresá una vez con tu correo para activar Face ID.")).toBeTruthy();
     expect(LocalAuthentication.authenticateAsync).not.toHaveBeenCalled();
@@ -107,6 +109,7 @@ describe("Acceso en pantalla", () => {
     await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
     await auth.cerrarSesion();
     await montarApp({ sesion: false });
+    await irALogin();
 
     await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
@@ -118,9 +121,10 @@ describe("Acceso en pantalla", () => {
     await auth.cerrarSesion();
     jest.mocked(LocalAuthentication.authenticateAsync).mockResolvedValueOnce({ success: false, error: "user_cancel" });
     await montarApp({ sesion: false });
+    await irALogin();
 
     await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
-    expect(screen.getByText("Bienvenido\nde nuevo")).toBeTruthy();
+    expect(screen.getByText("Ingresá a tu cuenta")).toBeTruthy();
     expect(screen.queryByText("Martín Ávila")).toBeNull();
   });
 
@@ -128,7 +132,7 @@ describe("Acceso en pantalla", () => {
     // Espía sin reemplazar: el servicio real genera el código y lo leemos.
     const enviar = jest.spyOn(auth, "enviarCodigo");
     await montarApp({ sesion: false });
-    await fireEvent.press(await screen.findByText("Crear cuenta"));
+    await fireEvent.press(await screen.findByText("Crear cuenta con tu teléfono"));
 
     // Paso 1 — datos
     expect(await screen.findByText("Tus datos")).toBeTruthy();
@@ -142,6 +146,11 @@ describe("Acceso en pantalla", () => {
     await fireEvent.changeText(screen.getByLabelText("Correo electrónico"), CUENTA_DEMO.email);
     await fireEvent.changeText(screen.getByLabelText("Teléfono"), "+54 11 4444 1234");
     await fireEvent.changeText(screen.getByLabelText("Contraseña"), "segura123");
+    await fireEvent.changeText(screen.getByLabelText("Confirmar contraseña"), "otra1234");
+    await fireEvent.press(screen.getByText("Continuar"));
+    expect(await screen.findByText("Las contraseñas no coinciden.")).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByLabelText("Confirmar contraseña"), "segura123");
     await fireEvent.press(screen.getByText("Continuar"));
     expect(await screen.findByText("Ya existe una cuenta con este correo.")).toBeTruthy();
 
@@ -197,9 +206,9 @@ describe("Acceso en pantalla", () => {
 
   it("la flecha del registro vuelve a la pantalla anterior", async () => {
     await montarApp({ sesion: false });
-    await fireEvent.press(await screen.findByText("Crear cuenta"));
+    await fireEvent.press(await screen.findByText("Crear cuenta con tu teléfono"));
     await fireEvent.changeText(await screen.findByLabelText("Nombre"), "Laura");
     await fireEvent.press(screen.getByLabelText("Volver"));
-    expect(await screen.findByText("Bienvenido\nde nuevo")).toBeTruthy();
+    expect(await screen.findByText("Crear cuenta con tu teléfono")).toBeTruthy();
   });
 });
