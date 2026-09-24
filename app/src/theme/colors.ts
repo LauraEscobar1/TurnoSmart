@@ -5,8 +5,13 @@
  * se codifica con contorno vs. relleno tenue vs. campo sólido.
  */
 export const colors = {
+  // Estilo suave: fondo de pantalla levemente acerado y superficies blancas.
+  fondo: "#f3f7fc",
+  superficie: "#ffffff",
+  borde: "rgba(29,45,61,0.10)",
+
   // Roles
-  bg: "#f2f2f3", // Papel
+  bg: "#f2f2f3", // Papel (texto e íconos sobre campos oscuros)
   surface: "#e9e9ea",
   text: "#1d1f20", // Tinta
   accent: "#5980a6", // Acero
