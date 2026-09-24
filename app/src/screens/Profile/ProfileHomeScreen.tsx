@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
@@ -9,6 +10,7 @@ import { ProfileStackParamList } from "@/navigation/types";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
 import { abrirAjustes, pedirPermisoNotificaciones } from "@/services/permisosService";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { Card } from "@/components/Card";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -59,7 +61,7 @@ export function ProfileHomeScreen() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <ScreenHeader title="Perfil" seccion={5} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Pressable
+        <Card
           style={styles.identity}
           onPress={() => navigation.navigate("PersonalData")}
           accessibilityRole="button"
@@ -74,21 +76,22 @@ export function ProfileHomeScreen() {
             </Text>
             <Text style={body(12, colors.neutral700)}>{paciente.email}</Text>
           </View>
-        </Pressable>
+          <Ionicons name="chevron-forward" size={18} color={colors.neutral600} />
+        </Card>
 
-        <View style={styles.list}>
-          {filas.map((f) => (
+        <Card style={styles.list}>
+          {filas.map((f, i) => (
             <Pressable
               key={f.label}
               onPress={f.onPress}
               accessibilityRole="button"
-              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.row, i > 0 && styles.rowDivider, pressed && styles.pressed]}
             >
-              <Text style={body(13)}>{f.label}</Text>
-              <Text style={body(13, colors.neutral600)}>{f.valor}</Text>
+              <Text style={body(14, f.label === "Cerrar sesión" ? colors.accent700 : colors.text)}>{f.label}</Text>
+              <Text style={body(14, colors.neutral600)}>{f.valor}</Text>
             </Pressable>
           ))}
-        </View>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -97,7 +100,7 @@ export function ProfileHomeScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
   },
   content: {
     padding: 18,
@@ -107,27 +110,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
+    padding: 16,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderWidth: 1,
-    borderColor: colors.divider,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.accent100,
     alignItems: "center",
     justifyContent: "center",
   },
   list: {
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    overflow: "hidden",
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+  },
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.borde,
   },
   pressed: {
-    backgroundColor: "rgba(29,31,32,0.07)",
+    backgroundColor: colors.accent100,
   },
 });
