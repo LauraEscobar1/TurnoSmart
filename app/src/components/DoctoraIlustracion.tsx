@@ -47,13 +47,13 @@ export function DoctoraIlustracion({ width, saludo = "¡Hola!" }: Props) {
       <SvgText x={57} y={43} fontSize={21} fontFamily={fonts.heading} fill={colors.bg} textAnchor="middle">
         {saludo}
       </SvgText>
-      <Path d="M104 70 L118 74" stroke={TINTA} strokeWidth={1} />
+      <Path d="M104 70 L122 74" stroke={TINTA} strokeWidth={1} />
 
       {/* Piernas y zapatos */}
-      <Rect x={124} y={236} width={20} height={44} rx={4} fill={AMBO} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={150} y={236} width={20} height={44} rx={4} fill={AMBO} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={116} y={276} width={30} height={12} rx={6} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={148} y={276} width={30} height={12} rx={6} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
+      <Rect x={129} y={236} width={15} height={50} rx={3} fill={AMBO} stroke={TINTA} strokeWidth={TRAZO} />
+      <Rect x={150} y={236} width={15} height={50} rx={3} fill={AMBO} stroke={TINTA} strokeWidth={TRAZO} />
+      <Rect x={122} y={284} width={24} height={10} rx={5} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
+      <Rect x={148} y={284} width={24} height={10} rx={5} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
 
       {/* Brazo izquierdo (detrás de la bata) */}
       <Path
@@ -94,23 +94,23 @@ export function DoctoraIlustracion({ width, saludo = "¡Hola!" }: Props) {
       <Circle cx={151} cy={176} r={7} fill={AMBO} stroke={PELO} strokeWidth={2.4} />
 
       {/* Cuello y cabeza */}
-      <Rect x={139} y={88} width={16} height={14} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={122} y={36} width={50} height={60} rx={25} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
+      <Rect x={140} y={86} width={14} height={16} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
+      <Rect x={126} y={40} width={42} height={52} rx={21} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
       {/* Pelo: flequillo recto y rodete */}
       <Path
-        d="M122 62 C122 42 133 34 147 34 C162 34 172 42 172 58 C162 56 150 52 142 46 C136 54 128 58 122 62 Z"
+        d="M126 62 C126 45 135 38 147 38 C159 38 168 45 168 58 C160 56 150 52 143 47 C138 54 132 58 126 62 Z"
         fill={PELO}
         stroke={TINTA}
         strokeWidth={TRAZO}
         strokeLinejoin="round"
       />
-      <Circle cx={170} cy={40} r={9} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
+      <Circle cx={165} cy={42} r={7.5} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
       {/* Cara */}
-      <Circle cx={138} cy={70} r={2.2} fill={TINTA} />
-      <Circle cx={156} cy={70} r={2.2} fill={TINTA} />
-      <Path d="M140 80 Q147 86 154 80" fill="none" stroke={TINTA} strokeWidth={1.4} strokeLinecap="round" />
-      <Circle cx={133} cy={78} r={3} fill={colors.accent300} opacity={0.8} />
-      <Circle cx={161} cy={78} r={3} fill={colors.accent300} opacity={0.8} />
+      <Circle cx={140} cy={69} r={2} fill={TINTA} />
+      <Circle cx={154} cy={69} r={2} fill={TINTA} />
+      <Path d="M142 78 Q147 83 152 78" fill="none" stroke={TINTA} strokeWidth={1.4} strokeLinecap="round" />
+      <Circle cx={135} cy={76} r={2.6} fill={colors.accent300} opacity={0.8} />
+      <Circle cx={159} cy={76} r={2.6} fill={colors.accent300} opacity={0.8} />
 
       {/* Brazo derecho con la tablilla */}
       <Rect x={172} y={170} width={40} height={52} rx={5} fill="#ffffff" stroke={TINTA} strokeWidth={TRAZO} />
@@ -118,7 +118,14 @@ export function DoctoraIlustracion({ width, saludo = "¡Hola!" }: Props) {
       <Rect x={180} y={182} width={24} height={4} rx={2} fill={colors.accent300} />
       <Rect x={180} y={190} width={16} height={4} rx={2} fill={colors.accent200} />
       <Circle cx={192} cy={206} r={8} fill={PELO} />
-      <Path d="M188 206 L191 209 L196 203" fill="none" stroke="#ffffff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path
+        d="M188 206 L191 209 L196 203"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <Path
         d="M178 112 C190 136 194 164 186 190 C184 196 176 196 176 188 L174 150 Z"
         fill={BATA}
