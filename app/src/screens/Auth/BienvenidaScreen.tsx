@@ -80,7 +80,8 @@ const styles = StyleSheet.create({
   ilustracion: {
     flex: 1,
     alignItems: "flex-end",
-    justifyContent: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 20,
   },
   texto: {
     paddingHorizontal: 28,
