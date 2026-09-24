@@ -1,40 +1,68 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { colors } from "@/theme/colors";
-import { radius, spacing } from "@/theme/spacing";
+import { fonts } from "@/theme/typography";
 
-type BadgeVariant = "success" | "warning" | "danger" | "neutral";
+/**
+ * Etiqueta de estado. La paleta es mono: el estado se codifica por
+ * relleno, nunca por color (docs del sistema §02 Vocabulario y estados).
+ *
+ * - outline: disponible, todavía no compromete a nadie.
+ * - tint:    hay un reloj corriendo (oferta enviada / pendiente).
+ * - accent:  tag sólido de acero ("Oferta para vos" en Home).
+ * - solid:   estado terminal positivo (confirmada, recuperado).
+ * - neutral: dato neutro (asistida, preferencias).
+ * - lost:    terminal negativo — gris tachado, sin dramatismo.
+ * - risk:    hipótesis de la IA — contorno punteado.
+ */
+export type BadgeVariant = "outline" | "tint" | "accent" | "solid" | "neutral" | "lost" | "risk";
 
 interface BadgeProps {
   label: string;
   variant?: BadgeVariant;
+  style?: StyleProp<ViewStyle>;
 }
 
-const variantColor: Record<BadgeVariant, string> = {
-  success: colors.secondary,
-  warning: colors.warning,
-  danger: colors.danger,
-  neutral: colors.textSecondary,
-};
-
-export function Badge({ label, variant = "neutral" }: BadgeProps) {
+export function Badge({ label, variant = "neutral", style }: BadgeProps) {
   return (
-    <View style={[styles.container, { backgroundColor: variantColor[variant] }]}>
-      <Text style={styles.text}>{label}</Text>
+    <View style={[styles.container, containerByVariant[variant], style]}>
+      <Text style={[styles.text, textByVariant[variant]]}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.full,
     alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   text: {
-    color: colors.textInverse,
-    fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fonts.body,
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
+});
+
+const containerByVariant = StyleSheet.create({
+  outline: { borderColor: colors.accent },
+  tint: { backgroundColor: colors.accent100 },
+  accent: { backgroundColor: colors.accent },
+  solid: { backgroundColor: colors.accent900 },
+  neutral: { backgroundColor: colors.neutral100 },
+  lost: { backgroundColor: colors.neutral100 },
+  risk: { borderColor: colors.accent, borderStyle: "dashed" },
+});
+
+const textByVariant = StyleSheet.create({
+  outline: { color: colors.accent700 },
+  tint: { color: colors.accent800 },
+  accent: { color: colors.bg },
+  solid: { color: colors.bg },
+  neutral: { color: colors.neutral800 },
+  lost: { color: colors.neutral800, textDecorationLine: "line-through" },
+  risk: { color: colors.accent700 },
 });
