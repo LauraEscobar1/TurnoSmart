@@ -4,6 +4,7 @@ import { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
+import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { RootTabParamList } from "@/navigation/types";
 
@@ -22,14 +23,20 @@ export type TabBadges = Partial<Record<keyof RootTabParamList, number>>;
 
 /**
  * Navegación primaria deslizable — "TabBar.dc.html" / "NavDeslizable.dc.html".
- * Un bloque sólido (acero 900, filete superior de acero) sigue al dedo
+ * Un bloque sólido redondeado (acero 900) sigue al dedo
  * mientras se arrastra el contenido. La sección actual lleva el ícono
  * ampliado en papel y la etiqueta en negrita.
  *
  * Todo lo que se mueve con el arrastre (bloque, ícono, etiqueta) se anima
  * solo con transform y opacity, para correr en el hilo nativo.
  */
-export function TabBar({ state, descriptors, navigation, position, badges = {} }: MaterialTopTabBarProps & { badges?: TabBadges }) {
+export function TabBar({
+  state,
+  descriptors,
+  navigation,
+  position,
+  badges = {},
+}: MaterialTopTabBarProps & { badges?: TabBadges }) {
   const insets = useSafeAreaInsets();
   const [width, setWidth] = useState(0);
   const count = state.routes.length;
@@ -41,17 +48,19 @@ export function TabBar({ state, descriptors, navigation, position, badges = {} }
         {width > 0 && (
           <Animated.View
             pointerEvents="none"
-            style={[styles.indicator, { width: tabWidth, transform: [{ translateX: Animated.multiply(position, tabWidth) }] }]}
+            style={[
+              styles.indicator,
+              { width: tabWidth, transform: [{ translateX: Animated.multiply(position, tabWidth) }] },
+            ]}
           >
             <View style={styles.block} />
-            <View style={styles.strip} />
           </Animated.View>
         )}
 
         {state.routes.map((route, i) => {
           const { options } = descriptors[route.key];
           const focused = state.index === i;
-          const title = typeof options.tabBarLabel === "string" ? options.tabBarLabel : options.title ?? route.name;
+          const title = typeof options.tabBarLabel === "string" ? options.tabBarLabel : (options.title ?? route.name);
           const badge = badges[route.name as keyof RootTabParamList];
           const icon = iconByRoute[route.name as keyof RootTabParamList];
 
@@ -59,7 +68,11 @@ export function TabBar({ state, descriptors, navigation, position, badges = {} }
           const range = [i - 0.5, i - 0.499, i + 0.499, i + 0.5];
           const on = position.interpolate({ inputRange: range, outputRange: [0, 1, 1, 0], extrapolate: "clamp" });
           const off = position.interpolate({ inputRange: range, outputRange: [1, 0, 0, 1], extrapolate: "clamp" });
-          const scale = position.interpolate({ inputRange: range, outputRange: [1, 1.12, 1.12, 1], extrapolate: "clamp" });
+          const scale = position.interpolate({
+            inputRange: range,
+            outputRange: [1, 1.12, 1.12, 1],
+            extrapolate: "clamp",
+          });
           const lift = position.interpolate({ inputRange: range, outputRange: [0, -1, -1, 0], extrapolate: "clamp" });
 
           const onPress = () => {
@@ -108,8 +121,8 @@ export function TabBar({ state, descriptors, navigation, position, badges = {} }
 const styles = StyleSheet.create({
   bar: {
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    backgroundColor: colors.bg,
+    borderTopColor: colors.borde,
+    backgroundColor: colors.superficie,
   },
   row: {
     height: BAR_HEIGHT,
@@ -123,19 +136,12 @@ const styles = StyleSheet.create({
   },
   block: {
     position: "absolute",
-    top: 6,
-    bottom: 6,
-    left: 5,
-    right: 5,
+    top: 7,
+    bottom: 7,
+    left: 6,
+    right: 6,
+    borderRadius: radius.md + 2,
     backgroundColor: colors.accent900,
-  },
-  strip: {
-    position: "absolute",
-    top: -1,
-    left: 5,
-    right: 5,
-    height: 3,
-    backgroundColor: colors.accent,
   },
   cell: {
     flex: 1,
@@ -190,7 +196,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.accent,
     borderWidth: 2,
-    borderColor: colors.bg,
+    borderColor: colors.superficie,
+    borderRadius: radius.pill,
   },
   badgeText: {
     fontFamily: fonts.bodyBold,
