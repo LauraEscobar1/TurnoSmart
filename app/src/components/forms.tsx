@@ -2,6 +2,7 @@ import React, { forwardRef, useState } from "react";
 import { Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
+import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 
 /**
@@ -21,7 +22,7 @@ interface TextFieldProps extends TextInputProps {
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
   { label, error, hint, style, onFocus, onBlur, revelable, secureTextEntry, ...input },
-  ref,
+  ref
 ) {
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -180,29 +181,29 @@ const styles = StyleSheet.create({
     color: "rgba(29,31,32,0.7)",
   },
   input: {
-    minHeight: 40,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    minHeight: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.text,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.superficie,
     borderWidth: 1,
-    borderColor: colors.divider,
-    borderRadius: 0,
+    borderColor: "rgba(29,45,61,0.16)",
+    borderRadius: radius.md,
     // Web: el anillo de foco del navegador va en acero, como pide el sistema
     // (:focus-visible con contorno en acento), no en el azul por defecto.
     outlineColor: colors.accent,
   },
   inputConOjo: {
-    paddingRight: 42,
+    paddingRight: 46,
   },
   ojo: {
     position: "absolute",
     right: 0,
     top: 0,
     bottom: 0,
-    width: 42,
+    width: 46,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -226,31 +227,32 @@ const styles = StyleSheet.create({
   },
   seg: {
     flexDirection: "row",
+    padding: 3,
+    gap: 3,
+    borderRadius: radius.md,
+    backgroundColor: colors.superficie,
     borderWidth: 1,
-    borderColor: colors.divider,
-    overflow: "hidden",
+    borderColor: "rgba(29,45,61,0.16)",
   },
   segInline: {
     alignSelf: "flex-start",
   },
   segOpt: {
     paddingVertical: 9,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    borderRadius: radius.sm + 1,
     alignItems: "center",
     justifyContent: "center",
   },
   segOptFill: {
     flex: 1,
   },
-  segOptDivider: {
-    borderLeftWidth: 1,
-    borderLeftColor: colors.divider,
-  },
+  segOptDivider: {},
   segOptChecked: {
     backgroundColor: colors.accent,
   },
   pressed: {
-    backgroundColor: "rgba(29,31,32,0.07)",
+    backgroundColor: colors.accent100,
   },
   segText: {
     fontFamily: fonts.body,
@@ -258,7 +260,8 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   segTextChecked: {
-    color: colors.bg,
+    color: "#ffffff",
+    fontFamily: fonts.bodyMedium,
   },
   chips: {
     flexDirection: "row",
@@ -266,16 +269,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   chip: {
-    paddingVertical: 7,
-    paddingHorizontal: 11,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderWidth: 1,
+    borderRadius: radius.pill,
   },
   chipOn: {
     backgroundColor: colors.accent900,
     borderColor: colors.accent900,
   },
   chipOff: {
-    borderColor: colors.accent,
+    backgroundColor: colors.superficie,
+    borderColor: colors.accent300,
   },
   chipText: {
     fontFamily: fonts.body,
@@ -291,7 +296,8 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 1.5,
-    borderColor: colors.divider,
+    borderColor: colors.accent300,
+    backgroundColor: colors.superficie,
     alignItems: "center",
     justifyContent: "center",
   },
