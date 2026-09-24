@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/theme/colors";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AppointmentsStackParamList } from "@/navigation/types";
 import { AppointmentsListScreen } from "@/screens/Appointments/AppointmentsListScreen";
@@ -8,7 +9,7 @@ const Stack = createNativeStackNavigator<AppointmentsStackParamList>();
 
 export function AppointmentsNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: true }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen
         name="AppointmentsList"
         component={AppointmentsListScreen}
