@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
+import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { EmptyState } from "@/components/EmptyState";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { SubTabs } from "@/components/SubTabs";
+import { Segmented } from "@/components/forms";
 import { Cita } from "@/types/domain";
 import { getCitasPasadas, getCitasProximas } from "@/services/appointmentsService";
 import { AppointmentsStackParamList } from "@/navigation/types";
@@ -29,7 +29,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
     if (route.params?.tab) setTab(route.params.tab);
   }, [route.params?.tab]);
 
-  useFocusEffect(
+  useCargarDatos(
     useCallback(() => {
       getCitasProximas().then(setProximas);
       getCitasPasadas().then(setPasadas);
@@ -40,17 +40,20 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Mis citas" />
-      <SubTabs
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: "proximas", label: "Próximas" },
-          { value: "pasadas", label: "Pasadas" },
-        ]}
-      />
+      <ScreenHeader title="Mis citas" seccion={3} />
       <FlatList
         contentContainerStyle={styles.content}
+        ListHeaderComponent={
+          <Segmented
+            fill={false}
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: "proximas", label: "Próximas" },
+              { value: "pasadas", label: "Pasadas" },
+            ]}
+          />
+        }
         data={esPasada ? pasadas : proximas}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -75,6 +78,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    gap: 16,
+    gap: 12,
   },
 });

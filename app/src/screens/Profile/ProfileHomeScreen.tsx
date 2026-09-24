@@ -1,52 +1,94 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
-import { body, heading, label } from "@/theme/typography";
+import { body, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
-import { pacienteActual } from "@/data/mockData";
+import { useAuth, usePaciente } from "@/auth/AuthContext";
+import { abrirAjustes, pedirPermisoNotificaciones } from "@/services/permisosService";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { Blueprint } from "@/components/Blueprint";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
 /**
- * Perfil — Nivel 1, navegación tipo stack simple hacia
- * sub-secciones de baja frecuencia de uso (docs/02-jerarquia.md §2).
+ * Perfil — Nivel 1 ("NavDeslizable.dc.html", sección 5 / 5).
+ * Iniciales, nombre y correo; debajo, filas de un pelo con el dato a la derecha.
  */
 export function ProfileHomeScreen() {
   const navigation = useNavigation<Nav>();
+  const paciente = usePaciente();
+  const { actualizar, cerrarSesion } = useAuth();
+  const [pidiendo, setPidiendo] = useState(false);
 
-  const items: { label: string; target: keyof ProfileStackParamList }[] = [
-    { label: "Datos personales", target: "PersonalData" },
-    { label: "Preferencias", target: "Preferences" },
+  // «Martín Ávila» → «MA»: las iniciales van sin tilde, como en el mockup.
+  const iniciales = `${paciente.nombre[0] ?? ""}${paciente.apellido[0] ?? ""}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+
+  async function alternarNotificaciones() {
+    if (paciente.notificacionesActivas) {
+      await actualizar({ notificacionesActivas: false });
+      return;
+    }
+    setPidiendo(true);
+    const ok = await pedirPermisoNotificaciones();
+    setPidiendo(false);
+    if (ok) await actualizar({ notificacionesActivas: true });
+    else await abrirAjustes();
+  }
+
+  const filas = [
+    {
+      label: "Especialidades en espera",
+      valor: String(paciente.especialidadesInteres.length),
+      onPress: () => navigation.navigate("Preferences"),
+    },
+    { label: "Franja preferida", valor: paciente.franjaPreferida, onPress: () => navigation.navigate("Preferences") },
+    {
+      label: "Notificaciones",
+      valor: pidiendo ? "…" : paciente.notificacionesActivas ? "Activadas" : "Desactivadas",
+      onPress: alternarNotificaciones,
+    },
+    { label: "Cerrar sesión", valor: "", onPress: cerrarSesion },
   ];
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Perfil" />
+      <ScreenHeader title="Perfil" seccion={5} />
       <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={label(10)}>Paciente</Text>
-          <Text style={heading(28)}>{pacienteActual.nombre}</Text>
-          <Text style={body(14, colors.neutral700)}>{pacienteActual.email}</Text>
-        </View>
+        <Pressable
+          style={styles.identity}
+          onPress={() => navigation.navigate("PersonalData")}
+          accessibilityRole="button"
+          accessibilityLabel="Datos personales"
+        >
+          <View style={styles.avatar}>
+            <Text style={heading(20, colors.accent700)}>{iniciales}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={heading(20)}>
+              {paciente.nombre} {paciente.apellido}
+            </Text>
+            <Text style={body(12, colors.neutral700)}>{paciente.email}</Text>
+          </View>
+        </Pressable>
 
-        <Blueprint>
-          {items.map((item, i) => (
+        <View style={styles.list}>
+          {filas.map((f) => (
             <Pressable
-              key={item.target}
-              style={({ pressed }) => [styles.row, i > 0 && styles.rowDivider, pressed && styles.rowPressed]}
-              onPress={() => navigation.navigate(item.target)}
+              key={f.label}
+              onPress={f.onPress}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
             >
-              <Text style={heading(19)}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.neutral600} />
+              <Text style={body(13)}>{f.label}</Text>
+              <Text style={body(13, colors.neutral600)}>{f.valor}</Text>
             </Pressable>
           ))}
-        </Blueprint>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -59,20 +101,33 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    gap: 22,
+    gap: 14,
+  },
+  identity: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  list: {
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
   },
-  rowDivider: {
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  rowPressed: {
+  pressed: {
     backgroundColor: "rgba(29,31,32,0.07)",
   },
 });

@@ -1,13 +1,14 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import React, { useState } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
 import { fonts } from "@/theme/typography";
 import { RootTabParamList } from "@/navigation/types";
 
-const ICON_SIZE = 19;
+const ICON_SIZE = 20;
+const BAR_HEIGHT = 64;
 
 const iconByRoute: Record<keyof RootTabParamList, keyof typeof Ionicons.glyphMap> = {
   Inicio: "home-outline",
@@ -17,86 +18,179 @@ const iconByRoute: Record<keyof RootTabParamList, keyof typeof Ionicons.glyphMap
   Perfil: "person-outline",
 };
 
+export type TabBadges = Partial<Record<keyof RootTabParamList, number>>;
+
 /**
- * Navegación primaria — "Design System/TabBar.dc.html".
- * Cinco celdas iguales de 62 px, icono de 19 px sobre etiqueta en
- * versalitas, activo en acento 700. El badge es un cuadrado de acero
- * anclado al icono (no al texto), así no desalinea la celda.
+ * Navegación primaria deslizable — "TabBar.dc.html" / "NavDeslizable.dc.html".
+ * Un bloque sólido (acero 900, filete superior de acero) sigue al dedo
+ * mientras se arrastra el contenido. La sección actual lleva el ícono
+ * ampliado en papel y la etiqueta en negrita.
+ *
+ * Todo lo que se mueve con el arrastre (bloque, ícono, etiqueta) se anima
+ * solo con transform y opacity, para correr en el hilo nativo.
  */
-export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export function TabBar({ state, descriptors, navigation, position, badges = {} }: MaterialTopTabBarProps & { badges?: TabBadges }) {
   const insets = useSafeAreaInsets();
+  const [width, setWidth] = useState(0);
+  const count = state.routes.length;
+  const tabWidth = width / count;
 
   return (
-    <View style={[styles.bar, { paddingBottom: insets.bottom, height: 62 + insets.bottom }]}>
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const focused = state.index === index;
-        const color = focused ? colors.accent700 : colors.neutral600;
-        const badge = options.tabBarBadge;
-        const title = typeof options.tabBarLabel === "string" ? options.tabBarLabel : options.title ?? route.name;
-
-        const onPress = () => {
-          const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
-          if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
-        };
-
-        return (
-          <Pressable
-            key={route.key}
-            onPress={onPress}
-            style={styles.cell}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: focused }}
-            accessibilityLabel={options.tabBarAccessibilityLabel ?? title}
+    <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
+      <View style={styles.row} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        {width > 0 && (
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.indicator, { width: tabWidth, transform: [{ translateX: Animated.multiply(position, tabWidth) }] }]}
           >
-            <View style={styles.iconBox}>
-              <Ionicons name={iconByRoute[route.name as keyof RootTabParamList]} size={ICON_SIZE} color={color} />
-              {badge !== undefined && (
+            <View style={styles.block} />
+            <View style={styles.strip} />
+          </Animated.View>
+        )}
+
+        {state.routes.map((route, i) => {
+          const { options } = descriptors[route.key];
+          const focused = state.index === i;
+          const title = typeof options.tabBarLabel === "string" ? options.tabBarLabel : options.title ?? route.name;
+          const badge = badges[route.name as keyof RootTabParamList];
+          const icon = iconByRoute[route.name as keyof RootTabParamList];
+
+          // La sección «actual» es la más cercana a la posición del arrastre.
+          const range = [i - 0.5, i - 0.499, i + 0.499, i + 0.5];
+          const on = position.interpolate({ inputRange: range, outputRange: [0, 1, 1, 0], extrapolate: "clamp" });
+          const off = position.interpolate({ inputRange: range, outputRange: [1, 0, 0, 1], extrapolate: "clamp" });
+          const scale = position.interpolate({ inputRange: range, outputRange: [1, 1.12, 1.12, 1], extrapolate: "clamp" });
+          const lift = position.interpolate({ inputRange: range, outputRange: [0, -1, -1, 0], extrapolate: "clamp" });
+
+          const onPress = () => {
+            const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
+            if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+          };
+
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              style={styles.cell}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: focused }}
+              accessibilityLabel={title}
+            >
+              <Animated.View style={[styles.iconBox, { transform: [{ translateY: lift }, { scale }] }]}>
+                <Animated.View style={[styles.layer, { opacity: off }]}>
+                  <Ionicons name={icon} size={ICON_SIZE} color={colors.neutral600} />
+                </Animated.View>
+                <Animated.View style={[styles.layer, { opacity: on }]}>
+                  <Ionicons name={icon} size={ICON_SIZE} color={colors.bg} />
+                </Animated.View>
+              </Animated.View>
+              <View style={styles.labelBox}>
+                <Animated.Text style={[styles.label, styles.labelOff, { opacity: off }]} numberOfLines={1}>
+                  {title}
+                </Animated.Text>
+                <Animated.Text style={[styles.label, styles.labelOn, { opacity: on }]} numberOfLines={1}>
+                  {title}
+                </Animated.Text>
+              </View>
+              {badge ? (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{badge}</Text>
                 </View>
-              )}
-            </View>
-            <Text style={[styles.label, { color }]} numberOfLines={1}>
-              {title}
-            </Text>
-          </Pressable>
-        );
-      })}
+              ) : null}
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
-    flexDirection: "row",
-    alignItems: "stretch",
     borderTopWidth: 1,
     borderTopColor: colors.divider,
     backgroundColor: colors.bg,
+  },
+  row: {
+    height: BAR_HEIGHT,
+    flexDirection: "row",
+  },
+  indicator: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+  },
+  block: {
+    position: "absolute",
+    top: 6,
+    bottom: 6,
+    left: 5,
+    right: 5,
+    backgroundColor: colors.accent900,
+  },
+  strip: {
+    position: "absolute",
+    top: -1,
+    left: 5,
+    right: 5,
+    height: 3,
+    backgroundColor: colors.accent,
   },
   cell: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
+    gap: 4,
   },
   iconBox: {
     width: ICON_SIZE,
     height: ICON_SIZE,
+  },
+  layer: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     alignItems: "center",
     justifyContent: "center",
   },
+  labelBox: {
+    height: 12,
+    alignSelf: "stretch",
+  },
+  label: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: 9,
+    lineHeight: 12,
+    letterSpacing: 0.72,
+    textTransform: "uppercase",
+  },
+  labelOff: {
+    fontFamily: fonts.bodyMedium,
+    color: colors.neutral600,
+  },
+  labelOn: {
+    fontFamily: fonts.bodyBold,
+    color: colors.bg,
+  },
   badge: {
     position: "absolute",
-    top: -5,
-    left: ICON_SIZE / 2 + 7,
-    minWidth: 15,
-    height: 15,
+    top: 6,
+    left: "50%",
+    marginLeft: 4,
+    minWidth: 19,
+    height: 19,
     paddingHorizontal: 3,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.accent,
+    borderWidth: 2,
+    borderColor: colors.bg,
   },
   badgeText: {
     fontFamily: fonts.bodyBold,
@@ -104,11 +198,5 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     color: colors.bg,
     includeFontPadding: false,
-  },
-  label: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 9,
-    letterSpacing: 0.72,
-    textTransform: "uppercase",
   },
 });

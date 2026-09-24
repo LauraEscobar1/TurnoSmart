@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
+import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { heading, label, body } from "@/theme/typography";
@@ -12,7 +13,8 @@ import { OfertaCupo, Cita } from "@/types/domain";
 import { getOfertaPendiente } from "@/services/offersService";
 import { getCitasProximas } from "@/services/appointmentsService";
 import { RootStackParamList } from "@/navigation/types";
-import { pacienteActual } from "@/data/mockData";
+import { usePaciente } from "@/auth/AuthContext";
+import { diasEnEspera } from "@/utils/format";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -32,23 +34,24 @@ function saludo() {
  */
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
+  const paciente = usePaciente();
   const [oferta, setOferta] = useState<OfertaCupo | null>(null);
   const [proximaCita, setProximaCita] = useState<Cita | null>(null);
 
-  useFocusEffect(
+  useCargarDatos(
     useCallback(() => {
       getOfertaPendiente().then(setOferta);
       getCitasProximas().then((citas) => setProximaCita(citas[0] ?? null));
     }, [])
   );
 
-  const { dias, puesto } = pacienteActual.listaEspera;
+  const dias = diasEnEspera(paciente.registradoEnISO);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={label(10)}>{saludo()}</Text>
-        <Text style={[heading(28), styles.name]}>{pacienteActual.nombre}</Text>
+        <Text style={[heading(28), styles.name]}>{paciente.nombre} {paciente.apellido}</Text>
 
         <View style={styles.block}>
           {oferta ? (
@@ -86,7 +89,7 @@ export function HomeScreen() {
         <View style={styles.waitlist}>
           <Text style={body(12, colors.neutral700)}>Tu lista de espera</Text>
           <Text style={heading(17)}>
-            {dias} días · puesto {puesto}
+            {dias} {dias === 1 ? "día" : "días"} · puesto {paciente.puestoEspera}
           </Text>
         </View>
       </ScrollView>

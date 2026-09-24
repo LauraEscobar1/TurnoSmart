@@ -12,9 +12,11 @@ interface ScreenHeaderProps {
    * Sin `onBack`, es el título grande de una sección de Nivel 1.
    */
   onBack?: () => void;
+  /** Posición en la navegación deslizable: 1–5 (se muestra «2 / 5 · deslizá»). */
+  seccion?: number;
 }
 
-export function ScreenHeader({ title, onBack }: ScreenHeaderProps) {
+export function ScreenHeader({ title, onBack, seccion }: ScreenHeaderProps) {
   if (onBack) {
     return (
       <View style={[styles.bar, styles.backBar]}>
@@ -28,7 +30,8 @@ export function ScreenHeader({ title, onBack }: ScreenHeaderProps) {
 
   return (
     <View style={[styles.bar, styles.titleBar]}>
-      <Text style={heading(26)}>{title}</Text>
+      <Text style={heading(24)}>{title}</Text>
+      {seccion ? <Text style={label(9)}>{seccion} / 5 · deslizá</Text> : null}
     </View>
   );
 }
@@ -40,8 +43,10 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   titleBar: {
-    paddingTop: 16,
-    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
   },
   backBar: {
     flexDirection: "row",

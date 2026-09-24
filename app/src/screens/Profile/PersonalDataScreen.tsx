@@ -4,17 +4,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "@/theme/colors";
 import { body, label } from "@/theme/typography";
-import { pacienteActual } from "@/data/mockData";
+import { usePaciente } from "@/auth/AuthContext";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Blueprint } from "@/components/Blueprint";
 
+/** "35482910" → "35.482.910" */
+const formatearDni = (dni: string) => dni.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
 export function PersonalDataScreen() {
   const navigation = useNavigation();
+  const paciente = usePaciente();
 
   const campos = [
-    { label: "Nombre", value: pacienteActual.nombre },
-    { label: "Correo", value: pacienteActual.email },
-    { label: "Teléfono", value: pacienteActual.telefono },
+    { label: "Nombre", value: `${paciente.nombre} ${paciente.apellido}` },
+    { label: "DNI", value: formatearDni(paciente.dni) },
+    { label: "Correo", value: paciente.email },
+    { label: "Teléfono", value: paciente.telefono },
+    { label: "Obra social / prepaga", value: paciente.obraSocial || "—" },
   ];
 
   return (
