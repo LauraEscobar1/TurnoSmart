@@ -13,6 +13,7 @@ import { Countdown, useCountdown } from "@/components/Countdown";
 import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { DataRow } from "@/components/OfferCard";
 import { EmptyState } from "@/components/EmptyState";
+import { Card } from "@/components/Card";
 import { fechaConDia, hora } from "@/utils/format";
 
 type Props = NativeStackScreenProps<RootStackParamList, "OfferDetail">;
@@ -81,9 +82,9 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
   return (
     <>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.timer}>
+        <Card tono="acento" style={styles.timer}>
           <Countdown segundos={segundos} size={52} caption="Tiempo para responder" align="center" />
-        </View>
+        </Card>
         <View>
           <Text style={heading(32)}>{oferta.especialidad}</Text>
           <Text style={body(14, colors.neutral700)}>
@@ -91,7 +92,9 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
           </Text>
         </View>
         <DataRow fecha={fechaConDia(oferta.fechaHoraISO)} hora={hora(oferta.fechaHoraISO)} size={18} />
-        <ExplainabilityPanel factores={oferta.factores} />
+        <Card style={styles.panel}>
+          <ExplainabilityPanel factores={oferta.factores} />
+        </Card>
       </ScrollView>
       <View style={styles.actions}>
         <PrimaryButton label="Rechazar" variant="secondary" onPress={handleRechazar} style={styles.reject} />
@@ -124,24 +127,26 @@ function OfertaResuelta(props: { title: string; description: string; action: str
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
   },
   content: {
     padding: 18,
     gap: 16,
   },
   timer: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-    paddingBottom: 16,
+    paddingVertical: 18,
+  },
+  panel: {
+    padding: 18,
   },
   actions: {
     flexDirection: "row",
     gap: 10,
     paddingVertical: 14,
     paddingHorizontal: 18,
+    backgroundColor: colors.superficie,
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    borderTopColor: colors.borde,
   },
   reject: {
     flex: 1,
