@@ -26,6 +26,17 @@ export function StepHeader({ title, step, total, onBack }: StepHeaderProps) {
   );
 }
 
+/** Solo la flecha de volver, sin título ni regla (acceso: login, restablecer). */
+export function BackBar({ onBack }: { onBack: () => void }) {
+  return (
+    <View style={styles.backBar}>
+      <Pressable onPress={onBack} hitSlop={12} accessibilityLabel="Volver" style={styles.back}>
+        <Ionicons name="arrow-back" size={18} color={colors.text} />
+      </Pressable>
+    </View>
+  );
+}
+
 /** Barras de progreso de 3 px: completas en acero, pendientes en neutro 300. */
 export function StepProgress({ step, total }: { step: number; total: number }) {
   return (
@@ -46,6 +57,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
+  },
+  backBar: {
+    paddingTop: 12,
+    paddingHorizontal: 18,
   },
   back: {
     width: 20,
