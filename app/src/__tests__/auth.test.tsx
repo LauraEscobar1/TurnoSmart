@@ -84,7 +84,7 @@ describe("authService", () => {
 describe("Acceso en pantalla", () => {
   it("sin sesión muestra el inicio de sesión; con credenciales válidas entra a Home", async () => {
     await montarApp({ sesion: false });
-    expect(await screen.findByText("Crear cuenta con tu teléfono")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
     await irALogin();
 
     await fireEvent.changeText(screen.getByLabelText("Correo electrónico"), CUENTA_DEMO.email);
@@ -132,7 +132,7 @@ describe("Acceso en pantalla", () => {
     // Espía sin reemplazar: el servicio real genera el código y lo leemos.
     const enviar = jest.spyOn(auth, "enviarCodigo");
     await montarApp({ sesion: false });
-    await fireEvent.press(await screen.findByText("Crear cuenta con tu teléfono"));
+    await fireEvent.press(await screen.findByRole("button", { name: "Empezar" }));
 
     // Paso 1 — datos
     expect(await screen.findByText("Tus datos")).toBeTruthy();
@@ -206,9 +206,9 @@ describe("Acceso en pantalla", () => {
 
   it("la flecha del registro vuelve a la pantalla anterior", async () => {
     await montarApp({ sesion: false });
-    await fireEvent.press(await screen.findByText("Crear cuenta con tu teléfono"));
+    await fireEvent.press(await screen.findByRole("button", { name: "Empezar" }));
     await fireEvent.changeText(await screen.findByLabelText("Nombre"), "Laura");
     await fireEvent.press(screen.getByLabelText("Volver"));
-    expect(await screen.findByText("Crear cuenta con tu teléfono")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
   });
 });
