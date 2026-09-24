@@ -1,13 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
 import { OfferCard } from "@/components/OfferCard";
 import { EmptyState } from "@/components/EmptyState";
+import { ScreenHeader } from "@/components/ScreenHeader";
+import { SubTabs } from "@/components/SubTabs";
 import { OfertaCupo } from "@/types/domain";
-import { getHistorialOfertas, getOfertaPendiente } from "@/services/offersService";
+import { aceptarOferta, getHistorialOfertas, getOfertaPendiente, rechazarOferta } from "@/services/offersService";
 import { RootStackParamList } from "@/navigation/types";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -17,6 +19,8 @@ type Tab = "pendiente" | "historial";
 /**
  * Ofertas — Nivel 1, con sub-tabs internos Pendiente/Historial
  * (docs/02-jerarquia.md §2, docs/03-navegacion.md §2.2).
+ * La tarjeta pendiente lleva las dos acciones: aceptar desde aquí
+ * sigue siendo un solo toque.
  */
 export function OffersListScreen() {
   const navigation = useNavigation<Nav>();
@@ -31,72 +35,58 @@ export function OffersListScreen() {
 
   useFocusEffect(cargar);
 
+  async function responder(oferta: OfertaCupo, resultado: "aceptada" | "rechazada") {
+    await (resultado === "aceptada" ? aceptarOferta(oferta.id) : rechazarOferta(oferta.id));
+    navigation.navigate("OfferConfirmation", { ofertaId: oferta.id, resultado });
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.tabRow}>
-        <Text
-          style={[styles.tabItem, tab === "pendiente" && styles.tabItemActive]}
-          onPress={() => setTab("pendiente")}
-        >
-          Pendiente
-        </Text>
-        <Text
-          style={[styles.tabItem, tab === "historial" && styles.tabItemActive]}
-          onPress={() => setTab("historial")}
-        >
-          Historial
-        </Text>
-      </View>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <ScreenHeader title="Ofertas" />
+      <SubTabs
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "pendiente", label: "Pendiente" },
+          { value: "historial", label: "Historial" },
+        ]}
+      />
 
       {tab === "pendiente" ? (
-        pendiente ? (
-          <View style={styles.content}>
+        <View style={styles.content}>
+          {pendiente ? (
             <OfferCard
               oferta={pendiente}
-              onPress={() => navigation.navigate("OfferDetail", { ofertaId: pendiente.id })}
+              onAceptar={() => responder(pendiente, "aceptada")}
+              onRechazar={() => responder(pendiente, "rechazada")}
             />
-          </View>
-        ) : (
-          <EmptyState title="No tienes ofertas pendientes" />
-        )
+          ) : (
+            <EmptyState
+              title="No tenés ofertas pendientes"
+              description="Te avisamos apenas se libere un cupo que te pueda interesar."
+            />
+          )}
+        </View>
       ) : (
         <FlatList
           contentContainerStyle={styles.content}
           data={historial}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <OfferCard oferta={item} />}
-          ListEmptyComponent={<EmptyState title="Aún no tienes historial de ofertas" />}
+          renderItem={({ item }) => <OfferCard variant="historial" oferta={item} />}
+          ListEmptyComponent={<EmptyState title="Todavía no tenés historial de ofertas" />}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.bg,
   },
   content: {
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  tabRow: {
-    flexDirection: "row",
-    gap: spacing.lg,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  tabItem: {
-    paddingBottom: spacing.sm,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  tabItemActive: {
-    color: colors.primary,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
+    padding: 18,
+    gap: 16,
   },
 });

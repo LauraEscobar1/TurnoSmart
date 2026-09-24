@@ -1,38 +1,54 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
+import { body, label } from "@/theme/typography";
 import { pacienteActual } from "@/data/mockData";
+import { ScreenHeader } from "@/components/ScreenHeader";
+import { Blueprint } from "@/components/Blueprint";
 
 export function PersonalDataScreen() {
+  const navigation = useNavigation();
+
+  const campos = [
+    { label: "Nombre", value: pacienteActual.nombre },
+    { label: "Correo", value: pacienteActual.email },
+    { label: "Teléfono", value: pacienteActual.telefono },
+  ];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Nombre</Text>
-      <Text style={styles.value}>{pacienteActual.nombre}</Text>
-
-      <Text style={styles.label}>Correo</Text>
-      <Text style={styles.value}>{pacienteActual.email}</Text>
-
-      <Text style={styles.label}>Teléfono</Text>
-      <Text style={styles.value}>{pacienteActual.telefono}</Text>
-    </View>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <ScreenHeader title="Datos personales" onBack={navigation.goBack} />
+      <View style={styles.content}>
+        <Blueprint>
+          {campos.map((c, i) => (
+            <View key={c.label} style={[styles.row, i > 0 && styles.rowDivider]}>
+              <Text style={label(9)}>{c.label}</Text>
+              <Text style={body(15)}>{c.value}</Text>
+            </View>
+          ))}
+        </Blueprint>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.md,
+    backgroundColor: colors.bg,
   },
-  label: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textTransform: "uppercase",
-    marginTop: spacing.md,
+  content: {
+    padding: 18,
   },
-  value: {
-    fontSize: 16,
-    color: colors.textPrimary,
+  row: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 2,
+  },
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
   },
 });

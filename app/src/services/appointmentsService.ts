@@ -3,9 +3,9 @@ import { citasMock } from "@/data/mockData";
 
 export async function getCitasProximas(): Promise<Cita[]> {
   const ahora = Date.now();
-  return citasMock.filter(
-    (c) => new Date(c.fechaHoraISO).getTime() >= ahora && c.estado === "confirmada"
-  );
+  return citasMock
+    .filter((c) => new Date(c.fechaHoraISO).getTime() >= ahora && c.estado === "confirmada")
+    .sort((a, b) => new Date(a.fechaHoraISO).getTime() - new Date(b.fechaHoraISO).getTime());
 }
 
 export async function getCitasPasadas(): Promise<Cita[]> {
