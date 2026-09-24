@@ -5,6 +5,14 @@ import { useFonts } from "expo-font";
 import { Barlow_400Regular, Barlow_500Medium, Barlow_700Bold } from "@expo-google-fonts/barlow";
 import { BarlowCondensed_600SemiBold } from "@expo-google-fonts/barlow-condensed";
 import { RootNavigator } from "@/navigation/RootNavigator";
+import { AuthProvider, useAuth } from "@/auth/AuthContext";
+
+function Main() {
+  const { cargando } = useAuth();
+  // Hasta saber si hay sesión guardada no se decide entre acceso y app.
+  if (cargando) return null;
+  return <RootNavigator />;
+}
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -20,7 +28,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <RootNavigator />
+      <AuthProvider>
+        <Main />
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
