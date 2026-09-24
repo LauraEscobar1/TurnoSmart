@@ -16,7 +16,7 @@ import { body, heading, label } from "@/theme/typography";
 import { AuthStackParamList } from "@/navigation/types";
 import { marcarIntroVista } from "@/services/authService";
 import { Badge } from "@/components/Badge";
-import { Blueprint } from "@/components/Blueprint";
+import { Card } from "@/components/Card";
 import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { PrimaryButton } from "@/components/PrimaryButton";
 
@@ -111,7 +111,7 @@ function FiguraOferta() {
   return (
     <View style={styles.stack}>
       <Badge label="Cupo disponible" variant="outline" />
-      <Blueprint style={styles.ofertaCard}>
+      <Card tono="acento" style={styles.ofertaCard}>
         <View style={styles.row}>
           <Badge label="Oferta para vos" variant="accent" />
           <View style={{ alignItems: "flex-end" }}>
@@ -121,14 +121,14 @@ function FiguraOferta() {
         </View>
         <Text style={heading(25, colors.accent900)}>Cardiología</Text>
         <Text style={body(13, colors.accent800)}>Hoy 15:40 · Dra. E. Ruiz</Text>
-      </Blueprint>
+      </Card>
     </View>
   );
 }
 
 function FiguraExplicacion() {
   return (
-    <Blueprint style={styles.panel}>
+    <Card style={styles.panel}>
       <ExplainabilityPanel
         factores={[
           { etiqueta: "Tiempo en espera", valor: "34 días", peso: 0.92 },
@@ -136,26 +136,26 @@ function FiguraExplicacion() {
           { etiqueta: "Horario preferido", valor: "Tarde", peso: 0.64 },
         ]}
       />
-    </Blueprint>
+    </Card>
   );
 }
 
 function FiguraConfirmacion() {
   return (
-    <Blueprint style={styles.confirmacion} cornerColor={colors.accent900}>
+    <Card style={styles.confirmacion}>
       <View style={styles.check}>
         <Ionicons name="checkmark" size={28} color={colors.bg} />
       </View>
       <Text style={heading(24)}>Cupo confirmado</Text>
       <Text style={body(13, colors.neutral700)}>Cardiología · hoy 15:40</Text>
-    </Blueprint>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
   },
   flex: {
     flex: 1,
@@ -188,12 +188,11 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   ofertaCard: {
-    padding: 14,
+    padding: 16,
     gap: 8,
-    backgroundColor: colors.accent100,
   },
   panel: {
-    padding: 18,
+    padding: 20,
   },
   confirmacion: {
     paddingVertical: 26,
@@ -202,8 +201,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   check: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.accent900,
     alignItems: "center",
     justifyContent: "center",
@@ -215,8 +215,9 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   dot: {
-    width: 6,
-    height: 6,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
     backgroundColor: colors.neutral300,
   },
   dotOn: {

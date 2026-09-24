@@ -36,7 +36,7 @@ export function FormScreen({ header, children, footer, contentStyle }: FormScree
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
   },
   flex: {
     flex: 1,
