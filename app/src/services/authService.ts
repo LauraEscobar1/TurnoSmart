@@ -15,6 +15,8 @@ const KEY_CUENTAS = "ts.cuentas";
 const KEY_SESION = "ts.sesion";
 /** Último correo que inició sesión: habilita «Ingresar con Face ID». */
 const KEY_ULTIMO = "ts.ultimoUsuario";
+/** La intro de 3 pantallas se muestra solo la primera vez. */
+const KEY_INTRO = "ts.introVista";
 
 interface Cuenta {
   paciente: Paciente;
@@ -88,10 +90,41 @@ export async function cerrarSesion(): Promise<void> {
   await AsyncStorage.removeItem(KEY_SESION);
 }
 
-/** Correo que se usa en «¿Olvidaste tu contraseña?». */
-export async function recuperarPassword(email: string): Promise<void> {
-  if (!validarEmail(email)) throw new AuthError("Ingresá tu correo para recuperar la contraseña.", "email");
-  // La API enviaría el enlace; por privacidad no se revela si la cuenta existe.
+export async function introVista(): Promise<boolean> {
+  return (await AsyncStorage.getItem(KEY_INTRO)) === "1";
+}
+
+export async function marcarIntroVista(): Promise<void> {
+  await AsyncStorage.setItem(KEY_INTRO, "1");
+}
+
+// — Restablecer contraseña —
+
+let resetPendiente: { email: string; codigo: string } | null = null;
+
+/**
+ * «¿Olvidaste tu contraseña?»: envía un código al correo. Por privacidad
+ * responde igual exista o no la cuenta. Simulado como `enviarCodigo`.
+ */
+export async function solicitarRestablecimiento(email: string): Promise<string> {
+  if (!validarEmail(email)) throw new AuthError("Ingresá un correo válido.", "email");
+  const codigo = String(Math.floor(100000 + Math.random() * 900000));
+  resetPendiente = { email: normalizarEmail(email), codigo };
+  return codigo;
+}
+
+export async function restablecerPassword(email: string, codigo: string, nueva: string): Promise<void> {
+  const errorPassword = validarPassword(nueva);
+  if (errorPassword) throw new AuthError(errorPassword, "password");
+  const destino = normalizarEmail(email);
+  const cuentas = await leerCuentas();
+  const cuenta = cuentas.find((c) => c.paciente.email === destino);
+  if (!resetPendiente || resetPendiente.email !== destino || resetPendiente.codigo !== codigo || !cuenta) {
+    throw new AuthError("El código no es correcto.", "codigo");
+  }
+  cuenta.password = nueva;
+  await guardarCuentas(cuentas);
+  resetPendiente = null;
 }
 
 // — Registro —
@@ -116,6 +149,11 @@ export function validarEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+/** Mismo criterio en el registro y al restablecer la contraseña. */
+export function validarPassword(password: string): string | undefined {
+  if (password.length < 8 || !/\d/.test(password)) return "Mínimo 8 caracteres, un número.";
+}
+
 /** Validación del paso 1. Devuelve un mensaje por campo con error. */
 export function validarDatosCuenta(d: DatosCuenta): Partial<Record<keyof DatosCuenta, string>> {
   const errores: Partial<Record<keyof DatosCuenta, string>> = {};
@@ -124,7 +162,8 @@ export function validarDatosCuenta(d: DatosCuenta): Partial<Record<keyof DatosCu
   if (!/^\d{7,8}$/.test(d.dni.replace(/\D/g, "")) || /[^\d.\s]/.test(d.dni)) errores.dni = "El DNI tiene 7 u 8 números.";
   if (!validarEmail(d.email)) errores.email = "Revisá el correo electrónico.";
   if (d.telefono.replace(/\D/g, "").length < 8) errores.telefono = "Ingresá un teléfono con código de área.";
-  if (d.password.length < 8 || !/\d/.test(d.password)) errores.password = "Mínimo 8 caracteres, un número.";
+  const errorPassword = validarPassword(d.password);
+  if (errorPassword) errores.password = errorPassword;
   return errores;
 }
 
