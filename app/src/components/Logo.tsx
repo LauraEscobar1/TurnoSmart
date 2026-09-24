@@ -16,24 +16,36 @@ interface LogoProps {
 
 /**
  * Marca de TurnoSmart: la cruz médica dibujada con el «+» de registro,
- * la firma del sistema. Esquinas rectas, dos brazos del mismo grosor y
- * un vacío central en el color de fondo, como una marca de plano.
+ * la firma del sistema. Dos brazos del mismo grosor con los extremos
+ * suavizados y un punto central en el color de fondo.
  */
 export function Logo({ size = 56, color = colors.accent, wordmark = false, tagline }: LogoProps) {
   const brazo = Math.round(size * 0.34);
   const hueco = Math.max(2, Math.round(size * 0.1));
+  const curva = Math.round(brazo * 0.3);
 
   return (
     <View style={styles.wrap} accessibilityRole="image" accessibilityLabel="TurnoSmart">
       <View style={{ width: size, height: size }}>
-        <View style={[styles.bar, { backgroundColor: color, width: brazo, height: size, left: (size - brazo) / 2 }]} />
-        <View style={[styles.bar, { backgroundColor: color, height: brazo, width: size, top: (size - brazo) / 2 }]} />
+        <View
+          style={[
+            styles.bar,
+            { backgroundColor: color, width: brazo, height: size, left: (size - brazo) / 2, borderRadius: curva },
+          ]}
+        />
+        <View
+          style={[
+            styles.bar,
+            { backgroundColor: color, height: brazo, width: size, top: (size - brazo) / 2, borderRadius: curva },
+          ]}
+        />
         <View
           style={[
             styles.bar,
             {
               width: hueco,
               height: hueco,
+              borderRadius: hueco / 2,
               left: (size - hueco) / 2,
               top: (size - hueco) / 2,
               backgroundColor: color === colors.bg ? colors.accent900 : colors.bg,
