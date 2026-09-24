@@ -49,11 +49,16 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
   const rule = esAceptada ? colors.dividerOnField : colors.divider;
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={[styles.safe, { backgroundColor: esAceptada ? colors.accent900 : colors.bg }]}>
+    <SafeAreaView
+      edges={["top", "bottom"]}
+      style={[styles.safe, { backgroundColor: esAceptada ? colors.accent900 : colors.fondo }]}
+    >
       <StatusBar style={esAceptada ? "light" : "dark"} />
-      <View style={[styles.body, { borderTopColor: rule }]}>
-        <View style={[styles.mark, { borderColor: fg }]}>
-          <Ionicons name={esAceptada ? "checkmark" : "close"} size={32} color={fg} />
+      <View style={styles.body}>
+        <View style={[styles.halo, { backgroundColor: esAceptada ? "rgba(255,255,255,0.08)" : colors.accent100 }]}>
+          <View style={[styles.mark, { borderColor: fg }]}>
+            <Ionicons name={esAceptada ? "checkmark" : "close"} size={34} color={fg} />
+          </View>
         </View>
         <Text style={[heading(34, fg), styles.center]}>{esAceptada ? "Cupo confirmado" : "Oferta rechazada"}</Text>
         {oferta && (
@@ -95,12 +100,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 16,
     padding: 28,
-    borderTopWidth: 1,
+  },
+  halo: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    alignItems: "center",
+    justifyContent: "center",
   },
   mark: {
-    width: 64,
-    height: 64,
-    borderWidth: 1,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
   },

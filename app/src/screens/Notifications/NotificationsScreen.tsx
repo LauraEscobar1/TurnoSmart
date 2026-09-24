@@ -1,11 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, heading, label } from "@/theme/typography";
+import { Card } from "@/components/Card";
 import { EmptyState } from "@/components/EmptyState";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Notificacion, TipoNotificacion } from "@/types/domain";
@@ -53,14 +54,16 @@ export function NotificationsScreen() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <ScreenHeader title="Notificaciones" seccion={4} />
       <FlatList
+        contentContainerStyle={styles.content}
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const destacada = !item.leida && item.tipo === "cupo-ultimo-minuto";
           const meta = destacada ? colors.accent800 : colors.neutral600;
           return (
-            <Pressable
-              style={[styles.item, destacada && styles.itemHighlighted, item.leida && styles.itemRead]}
+            <Card
+              tono={destacada ? "acento" : item.leida ? "plana" : "superficie"}
+              style={[styles.item, item.leida && styles.itemRead]}
               onPress={() => handlePress(item)}
             >
               <View style={[styles.dot, !item.leida && styles.dotUnread]} />
@@ -74,14 +77,10 @@ export function NotificationsScreen() {
                   <Text style={body(12, destacada ? colors.accent800 : colors.neutral700)}>{item.cuerpo}</Text>
                 ) : null}
               </View>
-            </Pressable>
+            </Card>
           );
         }}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <EmptyState title="No tenés notificaciones" />
-          </View>
-        }
+        ListEmptyComponent={<EmptyState title="No tenés notificaciones" />}
       />
     </SafeAreaView>
   );
@@ -90,26 +89,25 @@ export function NotificationsScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
+  },
+  content: {
+    padding: 18,
+    gap: 10,
   },
   item: {
     flexDirection: "row",
     gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  itemHighlighted: {
-    backgroundColor: colors.accent100,
+    padding: 16,
   },
   itemRead: {
     opacity: 0.6,
   },
   dot: {
-    width: 6,
-    height: 6,
-    marginTop: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 5,
   },
   dotUnread: {
     backgroundColor: colors.accent,
@@ -122,8 +120,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 8,
-  },
-  empty: {
-    padding: 18,
   },
 });
