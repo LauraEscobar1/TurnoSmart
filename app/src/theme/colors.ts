@@ -24,6 +24,9 @@ export const colors = {
 
   // Escala de acento
   accent100: "#eef6ff",
+  accent200: "#d6ebff",
+  accent300: "#b5d9fd",
+  accent400: "#94bce3",
   accent600: "#597ea3",
   accent700: "#416180",
   accent800: "#2c455d",
