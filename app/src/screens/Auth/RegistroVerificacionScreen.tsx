@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
@@ -9,6 +9,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { AuthError, enviarCodigo } from "@/services/authService";
 import { pedirPermisoNotificaciones } from "@/services/permisosService";
 import { Blueprint } from "@/components/Blueprint";
+import { CodeInput, LARGO_CODIGO, ReenviarCodigo, useEnvioCodigo } from "@/components/CodeInput";
 import { CheckRow } from "@/components/forms";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { StepHeader, StepProgress } from "@/components/StepHeader";
@@ -16,9 +17,6 @@ import { FormScreen } from "@/screens/Auth/FormScreen";
 import { useRegistro } from "@/screens/Auth/RegistroContext";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "RegistroVerificacion">;
-
-const LARGO_CODIGO = 6;
-const ESPERA_REENVIO = 60;
 
 /**
  * 04 · Acceso — 04 Registro, verificación (3 / 3).
@@ -28,28 +26,10 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
   const { datos, preferencias } = useRegistro();
   const { crearCuenta } = useAuth();
   const [codigo, setCodigo] = useState("");
-  const [codigoPrueba, setCodigoPrueba] = useState<string | null>(null);
-  const [restante, setRestante] = useState(ESPERA_REENVIO);
   const [acepta, setAcepta] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const inputRef = useRef<TextInput>(null);
-
-  const enviar = useCallback(async () => {
-    const c = await enviarCodigo(datos.telefono);
-    if (__DEV__) setCodigoPrueba(c);
-    setRestante(ESPERA_REENVIO);
-  }, [datos.telefono]);
-
-  useEffect(() => {
-    enviar();
-  }, [enviar]);
-
-  useEffect(() => {
-    if (restante <= 0) return;
-    const id = setTimeout(() => setRestante((s) => s - 1), 1000);
-    return () => clearTimeout(id);
-  }, [restante]);
+  const envio = useEnvioCodigo(useCallback(() => enviarCodigo(datos.telefono), [datos.telefono]));
 
   async function crear() {
     setError(null);
@@ -80,41 +60,16 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
         </Text>
       </View>
 
-      <Pressable onPress={() => inputRef.current?.focus()} style={styles.cells} accessibilityLabel="Código de verificación">
-        {Array.from({ length: LARGO_CODIGO }, (_, i) => (
-          <View key={i} style={[styles.cell, i === Math.min(codigo.length, LARGO_CODIGO - 1) && styles.cellActive]}>
-            <Text style={heading(24)}>{codigo[i] ?? ""}</Text>
-          </View>
-        ))}
-        <TextInput
-          ref={inputRef}
-          testID="codigo-input"
-          value={codigo}
-          onChangeText={(v) => {
-            setCodigo(v.replace(/\D/g, "").slice(0, LARGO_CODIGO));
-            setError(null);
-          }}
-          keyboardType="number-pad"
-          textContentType="oneTimeCode"
-          autoComplete="sms-otp"
-          maxLength={LARGO_CODIGO}
-          autoFocus
-          caretHidden
-          style={styles.hiddenInput}
-        />
-      </Pressable>
+      <CodeInput
+        value={codigo}
+        onChange={(v) => {
+          setCodigo(v);
+          setError(null);
+        }}
+        autoFocus
+      />
       {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      {restante > 0 ? (
-        <Text style={body(12, colors.neutral600)}>
-          Reenviar código en 0:{String(restante).padStart(2, "0")}
-        </Text>
-      ) : (
-        <Pressable onPress={enviar} hitSlop={8} style={{ alignSelf: "flex-start" }}>
-          <Text style={body(12, colors.accent700)}>Reenviar código</Text>
-        </Pressable>
-      )}
-      {codigoPrueba ? <Text style={body(12, colors.neutral600)}>Código de prueba: {codigoPrueba}</Text> : null}
+      <ReenviarCodigo restante={envio.restante} codigoPrueba={envio.codigoPrueba} onReenviar={envio.reenviar} />
 
       <Blueprint style={styles.notice}>
         <Ionicons name="notifications-outline" size={18} color={colors.accent700} style={{ marginTop: 1 }} />
@@ -132,27 +87,6 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  cells: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  cell: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1,
-    borderColor: colors.divider,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cellActive: {
-    borderColor: colors.accent,
-  },
-  hiddenInput: {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    opacity: 0,
-  },
   error: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
