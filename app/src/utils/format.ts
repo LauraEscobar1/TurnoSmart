@@ -70,3 +70,8 @@ export function mmss(segundos: number) {
   const s = Math.max(0, Math.floor(segundos));
   return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
 }
+
+/** Días completos desde el alta en la lista de espera. */
+export function diasEnEspera(desdeISO: string) {
+  return Math.max(0, Math.floor((Date.now() - new Date(desdeISO).getTime()) / 86_400_000));
+}
