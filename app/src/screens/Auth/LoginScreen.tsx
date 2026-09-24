@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as LocalAuthentication from "expo-local-authentication";
@@ -6,22 +6,29 @@ import { colors } from "@/theme/colors";
 import { body, fonts, heading } from "@/theme/typography";
 import { AuthStackParamList } from "@/navigation/types";
 import { useAuth } from "@/auth/AuthContext";
-import { AuthError, getUltimoUsuario, recuperarPassword } from "@/services/authService";
+import { AuthError, getUltimoUsuario } from "@/services/authService";
 import { TextField } from "@/components/forms";
+import { Logo } from "@/components/Logo";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { BackBar } from "@/components/StepHeader";
 import { FormScreen } from "@/screens/Auth/FormScreen";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
-/** 04 · Acceso — 01 Iniciar sesión. */
-export function LoginScreen({ navigation }: Props) {
+/** Acceso — Iniciar sesión: marca centrada, correo, contraseña y Face ID. */
+export function LoginScreen({ navigation, route }: Props) {
   const { iniciarSesion, iniciarSesionBiometrica } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<{ campo?: string; mensaje: string } | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(route.params?.aviso ?? null);
   const [enviando, setEnviando] = useState(false);
   const passwordRef = useRef<TextInput>(null);
+
+  // Al volver de «Restablecer contraseña» llega el aviso por parámetro.
+  useEffect(() => {
+    if (route.params?.aviso) setAviso(route.params.aviso);
+  }, [route.params?.aviso]);
 
   async function ingresar() {
     setError(null);
@@ -60,19 +67,9 @@ export function LoginScreen({ navigation }: Props) {
     }
   }
 
-  async function olvide() {
-    setError(null);
-    try {
-      await recuperarPassword(email);
-      setAviso(`Si existe una cuenta con ${email.trim()}, te enviamos un enlace para crear una contraseña nueva.`);
-    } catch (e) {
-      if (e instanceof AuthError) setError({ campo: e.campo, mensaje: e.message });
-    }
-  }
-
   return (
     <FormScreen
-      contentStyle={styles.content}
+      header={navigation.canGoBack() ? <BackBar onBack={navigation.goBack} /> : undefined}
       footer={
         <>
           <PrimaryButton label="Iniciar sesión" onPress={ingresar} disabled={enviando} />
@@ -86,16 +83,10 @@ export function LoginScreen({ navigation }: Props) {
         </>
       }
     >
-      <View style={styles.brand}>
-        <View style={styles.logo}>
-          <Text style={heading(15, colors.bg)}>TS</Text>
-        </View>
-        <Text style={heading(20)}>TurnoSmart</Text>
-      </View>
-
-      <View style={styles.welcome}>
-        <Text style={[heading(34), styles.title]}>{"Bienvenido\nde nuevo"}</Text>
-        <Text style={[body(13, colors.neutral700), styles.subtitle]}>Ingresá para ver tus ofertas de cupo.</Text>
+      <View style={styles.marca}>
+        <Logo size={52} wordmark />
+        <Text style={[heading(24), styles.center, styles.titulo]}>Ingresá a tu cuenta</Text>
+        <Text style={[body(13, colors.neutral700), styles.center]}>Para ver tus ofertas de cupo y tus citas.</Text>
       </View>
 
       <TextField
@@ -117,14 +108,18 @@ export function LoginScreen({ navigation }: Props) {
         label="Contraseña"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        revelable
         autoComplete="current-password"
         textContentType="password"
         returnKeyType="go"
         onSubmitEditing={ingresar}
         error={error && error.campo !== "email" ? error.mensaje : undefined}
       />
-      <Pressable onPress={olvide} style={styles.forgot} hitSlop={8}>
+      <Pressable
+        onPress={() => navigation.navigate("RestablecerPassword", { email: email.trim() || undefined })}
+        style={styles.forgot}
+        hitSlop={8}
+      >
         <Text style={body(12, colors.accent700)}>¿Olvidaste tu contraseña?</Text>
       </Pressable>
       {aviso ? <Text style={body(13, colors.neutral700)}>{aviso}</Text> : null}
@@ -133,33 +128,21 @@ export function LoginScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingTop: 28,
-    gap: 16,
-  },
-  brand: {
-    flexDirection: "row",
+  marca: {
     alignItems: "center",
-    gap: 10,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
-  logo: {
-    width: 34,
-    height: 34,
-    backgroundColor: colors.accent900,
-    alignItems: "center",
-    justifyContent: "center",
+  titulo: {
+    marginTop: 22,
+    marginBottom: 4,
   },
-  welcome: {
-    marginTop: 14,
-  },
-  title: {
-    lineHeight: 35,
-  },
-  subtitle: {
-    marginTop: 6,
+  center: {
+    textAlign: "center",
   },
   forgot: {
     alignSelf: "flex-end",
+    marginTop: -4,
   },
   signup: {
     flexDirection: "row",
