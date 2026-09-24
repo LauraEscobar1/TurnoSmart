@@ -9,6 +9,7 @@ import { heading, label, body } from "@/theme/typography";
 import { OfferCard } from "@/components/OfferCard";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { EmptyState } from "@/components/EmptyState";
+import { Card } from "@/components/Card";
 import { OfertaCupo, Cita } from "@/types/domain";
 import { getOfertaPendiente } from "@/services/offersService";
 import { getCitasProximas } from "@/services/appointmentsService";
@@ -51,7 +52,9 @@ export function HomeScreen() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={label(10)}>{saludo()}</Text>
-        <Text style={[heading(28), styles.name]}>{paciente.nombre} {paciente.apellido}</Text>
+        <Text style={[heading(28), styles.name]}>
+          {paciente.nombre} {paciente.apellido}
+        </Text>
 
         <View style={styles.block}>
           {oferta ? (
@@ -86,12 +89,12 @@ export function HomeScreen() {
           )}
         </View>
 
-        <View style={styles.waitlist}>
-          <Text style={body(12, colors.neutral700)}>Tu lista de espera</Text>
+        <Card style={styles.waitlist}>
+          <Text style={body(13, colors.neutral700)}>Tu lista de espera</Text>
           <Text style={heading(17)}>
             {dias} {dias === 1 ? "día" : "días"} · puesto {paciente.puestoEspera}
           </Text>
-        </View>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -100,7 +103,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.fondo,
   },
   content: {
     padding: 18,
@@ -117,9 +120,8 @@ const styles = StyleSheet.create({
   waitlist: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "baseline",
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    paddingTop: 12,
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
 });
