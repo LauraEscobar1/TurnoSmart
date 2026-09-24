@@ -10,7 +10,7 @@ const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 export function ProfileNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
       <Stack.Screen name="ProfileHome" component={ProfileHomeScreen} options={{ title: "Perfil" }} />
       <Stack.Screen
         name="PersonalData"

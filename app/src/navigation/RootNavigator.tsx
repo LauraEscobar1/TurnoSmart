@@ -16,8 +16,8 @@ const theme: Theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: colors.accent,
-    background: colors.bg,
-    card: colors.bg,
+    background: colors.fondo,
+    card: colors.superficie,
     text: colors.text,
     border: colors.divider,
     notification: colors.accent,
@@ -38,7 +38,7 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer theme={theme}>
-      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
         {paciente ? (
           <>
             <Stack.Screen name="Tabs" component={TabNavigator} />

@@ -8,7 +8,7 @@ const Stack = createNativeStackNavigator<OffersStackParamList>();
 
 export function OffersNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
       <Stack.Screen name="OffersList" component={OffersListScreen} options={{ title: "Ofertas" }} />
     </Stack.Navigator>
   );
