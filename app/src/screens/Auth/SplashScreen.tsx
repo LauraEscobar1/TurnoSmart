@@ -15,7 +15,7 @@ export function SplashScreen() {
   return (
     <View style={styles.field} accessibilityLabel="TurnoSmart, cargando">
       <StatusBar style="light" />
-      <Logo size={88} color={colors.bg} wordmark />
+      <Logo size={84} color="#ffffff" acento={colors.accent400} wordmark />
       <Text style={[label(10, colors.bg), styles.bajada]}>Cupos médicos de último minuto</Text>
     </View>
   );
