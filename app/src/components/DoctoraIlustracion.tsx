@@ -1,139 +1,176 @@
 import React from "react";
-import Svg, { Circle, G, Path, Rect, Text as SvgText } from "react-native-svg";
+import { StyleSheet, Text, View } from "react-native";
+import Svg, { ClipPath, Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
-import { fonts } from "@/theme/typography";
+import { radius, sombra } from "@/theme/spacing";
+import { heading, label } from "@/theme/typography";
 
 interface Props {
   width: number;
-  /** Texto del globo de diálogo. */
-  saludo?: string;
 }
 
-const TINTA = colors.text;
-const PIEL = colors.accent200;
-const AMBO = colors.accent;
+// Tonos del retrato: planos, sin contornos; las sombras son el mismo tono un paso más oscuro.
+const PIEL = "#ebc7ae";
+const PIEL_SOMBRA = "#d9aa8c";
+const BOCA = "#a8665a";
 const PELO = colors.accent900;
 const BATA = "#ffffff";
-const TRAZO = 1.6;
+const BATA_SOMBRA = "#e3edf7";
+
+/** Proporción del lienzo del retrato (ancho × alto). */
+const VB_W = 300;
+const VB_H = 340;
 
 /**
- * La doctora de TurnoSmart: ilustración de trazo fino y relleno plano en
- * la paleta mono del sistema (bata blanca, ambo en acero, estetoscopio en
- * Campo). Sostiene una tablilla con el tilde de «cupo confirmado» y saluda
- * desde un globo de diálogo. Dos «+» de registro flotan junto al círculo
- * de fondo, la firma del sistema.
- *
- * El círculo de fondo se corta contra el borde derecho a propósito: la
- * pantalla alinea el SVG al borde para que la forma «salga» de la vista.
+ * Retrato editorial de la doctora de TurnoSmart: medio cuerpo recortado por
+ * un arco, formas planas sin contornos y rasgos mínimos. Una tarjeta real
+ * de la interfaz («Cupo confirmado») cruza el borde del arco: une la
+ * ilustración con el producto y dice rapidez sin decoración extra.
  */
-export function DoctoraIlustracion({ width, saludo = "¡Hola!" }: Props) {
-  const height = (width * 300) / 260;
+export function DoctoraIlustracion({ width }: Props) {
+  const height = (width * VB_H) / VB_W;
 
   return (
-    <Svg width={width} height={height} viewBox="0 0 260 300" accessibilityLabel="Ilustración: una doctora te saluda">
-      {/* Fondo orgánico */}
-      <Circle cx={196} cy={158} r={118} fill="#ffffff" />
-      <Circle cx={196} cy={158} r={118} fill="none" stroke={colors.accent300} strokeWidth={1} strokeDasharray="2 5" />
+    <View style={{ width, height }}>
+      <Svg width={width} height={height} viewBox={`0 0 ${VB_W} ${VB_H}`} accessibilityLabel="Retrato de una doctora">
+        <Defs>
+          <LinearGradient id="arco" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={colors.accent200} />
+            <Stop offset="1" stopColor="#e4f0fd" />
+          </LinearGradient>
+          <ClipPath id="recorte">
+            <Path d="M40 340 V160 A120 120 0 0 1 280 160 V340 Z" />
+          </ClipPath>
+        </Defs>
 
-      {/* Marcas «+» del sistema */}
-      <G stroke={colors.accent} strokeWidth={1.6} strokeLinecap="square">
-        <Path d="M64 150 h12 M70 144 v12" />
-        <Path d="M232 40 h10 M237 35 v10" />
-      </G>
+        {/* Todo el dibujo va corrido 20 px: el arco cierra en el borde derecho del lienzo. */}
+        <G transform="translate(20 0)">
+          {/* Arco */}
+          <Path d="M40 340 V160 A120 120 0 0 1 280 160 V340 Z" fill="url(#arco)" />
 
-      {/* Globo de diálogo */}
-      <Rect x={14} y={14} width={86} height={44} rx={22} fill={PELO} />
-      <Path d="M86 50 L104 70 L74 56 Z" fill={PELO} />
-      <SvgText x={57} y={43} fontSize={21} fontFamily={fonts.heading} fill={colors.bg} textAnchor="middle">
-        {saludo}
-      </SvgText>
-      <Path d="M104 70 L122 74" stroke={TINTA} strokeWidth={1} />
+          <G clipPath="url(#recorte)">
+            {/* Pelo, capa de atrás */}
+            <Path
+              d="M124 118 C120 84 144 68 166 70 C194 72 206 98 204 132 C203 160 201 180 194 192 C188 197 180 195 176 188 L178 124 Z"
+              fill={PELO}
+            />
 
-      {/* Piernas y zapatos */}
-      <Rect x={129} y={236} width={15} height={50} rx={3} fill={AMBO} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={150} y={236} width={15} height={50} rx={3} fill={AMBO} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={122} y={284} width={24} height={10} rx={5} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={148} y={284} width={24} height={10} rx={5} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
+            {/* Cuello */}
+            <Rect x={149} y={148} width={22} height={38} rx={8} fill={PIEL_SOMBRA} />
 
-      {/* Brazo izquierdo (detrás de la bata) */}
-      <Path
-        d="M112 112 C100 140 98 176 100 212 C100 220 110 221 111 212 L116 150 Z"
-        fill={BATA}
-        stroke={TINTA}
-        strokeWidth={TRAZO}
-        strokeLinejoin="round"
-      />
-      <Circle cx={105} cy={218} r={7.5} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
+            {/* Bata */}
+            <Path
+              d="M88 340 C88 244 104 200 128 188 L146 180 L174 180 L194 188 C218 200 232 244 232 340 Z"
+              fill={BATA}
+            />
+            <Path d="M202 200 C219 220 229 262 232 340 L210 340 C209 282 205 232 196 204 Z" fill={BATA_SOMBRA} />
+            <Path d="M118 206 C104 232 97 282 96 340 L112 340 C113 290 116 246 124 214 Z" fill={BATA_SOMBRA} />
 
-      {/* Bata */}
-      <Path
-        d="M114 108 Q114 100 122 100 L172 100 Q180 100 180 108 L186 238 Q186 246 178 246 L116 246 Q108 246 108 238 Z"
-        fill={BATA}
-        stroke={TINTA}
-        strokeWidth={TRAZO}
-        strokeLinejoin="round"
-      />
-      {/* Ambo en V y solapas */}
-      <Path d="M134 100 L147 122 L160 100 Z" fill={AMBO} stroke={TINTA} strokeWidth={TRAZO} strokeLinejoin="round" />
-      <Path d="M134 100 L142 146 M160 100 L152 146" stroke={TINTA} strokeWidth={TRAZO} strokeLinecap="round" />
-      <Path d="M147 146 L147 246" stroke={TINTA} strokeWidth={1} />
-      {/* Bolsillo con lapicera */}
-      <Rect x={122} y={164} width={18} height={15} rx={3} fill="none" stroke={TINTA} strokeWidth={1.2} />
-      <Path d="M127 158 L127 167" stroke={AMBO} strokeWidth={2.4} strokeLinecap="round" />
+            {/* Ambo en V y solapas */}
+            <Path d="M144 180 L160 214 L176 180 Z" fill={colors.accent} />
+            <Path d="M144 180 L128 190 L151 262 L160 214 Z" fill={BATA_SOMBRA} />
+            <Path d="M176 180 L192 190 L169 262 L160 214 Z" fill={BATA_SOMBRA} />
 
-      {/* Estetoscopio */}
-      <Path
-        d="M136 102 C130 124 132 142 142 150 M158 102 C166 122 166 138 160 150"
-        fill="none"
-        stroke={PELO}
-        strokeWidth={3}
-        strokeLinecap="round"
-      />
-      <Path d="M142 150 C146 156 156 156 160 150" fill="none" stroke={PELO} strokeWidth={3} strokeLinecap="round" />
-      <Path d="M151 155 L151 170" stroke={PELO} strokeWidth={3} strokeLinecap="round" />
-      <Circle cx={151} cy={176} r={7} fill={AMBO} stroke={PELO} strokeWidth={2.4} />
+            {/* Estetoscopio */}
+            <Path
+              d="M141 184 C126 214 130 246 150 258 M179 184 C193 212 190 238 172 252"
+              fill="none"
+              stroke={PELO}
+              strokeWidth={3.2}
+              strokeLinecap="round"
+            />
+            <Path
+              d="M150 258 C158 264 166 262 172 252"
+              fill="none"
+              stroke={PELO}
+              strokeWidth={3.2}
+              strokeLinecap="round"
+            />
+            <Path d="M161 262 L161 286" stroke={PELO} strokeWidth={3.2} strokeLinecap="round" />
+            <Circle cx={161} cy={295} r={10} fill={colors.accent700} />
+            <Circle cx={161} cy={295} r={4.5} fill="#cfdceb" />
 
-      {/* Cuello y cabeza */}
-      <Rect x={140} y={86} width={14} height={16} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={126} y={40} width={42} height={52} rx={21} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
-      {/* Pelo: flequillo recto y rodete */}
-      <Path
-        d="M126 62 C126 45 135 38 147 38 C159 38 168 45 168 58 C160 56 150 52 143 47 C138 54 132 58 126 62 Z"
-        fill={PELO}
-        stroke={TINTA}
-        strokeWidth={TRAZO}
-        strokeLinejoin="round"
-      />
-      <Circle cx={165} cy={42} r={7.5} fill={PELO} stroke={TINTA} strokeWidth={TRAZO} />
-      {/* Cara */}
-      <Circle cx={140} cy={69} r={2} fill={TINTA} />
-      <Circle cx={154} cy={69} r={2} fill={TINTA} />
-      <Path d="M142 78 Q147 83 152 78" fill="none" stroke={TINTA} strokeWidth={1.4} strokeLinecap="round" />
-      <Circle cx={135} cy={76} r={2.6} fill={colors.accent300} opacity={0.8} />
-      <Circle cx={159} cy={76} r={2.6} fill={colors.accent300} opacity={0.8} />
+            {/* Credencial */}
+            <Rect x={196} y={244} width={24} height={14} rx={4} fill={colors.accent} />
+            <Rect x={200} y={249} width={12} height={2.4} rx={1.2} fill="#ffffff" opacity={0.85} />
 
-      {/* Brazo derecho con la tablilla */}
-      <Rect x={172} y={170} width={40} height={52} rx={5} fill="#ffffff" stroke={TINTA} strokeWidth={TRAZO} />
-      <Rect x={184} y={165} width={16} height={8} rx={2} fill={PELO} />
-      <Rect x={180} y={182} width={24} height={4} rx={2} fill={colors.accent300} />
-      <Rect x={180} y={190} width={16} height={4} rx={2} fill={colors.accent200} />
-      <Circle cx={192} cy={206} r={8} fill={PELO} />
-      <Path
-        d="M188 206 L191 209 L196 203"
-        fill="none"
-        stroke="#ffffff"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M178 112 C190 136 194 164 186 190 C184 196 176 196 176 188 L174 150 Z"
-        fill={BATA}
-        stroke={TINTA}
-        strokeWidth={TRAZO}
-        strokeLinejoin="round"
-      />
-      <Circle cx={180} cy={196} r={7.5} fill={PIEL} stroke={TINTA} strokeWidth={TRAZO} />
-    </Svg>
+            {/* Cabeza */}
+            <Ellipse cx={160} cy={122} rx={30} ry={36} fill={PIEL} />
+            {/* Sombra del mentón sobre el cuello */}
+            <Path
+              d="M147 152 C154 160 166 160 172 152 L172 162 C164 168 154 168 147 162 Z"
+              fill={PIEL_SOMBRA}
+              opacity={0.9}
+            />
+
+            {/* Pelo, flequillo */}
+            <Path
+              d="M129 130 C126 101 143 83 168 84 L171 85 C160 93 151 105 147 119 C140 117 134 121 129 130 Z"
+              fill={PELO}
+            />
+            <Path d="M167 84 C187 86 196 99 195 116 C189 105 181 97 169 89 Z" fill={PELO} />
+
+            {/* Rostro: cejas, ojos, nariz, sonrisa */}
+            <Path
+              d="M142 115 Q147 112 152 114 M162 114 Q167 112 172 115"
+              fill="none"
+              stroke={PELO}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+            />
+            <Circle cx={147} cy={125} r={2.3} fill={PELO} />
+            <Circle cx={167} cy={125} r={2.3} fill={PELO} />
+            <Path
+              d="M157 128 Q153 137 157 139"
+              fill="none"
+              stroke={PIEL_SOMBRA}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+            />
+            <Path d="M149 145 Q156 150 164 144" fill="none" stroke={BOCA} strokeWidth={1.8} strokeLinecap="round" />
+            <Circle cx={142} cy={137} r={5} fill="#e7ad98" opacity={0.45} />
+            <Circle cx={172} cy={137} r={5} fill="#e7ad98" opacity={0.45} />
+          </G>
+        </G>
+      </Svg>
+
+      {/* Tarjeta flotante: una pieza real de la interfaz, no decoración */}
+      <View style={[styles.chip, { left: 0, bottom: height * 0.16 }]}>
+        <View style={styles.check}>
+          <Ionicons name="checkmark" size={16} color="#ffffff" />
+        </View>
+        <View>
+          <Text style={label(9, colors.neutral600)}>Cupo confirmado</Text>
+          <Text style={heading(16)}>Cardiología · 15:40</Text>
+        </View>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  chip: {
+    position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+    paddingLeft: 10,
+    paddingRight: 16,
+    borderRadius: radius.lg,
+    backgroundColor: colors.superficie,
+    borderWidth: 1,
+    borderColor: colors.borde,
+    ...sombra.md,
+    shadowOpacity: 0.1,
+  },
+  check: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accent900,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
