@@ -58,9 +58,11 @@ describe("Ruta crítica · 2 toques", () => {
       jest.advanceTimersByTime(2100);
     });
 
-    expect(await screen.findByText(/Cardiología · \d\d:\d\d/)).toBeTruthy();
+    // Mis citas abre en el día de la cita nueva (hoy), recuperada de un cupo.
+    expect(await screen.findByText("Cardiología")).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Mis citas", selected: true })).toBeTruthy();
-    expect(screen.getAllByText("Confirmada")).toHaveLength(2);
+    expect(screen.getByText("Cupo recuperado")).toBeTruthy();
+    expect(screen.getAllByText("Confirmada")).toHaveLength(1);
   });
 
   it("Rechazar muestra el estado terminal en contorno y vuelve al inicio", async () => {
@@ -99,10 +101,22 @@ describe("Secciones", () => {
     expect(await screen.findByText("Tiempo para responder")).toBeTruthy();
   });
 
-  it("Mis citas: control segmentado Próximas / Pasadas y detalle", async () => {
+  it("Mis citas: calendario, citas del día elegido, Próximas / Pasadas y detalle", async () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Mis citas" }));
-    await fireEvent.press(await screen.findByText(/Dermatología · \d\d:\d\d/));
+
+    // Abre en el primer día con citas.
+    expect(await screen.findByText("Dermatología")).toBeTruthy();
+    expect(screen.getByText("1 cita")).toBeTruthy();
+
+    // Un día sin citas muestra el vacío y lleva a la cita más cercana.
+    const hoy = screen.getAllByRole("button").find((b) => b.props.accessibilityState?.selected === false)!;
+    await fireEvent.press(hoy);
+    expect(await screen.findByText("Sin citas")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Ir a ese día" }));
+    expect(await screen.findByText("Dermatología")).toBeTruthy();
+
+    await fireEvent.press(screen.getByText("Dermatología"));
     expect(await screen.findByText("Detalle de cita")).toBeTruthy();
     expect(screen.getByText("Reserva directa")).toBeTruthy();
 
@@ -156,8 +170,8 @@ describe("Regresiones", () => {
     });
 
     // Ofertas ya no tiene badge; Avisos baja de 2 a 1 (queda el recordatorio).
-    expect(screen.getByText("1")).toBeTruthy();
-    expect(screen.queryByText("2")).toBeNull();
+    expect(screen.queryByTestId("badge-Ofertas")).toBeNull();
+    expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("1");
 
     await fireEvent.press(screen.getByRole("tab", { name: "Avisos" }));
     await fireEvent.press(await screen.findByText(AVISO_CUPO));
