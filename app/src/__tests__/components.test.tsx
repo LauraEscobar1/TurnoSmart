@@ -73,15 +73,24 @@ const cita: Cita = {
 };
 
 describe("AppointmentCard", () => {
+  it("la versión compacta de Home ancla la fecha a la izquierda", async () => {
+    await render(<AppointmentCard cita={cita} compact />);
+    expect(screen.getByText("23")).toBeTruthy();
+    expect(screen.getByText("sep")).toBeTruthy();
+    expect(screen.getByText("Cardiología · 15:40")).toBeTruthy();
+  });
+
   it("ancla la fecha a la izquierda y muestra el estado", async () => {
     const onPress = jest.fn();
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await render(<AppointmentCard cita={cita} onPress={onPress} />);
-    expect(screen.getByText("23")).toBeTruthy();
-    expect(screen.getByText("sep")).toBeTruthy();
-    expect(screen.getByText("Cardiología · 15:40")).toBeTruthy();
+    // Jerarquía: especialidad + hora → profesional → consultorio → estado.
+    expect(screen.getByText("Cardiología")).toBeTruthy();
+    expect(screen.getByText("15:40")).toBeTruthy();
+    expect(screen.getByText("Dra. Elena Ruiz")).toBeTruthy();
+    expect(screen.getByText("Consultorio 4B")).toBeTruthy();
     expect(screen.getByText("Confirmada")).toBeTruthy();
-    await user.press(screen.getByText("Cardiología · 15:40"));
+    await user.press(screen.getByText("Cardiología"));
     expect(onPress).toHaveBeenCalled();
   });
 
@@ -90,7 +99,7 @@ describe("AppointmentCard", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await render(<AppointmentCard cita={cita} onPress={onPress} past />);
     // userEvent simula un toque real: solo responde un elemento tocable.
-    await user.press(screen.getByText("Cardiología · 15:40"));
+    await user.press(screen.getByText("Cardiología"));
     expect(onPress).not.toHaveBeenCalled();
   });
 });
