@@ -75,3 +75,48 @@ export function mmss(segundos: number) {
 export function diasEnEspera(desdeISO: string) {
   return Math.max(0, Math.floor((Date.now() - new Date(desdeISO).getTime()) / 86_400_000));
 }
+
+const DIAS_CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const DIAS_LARGOS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const MESES_LARGOS = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+];
+
+/** Clave estable de un día local: "2026-09-24". Sirve para agrupar citas por día. */
+export function claveDia(fecha: Date | string) {
+  const d = typeof fecha === "string" ? new Date(fecha) : fecha;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** "Mié" */
+export function diaSemanaCorto(d: Date) {
+  return DIAS_CORTOS[d.getDay()];
+}
+
+/** "Septiembre 2026" */
+export function mesYAnio(d: Date) {
+  const m = MESES_LARGOS[d.getMonth()];
+  return `${m[0].toUpperCase()}${m.slice(1)} ${d.getFullYear()}`;
+}
+
+/** "miércoles 24 de septiembre" */
+export function fechaLarga(d: Date) {
+  return `${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES_LARGOS[d.getMonth()]}`;
+}
+
+/** Días consecutivos a partir de hoy + `desde` (inclusive), a medianoche local. */
+export function rangoDias(desde: number, cantidad: number) {
+  const hoy = new Date();
+  return Array.from({ length: cantidad }, (_, i) => new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + desde + i));
+}
