@@ -10,15 +10,19 @@ import { Logo } from "@/components/Logo";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Bienvenida">;
 
+const MARGEN = 28;
+
 /**
- * Bienvenida: la doctora de TurnoSmart es la protagonista. Es la única
- * pantalla con esquinas redondeadas y formas orgánicas: la puerta de
- * entrada busca cercanía; adentro, la app vuelve a la retícula del sistema.
+ * Bienvenida: composición editorial. Arriba el retrato de la doctora en su
+ * arco, alineado al margen derecho del texto; abajo, titular, bajada y
+ * acciones sobre el mismo margen izquierdo.
  */
 export function BienvenidaScreen({ navigation }: Props) {
   const { width, height } = useWindowDimensions();
-  // La ilustración ocupa el ancho disponible sin empujar las acciones fuera de vista.
-  const anchoIlustracion = Math.min(width * 0.92, height * 0.44 * (260 / 300), 420);
+  // El retrato ocupa el ancho del contenido (así el arco cierra en el margen
+  // derecho del texto) sin pasar del 47% del alto, para que la pantalla respire.
+  const anchoContenido = Math.min(width, 480) - MARGEN * 2;
+  const anchoIlustracion = Math.min(anchoContenido, height * 0.47 * (300 / 340));
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
@@ -74,17 +78,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 28,
+    paddingHorizontal: MARGEN,
     paddingTop: 12,
   },
   ilustracion: {
     flex: 1,
     alignItems: "flex-end",
-    justifyContent: "flex-end",
-    paddingBottom: 20,
+    justifyContent: "center",
+    paddingHorizontal: MARGEN,
   },
   texto: {
-    paddingHorizontal: 28,
+    paddingHorizontal: MARGEN,
   },
   titular: {
     fontFamily: fonts.heading,
@@ -101,7 +105,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   acciones: {
-    paddingHorizontal: 28,
+    paddingHorizontal: MARGEN,
     paddingTop: 28,
     paddingBottom: 16,
     gap: 18,
