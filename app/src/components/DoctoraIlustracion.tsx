@@ -1,5 +1,5 @@
 import React from "react";
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { colors } from "@/theme/colors";
 
 interface Props {
@@ -19,7 +19,7 @@ export const PROPORCION_ILUSTRACION = VB.w / VB.h;
 /**
  * El doctor de TurnoSmart. Sigue de cerca la referencia visual: medio
  * cuerpo, saludo con la mano abierta, tablilla bajo el brazo, rostro sin
- * contorno, pelo con volumen en dos tonos, estetoscopio de trazo grueso y
+ * contorno, pelo corto simétrico pegado al cráneo, estetoscopio de trazo grueso y
  * bata con pliegues grises suaves. Solo cambian los colores: camisa
  * celeste, corbata acero 700, estetoscopio Campo (#1d2d3d), tablilla en
  * acero con un tilde de «cupo confirmado», líneas de la bata en gris
@@ -43,6 +43,9 @@ export function DoctoraIlustracion({ width }: Props) {
           <Stop offset="0" stopColor={colors.accent200} />
           <Stop offset="1" stopColor="#e4f0fd" />
         </LinearGradient>
+        <ClipPath id="cuello">
+          <Path d="M386 468 C388 500 387 524 384 546 C414 572 464 572 494 544 C490 520 488 496 488 466 Z" />
+        </ClipPath>
       </Defs>
       <Path d="M170 1180 V540 A300 300 0 0 1 770 540 V1180 Z" fill="url(#arco)" />
       {/* Bata: cuerpo con hombros y brazo derecho */}
@@ -68,10 +71,10 @@ export function DoctoraIlustracion({ width }: Props) {
       />
       {/* Cuello (piel) y sombra bajo el mentón */}
       <Path
-        d="M388 480 L512 470 C512 500 514 520 516 538 C470 578 420 578 384 548 C387 525 388 505 388 480 Z"
+        d="M386 468 C388 500 387 524 384 546 C414 572 464 572 494 544 C490 520 488 496 488 466 Z"
         fill="#f5bf9b"
       />
-      <Path d="M388 500 C420 528 476 524 514 496 L515 528 C472 560 420 560 386 532 Z" fill="#ea9870" />
+      <Path d="M350 488 C372 512 404 522 440 518 C476 514 500 496 514 474 L514 502 C494 528 466 538 436 538 C402 538 374 526 350 510 Z" fill="#ea9870" clipPath="url(#cuello)" />
       {/* Cuello de la camisa */}
       <Path d="M384 530 L373 577 L392 624 L420 604 L436 578 C416 572 398 556 384 530 Z" fill="#bcd9f2" />
       <Path d="M520 520 L516 577 L467 627 L450 606 L436 578 C460 572 500 552 520 520 Z" fill="#bcd9f2" />
@@ -218,28 +221,31 @@ export function DoctoraIlustracion({ width }: Props) {
         strokeLinecap="round"
       />
       {/* Orejas */}
-      <Path d="M326 372 C309 363 297 378 300 400 C302 421 312 436 330 438 Z" fill="#f2b08a" />
-      <Path d="M536 376 C562 366 585 376 583 402 C582 424 568 441 534 446 Z" fill="#f2b08a" />
+      <Path d="M348 370 C312 360 297 378 300 400 C302 421 312 440 348 442 Z" fill="#f2b08a" />
+      <Path d="M512 372 C560 364 585 376 583 402 C582 424 568 442 512 448 Z" fill="#f2b08a" />
       <Path d="M566 388 C557 396 552 408 553 420" fill="none" stroke="#dc8a62" strokeWidth="5" strokeLinecap="round" />
-      {/* Cara */}
+      {/* Cabeza calva y cara */}
       <Path
-        d="M326 300 C325 262 360 240 430 240 C498 240 530 262 530 300 C533 342 533 392 526 428 C518 468 486 506 440 516 C400 521 362 506 342 472 C330 450 325 420 325 380 Z"
+        d="M325 384 C315 326 318 272 344 244 C368 220 400 214 432 214 C466 214 498 222 520 246 C544 274 544 330 534 394 C531 412 528 420 526 428 C518 468 486 506 440 516 C400 521 362 506 342 472 C330 450 325 420 325 380 Z"
         fill="#f7c7a5"
       />
-      {/* Pelo */}
+      {/* Pelo corto pegado al cráneo, simétrico sobre la cabeza (eje x = 430) */}
       <Path
-        d="M301 382 C292 332 294 282 306 250 C302 238 304 229 313 226 C323 222 336 223 346 229 C362 205 396 190 436 190 C482 190 520 205 541 224 C571 236 592 262 591 302 C592 342 585 370 564 382 C556 386 546 384 541 378 C533 350 522 322 505 302 C481 272 446 263 411 275 C381 286 352 291 331 281 C327 300 323 340 319 374 Z"
+        d="M328 362 C318 340 312 314 313 290 C315 254 340 224 378 208 C398 200 414 198 430 198 C446 198 462 200 482 208 C520 224 545 254 547 290 C548 314 542 340 532 362 L526 362 C525 344 526 330 528 318 C518 300 505 288 486 280 C468 274 450 272 430 272 C410 272 392 274 374 280 C355 288 342 300 332 318 C334 330 335 344 334 362 Z"
         fill="#6b3f2a"
       />
-      <Path d="M303 252 C297 292 297 340 303 382 L319 374 C321 334 325 296 331 268 Z" fill="#54301f" />
-      <Path d="M522 330 C530 372 531 424 515 478 C536 464 549 430 549 382 C549 356 541 338 522 330 Z" fill="#54301f" />
+      {/* Patillas: la misma sombra de los dos lados */}
+      <Path d="M328 362 C319 340 313 316 314 296 C320 318 326 340 334 362 Z" fill="#54301f" />
+      <Path d="M532 362 C541 340 547 316 546 296 C540 318 534 340 526 362 Z" fill="#54301f" />
+      {/* Raya fina y mechones */}
       <Path
-        d="M331 256 C347 262 362 258 374 250 M407 226 C432 214 462 218 486 236 M540 266 C549 278 553 292 553 304"
+        d="M398 274 C402 256 408 240 418 228 M366 244 C388 230 412 224 432 224 M456 234 C478 238 498 250 512 266"
         fill="none"
         stroke="#4a291b"
-        strokeWidth="5"
+        strokeWidth="4.5"
         strokeLinecap="round"
       />
+      <Path d="M384 218 C404 208 428 204 452 206" fill="none" stroke="#8a5638" strokeWidth="5" strokeLinecap="round" />
       {/* Cejas, ojos, nariz y sonrisa */}
       <Path
         d="M340 338 C348 328 372 325 386 333 C389 336 386 340 382 339 C370 335 354 337 344 342 C339 344 337 341 340 338 Z M447 332 C462 322 486 324 497 335 C498 339 494 341 490 339 C478 332 462 331 450 337 C446 339 444 335 447 332 Z"
