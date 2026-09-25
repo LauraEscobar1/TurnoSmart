@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-na
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
-import { body, fonts, heading } from "@/theme/typography";
+import { body, fonts } from "@/theme/typography";
 import { AuthStackParamList } from "@/navigation/types";
 import { DoctoraIlustracion } from "@/components/DoctoraIlustracion";
 import { Logo } from "@/components/Logo";
@@ -27,8 +27,7 @@ export function BienvenidaScreen({ navigation }: Props) {
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
       <View style={styles.marca}>
-        <Logo size={18} />
-        <Text style={heading(17)}>TurnoSmart</Text>
+        <Logo size={20} wordmark disposicion="horizontal" />
       </View>
 
       <View style={styles.ilustracion}>
