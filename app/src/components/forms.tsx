@@ -76,15 +76,33 @@ interface SegmentedProps<T> {
   onChange: (value: T) => void;
   /** Opciones de igual ancho que llenan la fila (registro, preferencias). */
   fill?: boolean;
+  /**
+   * relleno: la opción elegida es un relleno de acero (formularios).
+   * pildora: pista celeste y la opción elegida en blanco (pestañas de sección).
+   */
+  variante?: "relleno" | "pildora";
   style?: StyleProp<ViewStyle>;
 }
 
-/** Control segmentado (.seg): la opción elegida es un relleno de acero. */
-export function Segmented<T>({ label, options, value, onChange, fill = true, style }: SegmentedProps<T>) {
+/** Control segmentado (.seg). */
+export function Segmented<T>({
+  label,
+  options,
+  value,
+  onChange,
+  fill = true,
+  variante = "relleno",
+  style,
+}: SegmentedProps<T>) {
+  const pildora = variante === "pildora";
   return (
     <View style={style}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.seg, !fill && styles.segInline]} accessibilityRole="radiogroup" accessibilityLabel={label}>
+      <View
+        style={[styles.seg, pildora && styles.pista, !fill && styles.segInline]}
+        accessibilityRole="radiogroup"
+        accessibilityLabel={label}
+      >
         {options.map((o, i) => {
           const checked = o.value === value;
           return (
@@ -98,11 +116,20 @@ export function Segmented<T>({ label, options, value, onChange, fill = true, sty
                 styles.segOpt,
                 fill && styles.segOptFill,
                 i > 0 && styles.segOptDivider,
-                checked && styles.segOptChecked,
+                pildora && styles.pildora,
+                checked && (pildora ? styles.pildoraElegida : styles.segOptChecked),
                 pressed && !checked && styles.pressed,
               ]}
             >
-              <Text style={[styles.segText, checked && styles.segTextChecked]}>{o.label}</Text>
+              <Text
+                style={[
+                  styles.segText,
+                  pildora && styles.pildoraTexto,
+                  checked && (pildora ? styles.pildoraTextoElegido : styles.segTextChecked),
+                ]}
+              >
+                {o.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -248,6 +275,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   segOptDivider: {},
+  pista: {
+    padding: 4,
+    gap: 4,
+    borderRadius: radius.pill,
+    backgroundColor: colors.accent100,
+    borderColor: colors.accent200,
+  },
+  pildora: {
+    borderRadius: radius.pill,
+    paddingVertical: 9,
+  },
+  pildoraElegida: {
+    backgroundColor: colors.superficie,
+    shadowColor: colors.accent900,
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  pildoraTexto: {
+    fontFamily: fonts.bodyMedium,
+    color: colors.neutral700,
+  },
+  pildoraTextoElegido: {
+    color: colors.accent900,
+    fontFamily: fonts.bodyBold,
+  },
   segOptChecked: {
     backgroundColor: colors.accent,
   },
