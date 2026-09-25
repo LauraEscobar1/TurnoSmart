@@ -14,7 +14,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#f2f2f3"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1d2d3d"
       },
       "package": "com.turnosmart.app"
     },
@@ -33,6 +34,10 @@
           "faceIDPermission": "TurnoSmart usa Face ID para que ingreses sin escribir tu contraseña."
         }
       ]
-    ]
+    ],
+    "icon": "./assets/icon.png",
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
   }
 }
