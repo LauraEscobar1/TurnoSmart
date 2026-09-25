@@ -106,7 +106,7 @@ export function TabBar({
                 </Animated.Text>
               </View>
               {badge ? (
-                <View style={styles.badge}>
+                <View style={styles.badge} testID={`badge-${route.name}`}>
                   <Text style={styles.badgeText}>{badge}</Text>
                 </View>
               ) : null}
