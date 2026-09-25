@@ -6,198 +6,255 @@ interface Props {
   width: number;
 }
 
-// Estilo de la referencia: rellenos planos con líneas finas en un tono más
-// oscuro del mismo color (nunca negro). Ropa y objetos en la paleta azul de
-// TurnoSmart; piel y pelo naturales, que son la esencia del personaje.
-const PIEL = "#f2c9a8";
-const PIEL_LINEA = "#d49c7a";
-const PIEL_SOMBRA = "#e6b390";
-const PELO = "#5b3a29";
-const PELO_LINEA = "#43291c";
-const BATA = "#ffffff";
-const BATA_LINEA = "#c7d4e2";
-const CAMISA = "#cfe3f5";
-const CAMISA_LINEA = "#9dbddb";
-const CORBATA = colors.accent700;
-const CORBATA_LINEA = colors.accent800;
-const TUBO = colors.accent900;
-const L = 1.4;
+/**
+ * Lienzo recortado sobre las coordenadas de la ilustración de referencia
+ * (853 × 1280): el doctor se dibujó calcando la referencia elegida por el
+ * equipo, así que conserva sus proporciones y formas orgánicas.
+ */
+const VB = { x: 30, y: 180, w: 760, h: 1000 };
 
-const VB_W = 300;
-const VB_H = 340;
+/** Ancho / alto del dibujo, para dimensionarlo desde la pantalla. */
+export const PROPORCION_ILUSTRACION = VB.w / VB.h;
 
 /**
- * El doctor de TurnoSmart, siguiendo la referencia elegida por el equipo:
- * medio cuerpo de frente, saluda con la mano abierta y sostiene una
- * tablilla con un tilde de «cupo confirmado». Bata blanca, camisa celeste,
- * corbata azul y estetoscopio al cuello. Detrás, el arco celeste de la app;
- * la mano que saluda asoma por fuera del arco para que el personaje no se
- * vea encerrado.
+ * El doctor de TurnoSmart. Sigue de cerca la referencia visual: medio
+ * cuerpo, saludo con la mano abierta, tablilla bajo el brazo, rostro sin
+ * contorno, pelo con volumen en dos tonos, estetoscopio de trazo grueso y
+ * bata con pliegues grises suaves. Solo cambian los colores: camisa
+ * celeste, corbata acero 700, estetoscopio Campo (#1d2d3d), tablilla en
+ * acero con un tilde de «cupo confirmado», líneas de la bata en gris
+ * azulado. Piel y pelo quedan naturales, como en la referencia.
+ *
+ * Detrás, el arco celeste de la app; la cabeza sobresale por arriba y la
+ * mano que saluda asoma por la izquierda para que no se vea encerrado.
  */
 export function DoctoraIlustracion({ width }: Props) {
-  const height = (width * VB_H) / VB_W;
+  const height = width / PROPORCION_ILUSTRACION;
 
   return (
-    <Svg width={width} height={height} viewBox={`0 0 ${VB_W} ${VB_H}`} accessibilityLabel="Un doctor te saluda">
+    <Svg
+      width={width}
+      height={height}
+      viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`}
+      accessibilityLabel="Un doctor te saluda"
+    >
       <Defs>
         <LinearGradient id="arco" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={colors.accent200} />
           <Stop offset="1" stopColor="#e4f0fd" />
         </LinearGradient>
       </Defs>
-
-      {/* Arco de fondo */}
-      <Path d="M70 340 V172 A115 115 0 0 1 300 172 V340 Z" fill="url(#arco)" />
-
-      <G strokeLinecap="round" strokeLinejoin="round">
-        {/* Cuello */}
-        <Rect x={177} y={148} width={26} height={30} rx={6} fill={PIEL_SOMBRA} stroke={PIEL_LINEA} strokeWidth={L} />
-
-        {/* Bata: cuerpo */}
-        <Path
-          d="M104 340 C104 262 114 216 138 200 L172 174 L190 250 L208 174 L242 200 C266 216 276 262 276 340 Z"
-          fill={BATA}
-          stroke={BATA_LINEA}
-          strokeWidth={L}
-        />
-
-        {/* Camisa, cuello y corbata */}
-        <Path d="M170 176 L190 252 L210 176 Z" fill={CAMISA} stroke={CAMISA_LINEA} strokeWidth={L} />
-        <Path
-          d="M172 170 L190 186 L208 170 L203 162 L190 174 L177 162 Z"
-          fill={CAMISA}
-          stroke={CAMISA_LINEA}
-          strokeWidth={L}
-        />
-        <Path d="M184 184 L196 184 L194 194 L186 194 Z" fill={CORBATA} stroke={CORBATA_LINEA} strokeWidth={L} />
-        <Path d="M186 194 L194 194 L199 238 L190 250 L181 238 Z" fill={CORBATA} stroke={CORBATA_LINEA} strokeWidth={L} />
-
-        {/* Solapas, línea central, botón y bolsillos */}
-        <Path
-          d="M172 174 L150 198 L160 214 L154 222 L190 262 M208 174 L230 198 L220 214 L226 222 L190 262"
-          fill="none"
-          stroke={BATA_LINEA}
-          strokeWidth={L}
-        />
-        <Path d="M190 262 V340" stroke={BATA_LINEA} strokeWidth={L} />
-        <Circle cx={190} cy={304} r={3.2} fill="none" stroke={BATA_LINEA} strokeWidth={L} />
-        <Path d="M124 300 H158 V338 M222 300 H256" fill="none" stroke={BATA_LINEA} strokeWidth={L} />
-
-        {/* Estetoscopio: olivas a la izquierda, campana a la derecha */}
-        <Path
-          d="M174 176 C158 198 150 236 156 268 M206 176 C224 196 232 214 232 226"
-          fill="none"
-          stroke={TUBO}
-          strokeWidth={3.4}
-        />
-        <Path d="M156 268 L147 284 M156 268 L166 283" fill="none" stroke={TUBO} strokeWidth={3} />
-        <Circle cx={146} cy={287} r={3.4} fill={TUBO} />
-        <Circle cx={167} cy={286} r={3.4} fill={TUBO} />
-        <Circle cx={232} cy={236} r={10} fill="#dbe5ef" stroke={TUBO} strokeWidth={2.6} />
-        <Circle cx={232} cy={236} r={4.2} fill={colors.accent} />
-
-        {/* Brazo izquierdo: brazo hacia abajo y antebrazo levantado */}
-        <Path
-          d="M140 198 C120 208 106 242 104 282 C105 296 124 298 128 287 C130 256 138 232 150 218 Z"
-          fill={BATA}
-          stroke={BATA_LINEA}
-          strokeWidth={L}
-        />
-        <Path
-          d="M104 292 C92 272 86 236 88 210 L112 208 C111 232 116 262 128 284 C124 296 110 298 104 292 Z"
-          fill={BATA}
-          stroke={BATA_LINEA}
-          strokeWidth={L}
-        />
-        <Path d="M87 211 L113 209 L113 199 L87 201 Z" fill={CAMISA} stroke={CAMISA_LINEA} strokeWidth={L} />
-
-        {/* Mano que saluda */}
-        <Path
-          d="M88 200 L87 166 C87 158 95 158 95 166 L95 150 C95 142 103 142 103 150 L103 147 C103 139 111 139 111 147 L111 156 C111 148 119 148 119 156 L119 180 L125 172 C129 166 137 170 133 178 L121 198 C117 204 111 206 103 206 L95 206 C90 206 88 204 88 200 Z"
-          fill={PIEL}
-          stroke={PIEL_LINEA}
-          strokeWidth={L}
-        />
-        <Path d="M95 166 V178 M103 150 V176 M111 156 V177" fill="none" stroke={PIEL_LINEA} strokeWidth={1.1} />
-        <Path d="M97 192 Q105 196 113 190" fill="none" stroke={PIEL_LINEA} strokeWidth={1.1} />
-
-        {/* Brazo derecho */}
-        <Path
-          d="M240 198 C262 212 274 252 272 302 L252 302 C252 262 246 236 232 222 Z"
-          fill={BATA}
-          stroke={BATA_LINEA}
-          strokeWidth={L}
-        />
-
-        {/* Tablilla con el tilde de cupo confirmado */}
-        <G transform="rotate(-4 200 290)">
-          <Rect
-            x={166}
-            y={248}
-            width={66}
-            height={84}
-            rx={7}
-            fill={colors.accent}
-            stroke={colors.accent700}
-            strokeWidth={L}
-          />
-          <Rect x={173} y={259} width={52} height={67} rx={3} fill="#ffffff" />
-          <Rect x={186} y={241} width={26} height={13} rx={4} fill={TUBO} />
-          <Circle cx={212} cy={275} r={8} fill={TUBO} />
-          <Path d="M208 275 L211 278 L216.5 271.5" fill="none" stroke="#ffffff" strokeWidth={2} />
-          <Rect x={180} y={268} width={22} height={4} rx={2} fill={colors.accent200} />
-          <Rect x={180} y={278} width={16} height={4} rx={2} fill={colors.accent200} />
-          <Rect x={180} y={288} width={36} height={4} rx={2} fill={colors.accent200} />
-        </G>
-
-        {/* Antebrazo derecho y mano sobre la tablilla */}
-        <Path
-          d="M272 300 C268 320 244 328 216 322 L214 304 C234 306 248 302 252 292 Z"
-          fill={BATA}
-          stroke={BATA_LINEA}
-          strokeWidth={L}
-        />
-        <Path d="M217 303 L217 322 L209 322 L209 303 Z" fill={CAMISA} stroke={CAMISA_LINEA} strokeWidth={L} />
-        <Path
-          d="M209 304 C200 302 190 304 186 309 C184 313 188 315 194 314 L200 314 C194 318 194 322 200 323 L209 322 Z"
-          fill={PIEL}
-          stroke={PIEL_LINEA}
-          strokeWidth={L}
-        />
-
-        {/* Orejas */}
-        <Ellipse cx={159} cy={124} rx={6.5} ry={10} fill={PIEL} stroke={PIEL_LINEA} strokeWidth={L} />
-        <Ellipse cx={221} cy={124} rx={6.5} ry={10} fill={PIEL} stroke={PIEL_LINEA} strokeWidth={L} />
-
-        {/* Cara */}
-        <Path
-          d="M160 112 C160 90 173 80 190 80 C207 80 220 90 220 112 C220 136 208 158 190 158 C172 158 160 136 160 112 Z"
-          fill={PIEL}
-          stroke={PIEL_LINEA}
-          strokeWidth={L}
-        />
-
-        {/* Pelo corto peinado de costado */}
-        <Path
-          d="M157 120 C151 92 166 70 192 69 C215 68 229 84 226 108 C225 114 223 119 221 123 C219 110 214 101 205 96 C192 104 173 104 163 97 C160 104 158 111 157 120 Z"
-          fill={PELO}
-          stroke={PELO_LINEA}
-          strokeWidth={L}
-        />
-        <Path d="M176 80 Q193 75 208 86 M168 90 Q180 88 190 92" fill="none" stroke={PELO_LINEA} strokeWidth={1.1} />
-
-        {/* Cejas, ojos, nariz y sonrisa */}
-        <Path
-          d="M170 108 Q176 104 182 107 M198 107 Q204 104 210 108"
-          fill="none"
-          stroke={PELO_LINEA}
-          strokeWidth={2.2}
-        />
-        <Ellipse cx={176} cy={119} rx={2.7} ry={3.6} fill="#2b2b2d" />
-        <Ellipse cx={204} cy={119} rx={2.7} ry={3.6} fill="#2b2b2d" />
-        <Path d="M190 118 Q185 132 191 134" fill="none" stroke={PIEL_LINEA} strokeWidth={1.6} />
-        <Path d="M178 142 Q190 151 202 142" fill="none" stroke="#b5634f" strokeWidth={1.9} />
+      <Path d="M170 1180 V540 A300 300 0 0 1 770 540 V1180 Z" fill="url(#arco)" />
+      {/* Bata: cuerpo con hombros y brazo derecho */}
+      <Path
+        d="M300 590 C330 562 360 540 385 527 L525 515 C560 528 640 560 700 604 C735 640 752 700 758 780 C762 850 760 930 750 980 C735 1030 700 1070 665 1100 L662 1180 L248 1180 C246 1080 248 960 252 860 C255 760 262 660 300 590 Z"
+        fill="#ffffff"
+        stroke="#d3dde8"
+        strokeWidth="5"
+        strokeLinejoin="round"
+      />
+      {/* Pliegues de la bata */}
+      <Path
+        d="M255 628 C254 680 254 740 258 800 M660 615 C640 640 626 680 620 730 C616 790 620 840 640 880"
+        fill="none"
+        stroke="#d3dde8"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      {/* Camisa */}
+      <Path
+        d="M375 527 C372 562 377 610 385 645 C392 690 402 742 420 795 C442 748 470 690 490 645 C505 608 515 572 525 520 Z"
+        fill="#bcd9f2"
+      />
+      {/* Cuello (piel) y sombra bajo el mentón */}
+      <Path
+        d="M388 480 L512 470 C512 500 514 520 516 538 C470 578 420 578 384 548 C387 525 388 505 388 480 Z"
+        fill="#f5bf9b"
+      />
+      <Path d="M388 500 C420 528 476 524 514 496 L515 528 C472 560 420 560 386 532 Z" fill="#ea9870" />
+      {/* Cuello de la camisa */}
+      <Path d="M384 530 L373 577 L392 624 L420 604 L436 578 C416 572 398 556 384 530 Z" fill="#bcd9f2" />
+      <Path d="M520 520 L516 577 L467 627 L450 606 L436 578 C460 572 500 552 520 520 Z" fill="#bcd9f2" />
+      <Path
+        d="M374 578 L392 624 M516 578 L467 627"
+        fill="none"
+        stroke="#8db6d9"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+      {/* Corbata */}
+      <Path
+        d="M423 628 L451 628 C454 662 454 700 452 724 L420 798 L397 730 C400 696 410 662 423 628 Z"
+        fill="#416180"
+      />
+      <Path d="M412 597 C426 590 444 590 456 597 L450 628 C438 632 432 632 420 628 Z" fill="#3a5876" />
+      {/* Solapas */}
+      <Path
+        d="M373 578 L338 628 L356 638 L350 650 L420 812 M516 578 L550 626 L532 638 L542 650 L432 812"
+        fill="none"
+        stroke="#d3dde8"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Bolsillos, línea central y botón */}
+      <Path
+        d="M262 1037 L337 1045 L329 1176 L262 1172 M512 1140 C514 1162 518 1178 530 1182 L632 1180 M400 1102 L400 1180"
+        fill="none"
+        stroke="#d3dde8"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx="425" cy="1155" r="9" fill="none" stroke="#d3dde8" strokeWidth="5" />
+      {/* Estetoscopio */}
+      <Path
+        d="M386 528 C360 540 338 560 328 598 C321 624 318 648 318 668"
+        fill="none"
+        stroke="#1d2d3d"
+        strokeWidth="14"
+        strokeLinecap="round"
+      />
+      <Path
+        d="M283 732 C280 700 290 672 318 668 C346 672 356 700 353 734"
+        fill="none"
+        stroke="#1d2d3d"
+        strokeWidth="14"
+        strokeLinecap="round"
+      />
+      <Path
+        d="M283 734 C284 780 288 815 293 842 M353 736 C352 780 346 815 338 842"
+        fill="none"
+        stroke="#a9bbcd"
+        strokeWidth="10"
+        strokeLinecap="round"
+      />
+      <Ellipse cx="285" cy="848" rx="12" ry="9" fill="#1d2d3d" />
+      <Ellipse cx="342" cy="850" rx="12" ry="9" fill="#1d2d3d" />
+      <Path
+        d="M520 516 C546 526 560 552 562 590 C564 640 556 690 546 730 C542 742 540 748 539 752"
+        fill="none"
+        stroke="#1d2d3d"
+        strokeWidth="14"
+        strokeLinecap="round"
+      />
+      <Circle cx="537" cy="763" r="31" fill="#b7c5d3" />
+      <Circle cx="537" cy="763" r="17" fill="none" stroke="#1d2d3d" strokeWidth="8" />
+      <Circle cx="537" cy="763" r="8" fill="#dfe7ef" />
+      {/* Brazo izquierdo (el que saluda) */}
+      <Path
+        d="M100 762 C97 805 110 870 150 915 C175 938 206 946 236 936 C250 900 256 820 258 760 C262 690 278 624 304 588 C284 592 262 606 244 626 C224 650 205 690 190 730 Z"
+        fill="#ffffff"
+        stroke="#d3dde8"
+        strokeWidth="5"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M195 732 C208 760 220 790 226 802 C232 818 238 832 242 846 M226 802 C232 808 238 814 244 820"
+        fill="none"
+        stroke="#d3dde8"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      {/* Puño de la camisa */}
+      <Path d="M100 752 L186 721 C190 732 188 746 180 758 L112 782 C104 776 99 764 100 752 Z" fill="#bcd9f2" />
+      {/* Mano que saluda: palma y dedos individuales */}
+      <Path
+        d="M52 632 C70 622 110 616 134 626 C150 650 170 690 184 722 L104 752 C88 730 66 690 52 632 Z"
+        fill="#f7c7a5"
+      />
+      <G stroke="#f7c7a5" strokeLinecap="round" fill="none">
+        <Path d="M62 648 L51 596" strokeWidth="20" />
+        <Path d="M82 636 L69 574" strokeWidth="22" />
+        <Path d="M102 630 L91 563" strokeWidth="22" />
+        <Path d="M121 634 L113 570" strokeWidth="21" />
+        <Path d="M150 694 C158 660 168 628 181 606" strokeWidth="24" />
       </G>
+      <Path
+        d="M80 575 L99 634 M102 568 L121 626 M80 655 C96 645 116 632 136 624 M156 648 C146 662 142 680 142 698"
+        fill="none"
+        stroke="#e39a78"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      {/* Tablilla */}
+      <G transform="rotate(-2 494 955)">
+        <Rect x="388" y="830" width="212" height="252" rx="15" fill="#5980a6" />
+        <Rect x="410" y="858" width="167" height="204" rx="6" fill="#ffffff" />
+        <Rect x="446" y="833" width="97" height="30" rx="9" fill="#1d2d3d" />
+        <Rect x="463" y="818" width="64" height="22" rx="7" fill="#1d2d3d" />
+        <Rect x="437" y="890" width="92" height="8" rx="4" fill="#d6ebff" />
+        <Rect x="437" y="918" width="112" height="8" rx="4" fill="#d6ebff" />
+        <Rect x="437" y="946" width="72" height="8" rx="4" fill="#d6ebff" />
+        <Circle cx="552" cy="894" r="12" fill="#1d2d3d" />
+        <Path
+          d="M546 894 L550.5 898.5 L558 890"
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </G>
+      {/* Antebrazo derecho cruzado */}
+      <Path
+        d="M548 985 C575 960 600 930 625 895 C645 868 670 850 700 845 C726 842 750 862 753 902 C756 950 740 992 714 1012 C690 1034 650 1060 600 1078 C594 1056 586 1034 570 1008 Z"
+        fill="#ffffff"
+        stroke="#d3dde8"
+        strokeWidth="5"
+        strokeLinejoin="round"
+      />
+      <Path d="M548 985 L568 981 C586 1000 597 1032 598 1070 L588 1072 C586 1040 574 1010 548 985 Z" fill="#bcd9f2" />
+      {/* Mano sobre la tablilla */}
+      <Path
+        d="M457 1005 C480 996 520 993 552 1000 C566 1004 574 1010 580 1022 C588 1040 592 1058 588 1070 C576 1092 546 1108 505 1112 C475 1114 452 1102 441 1085 C436 1075 442 1066 455 1062 C470 1058 490 1050 508 1040 C494 1032 478 1027 463 1023 C452 1020 450 1009 457 1005 Z"
+        fill="#f7c7a5"
+      />
+      <Path
+        d="M455 1077 L497 1060 M472 1100 L515 1082 M500 1110 L532 1095"
+        fill="none"
+        stroke="#e39a78"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      {/* Orejas */}
+      <Path d="M326 372 C309 363 297 378 300 400 C302 421 312 436 330 438 Z" fill="#f2b08a" />
+      <Path d="M536 376 C562 366 585 376 583 402 C582 424 568 441 534 446 Z" fill="#f2b08a" />
+      <Path d="M566 388 C557 396 552 408 553 420" fill="none" stroke="#dc8a62" strokeWidth="5" strokeLinecap="round" />
+      {/* Cara */}
+      <Path
+        d="M326 300 C325 262 360 240 430 240 C498 240 530 262 530 300 C533 342 533 392 526 428 C518 468 486 506 440 516 C400 521 362 506 342 472 C330 450 325 420 325 380 Z"
+        fill="#f7c7a5"
+      />
+      {/* Pelo */}
+      <Path
+        d="M301 382 C292 332 294 282 306 250 C302 238 304 229 313 226 C323 222 336 223 346 229 C362 205 396 190 436 190 C482 190 520 205 541 224 C571 236 592 262 591 302 C592 342 585 370 564 382 C556 386 546 384 541 378 C533 350 522 322 505 302 C481 272 446 263 411 275 C381 286 352 291 331 281 C327 300 323 340 319 374 Z"
+        fill="#6b3f2a"
+      />
+      <Path d="M303 252 C297 292 297 340 303 382 L319 374 C321 334 325 296 331 268 Z" fill="#54301f" />
+      <Path d="M522 330 C530 372 531 424 515 478 C536 464 549 430 549 382 C549 356 541 338 522 330 Z" fill="#54301f" />
+      <Path
+        d="M331 256 C347 262 362 258 374 250 M407 226 C432 214 462 218 486 236 M540 266 C549 278 553 292 553 304"
+        fill="none"
+        stroke="#4a291b"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      {/* Cejas, ojos, nariz y sonrisa */}
+      <Path
+        d="M340 338 C348 328 372 325 386 333 C389 336 386 340 382 339 C370 335 354 337 344 342 C339 344 337 341 340 338 Z M447 332 C462 322 486 324 497 335 C498 339 494 341 490 339 C478 332 462 331 450 337 C446 339 444 335 447 332 Z"
+        fill="#4a291b"
+      />
+      <Ellipse cx="368" cy="379" rx="9.5" ry="14.5" fill="#3a2a24" />
+      <Ellipse cx="466" cy="379" rx="9.5" ry="14.5" fill="#3a2a24" />
+      <Path
+        d="M402 366 C406 385 402 402 394 415 C390 424 396 432 414 432"
+        fill="none"
+        stroke="#d27150"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+      <Path d="M388 457 C402 471 440 472 457 450" fill="none" stroke="#d27150" strokeWidth="6" strokeLinecap="round" />
     </Svg>
   );
 }
