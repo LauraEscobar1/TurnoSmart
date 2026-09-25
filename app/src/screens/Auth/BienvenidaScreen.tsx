@@ -5,7 +5,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, fonts } from "@/theme/typography";
 import { AuthStackParamList } from "@/navigation/types";
-import { DoctoraIlustracion } from "@/components/DoctoraIlustracion";
+import { DoctoraIlustracion, PROPORCION_ILUSTRACION } from "@/components/DoctoraIlustracion";
 import { Logo } from "@/components/Logo";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Bienvenida">;
@@ -22,7 +22,7 @@ export function BienvenidaScreen({ navigation }: Props) {
   // El retrato ocupa el ancho del contenido (así el arco cierra en el margen
   // derecho del texto) sin pasar del 47% del alto, para que la pantalla respire.
   const anchoContenido = Math.min(width, 480) - MARGEN * 2;
-  const anchoIlustracion = Math.min(anchoContenido, height * 0.47 * (300 / 340));
+  const anchoIlustracion = Math.min(anchoContenido, height * 0.47 * PROPORCION_ILUSTRACION);
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
