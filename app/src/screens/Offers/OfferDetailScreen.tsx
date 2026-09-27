@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, heading } from "@/theme/typography";
@@ -32,12 +32,19 @@ export function OfferDetailScreen({ route, navigation }: Props) {
     getOfertaPorId(ofertaId).then(setOferta);
   }, [ofertaId]);
 
+  const insets = useSafeAreaInsets();
+
   const volverAHome = () => navigation.navigate("Tabs", { screen: "Inicio" });
 
-  if (oferta === undefined) return <SafeAreaView style={styles.safe} />;
+  // Presentada como fullScreenModal: los insets se toman del proveedor raíz
+  // (ventana completa) y no de un SafeAreaView nativo, que dentro del modal
+  // de iOS puede medir 0 arriba y dejar el encabezado bajo la barra de estado.
+  const marco = [styles.safe, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }];
+
+  if (oferta === undefined) return <View style={marco} />;
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <View style={marco}>
       <ScreenHeader title="Oferta de cupo" onBack={volverAHome} />
       {oferta && oferta.estado === "pendiente" ? (
         <OfertaVigente oferta={oferta} navigation={navigation} />
@@ -58,11 +65,12 @@ export function OfferDetailScreen({ route, navigation }: Props) {
       ) : (
         <OfertaExpirada onVerHistorial={() => navigation.navigate("Tabs", { screen: "Ofertas" })} />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation: Props["navigation"] }) {
+  const insets = useSafeAreaInsets();
   const segundos = useCountdown(oferta.expiraEnISO);
 
   if (segundos === 0) {
@@ -81,7 +89,7 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Card tono="acento" style={styles.timer}>
           <Countdown segundos={segundos} size={52} caption="Tiempo para responder" align="center" />
         </Card>
@@ -96,7 +104,8 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
           <ExplainabilityPanel factores={oferta.factores} />
         </Card>
       </ScrollView>
-      <View style={styles.actions}>
+      {/* La barra llega al borde inferior y absorbe el inset (indicador de inicio). */}
+      <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, 14) }]}>
         <PrimaryButton label="Rechazar" variant="secondary" onPress={handleRechazar} style={styles.reject} />
         <PrimaryButton label="Aceptar cupo" onPress={handleAceptar} style={styles.accept} />
       </View>
@@ -116,8 +125,9 @@ function OfertaExpirada({ onVerHistorial }: { onVerHistorial: () => void }) {
 }
 
 function OfertaResuelta(props: { title: string; description: string; action: string; onPress: () => void }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.content}>
+    <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 18) }]}>
       <EmptyState title={props.title} description={props.description} />
       <PrimaryButton label={props.action} variant="secondary" onPress={props.onPress} />
     </View>
@@ -128,6 +138,9 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,
+  },
+  scroll: {
+    flex: 1,
   },
   content: {
     padding: 18,
