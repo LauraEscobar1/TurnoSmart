@@ -1,5 +1,5 @@
 import React from "react";
-import { colors } from "@/theme/colors";
+import { useTema } from "@/theme/Tema";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useT } from "@/i18n";
 import { ProfileStackParamList } from "@/navigation/types";
@@ -10,6 +10,7 @@ import { PreferencesScreen } from "@/screens/Profile/PreferencesScreen";
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 export function ProfileNavigator() {
+  const { colors } = useTema();
   const t = useT();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>

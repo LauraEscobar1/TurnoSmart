@@ -3,7 +3,8 @@ import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading } from "@/theme/typography";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { CalendarioHorizontal } from "@/components/CalendarioHorizontal";
@@ -33,6 +34,8 @@ const RANGO: Record<Tab, { desde: number; dias: number }> = {
  * que cambian el rango del calendario, y las citas del día elegido.
  */
 export function AppointmentsListScreen({ navigation, route }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { fechaCorta, fechaLarga } = useFormato();
   const [tab, setTab] = useState<Tab>(route.params?.tab ?? "proximas");
@@ -146,7 +149,8 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,

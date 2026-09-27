@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, label } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
@@ -21,6 +22,8 @@ import { fechaADisplay, fechaDesdeDisplay, formatearCedula } from "@/utils/perfi
  * nacimiento, ciudad, EPS y contacto de emergencia.
  */
 export function PersonalDataScreen() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const navigation = useNavigation();
   const paciente = usePaciente();
@@ -100,8 +103,8 @@ export function PersonalDataScreen() {
             <Card>
               {cuenta.map((c, i) => (
                 <View key={c.label} style={[styles.row, i > 0 && styles.rowDivider]}>
-                  <Text style={label(9)}>{c.label}</Text>
-                  <Text style={body(15)}>{c.value}</Text>
+                  <Text style={label(9, colors.neutral600)}>{c.label}</Text>
+                  <Text style={body(15, colors.text)}>{c.value}</Text>
                 </View>
               ))}
             </Card>
@@ -162,7 +165,8 @@ export function PersonalDataScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,

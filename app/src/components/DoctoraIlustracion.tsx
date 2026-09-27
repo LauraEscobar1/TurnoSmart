@@ -1,6 +1,6 @@
 import React from "react";
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
-import { colors } from "@/theme/colors";
+import { useTema } from "@/theme/Tema";
 import { useT } from "@/i18n";
 
 interface Props {
@@ -31,6 +31,7 @@ export const PROPORCION_ILUSTRACION = VB.w / VB.h;
  */
 export function DoctoraIlustracion({ width }: Props) {
   const t = useT();
+  const { colors, oscuro } = useTema();
   const height = width / PROPORCION_ILUSTRACION;
 
   return (
@@ -43,7 +44,7 @@ export function DoctoraIlustracion({ width }: Props) {
       <Defs>
         <LinearGradient id="arco" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={colors.accent200} />
-          <Stop offset="1" stopColor="#e4f0fd" />
+          <Stop offset="1" stopColor={oscuro ? colors.accent100 : "#e4f0fd"} />
         </LinearGradient>
         <ClipPath id="cuello">
           <Path d="M386 468 C388 500 387 524 384 546 C414 572 464 572 494 544 C490 520 488 496 488 466 Z" />

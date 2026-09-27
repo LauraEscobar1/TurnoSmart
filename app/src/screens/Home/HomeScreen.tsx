@@ -5,7 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { OfferCard } from "@/components/OfferCard";
@@ -41,6 +42,8 @@ function saludo(t: T) {
  * lista liviana) para que no se lea como una pila de tarjetas iguales.
  */
 export function HomeScreen() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { idioma, fechaCorta, haceCuanto } = useFormato();
   const navigation = useNavigation<Nav>();
@@ -81,7 +84,7 @@ export function HomeScreen() {
         {/* 1. Saludo */}
         <View style={styles.saludo}>
           <View style={styles.flex}>
-            <Text style={label(10)}>{saludo(t)}</Text>
+            <Text style={label(10, colors.neutral600)}>{saludo(t)}</Text>
             <Text style={heading(28, colors.accent900)} numberOfLines={1}>
               {paciente.nombre} {paciente.apellido}
             </Text>
@@ -110,7 +113,7 @@ export function HomeScreen() {
             <Card tono="acento" style={styles.sinOferta}>
               <View style={styles.radar}>
                 <View style={styles.radarAnillo} />
-                <Ionicons name="notifications-outline" size={20} color="#ffffff" />
+                <Ionicons name="notifications-outline" size={20} color={colors.sobreAcento} />
               </View>
               <View style={styles.flex}>
                 <Text style={heading(18, colors.accent900)}>{t("inicio.sinOfertas")}</Text>
@@ -187,13 +190,13 @@ export function HomeScreen() {
                       </Text>
                     ) : null}
                   </View>
-                  <Text style={label(9)}>{haceCuanto(a.fechaISO)}</Text>
+                  <Text style={label(9, colors.neutral600)}>{haceCuanto(a.fechaISO)}</Text>
                 </Pressable>
               ))
             ) : (
               <View style={styles.alDia}>
                 <View style={styles.alDiaIcono}>
-                  <Ionicons name="checkmark" size={18} color="#ffffff" />
+                  <Ionicons name="checkmark" size={18} color={colors.sobreAcento} />
                 </View>
                 <View>
                   <Text style={heading(17, colors.accent900)}>{t("inicio.todoAlDia")}</Text>
@@ -220,6 +223,8 @@ function Seccion({
   onAccion?: () => void;
   children: React.ReactNode;
 }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   return (
     <View style={styles.seccion}>
       <View style={styles.seccionCabecera}>
@@ -240,6 +245,8 @@ function Seccion({
  * (los que están antes, tenues; vos, la píldora de acero).
  */
 function ListaEspera({ puesto, dias, onPress }: { puesto: number; dias: number; onPress: () => void }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const antes = Math.max(0, puesto - 1);
   const visibles = Math.min(antes, 9);
@@ -248,12 +255,12 @@ function ListaEspera({ puesto, dias, onPress }: { puesto: number; dias: number; 
     <Card onPress={onPress} accessibilityRole="button" accessibilityLabel={t("inicio.verListaEspera")} style={styles.espera}>
       <View style={styles.esperaDatos}>
         <View style={styles.flex}>
-          <Text style={label(9)}>{t("inicio.puesto")}</Text>
+          <Text style={label(9, colors.neutral600)}>{t("inicio.puesto")}</Text>
           <Text style={styles.esperaNumero}>{puesto}</Text>
         </View>
         <View style={styles.esperaSeparador} />
         <View style={styles.flex}>
-          <Text style={label(9)}>{t("inicio.enEspera")}</Text>
+          <Text style={label(9, colors.neutral600)}>{t("inicio.enEspera")}</Text>
           <Text style={styles.esperaNumero}>
             {dias}
             <Text style={heading(17, colors.neutral600)}> {t("comun.dias", { count: dias })}</Text>
@@ -277,7 +284,8 @@ function ListaEspera({ puesto, dias, onPress }: { puesto: number; dias: number; 
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,
@@ -429,7 +437,7 @@ const styles = StyleSheet.create({
   colaVosTexto: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: "#ffffff",
+    color: colors.sobreAcento,
   },
   // Avisos
   avisos: {

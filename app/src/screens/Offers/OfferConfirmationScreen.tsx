@@ -4,7 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading, label } from "@/theme/typography";
 import { RootStackParamList } from "@/navigation/types";
 import { OfertaCupo } from "@/types/domain";
@@ -24,6 +25,8 @@ const AUTO_NAV_MS = 2000;
  * Rechazada: mismo molde con el campo sólido reemplazado por contorno.
  */
 export function OfferConfirmationScreen({ route, navigation }: Props) {
+  const { colors, oscuro } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { diaRelativo } = useFormato();
@@ -55,11 +58,12 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
-      style={[styles.safe, { backgroundColor: esAceptada ? colors.accent900 : colors.fondo }]}
+      style={[styles.safe, { backgroundColor: esAceptada ? colors.campo : colors.fondo }]}
     >
-      <StatusBar style={esAceptada ? "light" : "dark"} />
+      {/* Sobre el campo sólido la barra va al revés que en el resto del modo. */}
+      <StatusBar style={esAceptada !== oscuro ? "light" : "dark"} />
       <View style={styles.body}>
-        <View style={[styles.halo, { backgroundColor: esAceptada ? "rgba(255,255,255,0.08)" : colors.accent100 }]}>
+        <View style={[styles.halo, { backgroundColor: esAceptada ? colors.haloCampo : colors.accent100 }]}>
           <View style={[styles.mark, { borderColor: fg }]}>
             <Ionicons name={esAceptada ? "checkmark" : "close"} size={34} color={fg} />
           </View>
@@ -98,7 +102,8 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
   },
