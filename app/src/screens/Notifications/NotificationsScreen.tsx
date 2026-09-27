@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
+import { usePaciente } from "@/auth/AuthContext";
 import { colors } from "@/theme/colors";
 import { radius, sombra } from "@/theme/spacing";
 import { body, fonts, label } from "@/theme/typography";
@@ -17,72 +18,67 @@ import { grupoAviso, marcaAviso } from "@/utils/format";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-type Filtro = "todas" | "citas" | "ofertas";
-
-const FILTROS: { value: Filtro; label: string; vacio: string }[] = [
-  { value: "todas", label: "Todas", vacio: "No tenés avisos." },
-  { value: "citas", label: "Citas", vacio: "No tenés avisos de citas." },
-  { value: "ofertas", label: "Ofertas", vacio: "No tenés avisos de ofertas." },
-];
-
 /**
  * Cada tipo tiene su ícono y su jerarquía, sin salir de la paleta mono:
  * el cupo disponible (lo único urgente) lleva el círculo de Acero sólido;
  * citas y confirmaciones, el tinte suave; lo ya resuelto, gris.
  */
-const TIPO: Record<
-  TipoNotificacion,
-  { titulo: string; icono: keyof typeof Ionicons.glyphMap; tono: "fuerte" | "suave" | "apagado"; filtro: Filtro }
-> = {
-  "cupo-ultimo-minuto": { titulo: "Cupo disponible", icono: "flash", tono: "fuerte", filtro: "ofertas" },
-  recordatorio: { titulo: "Recordatorio de cita", icono: "calendar-outline", tono: "suave", filtro: "citas" },
-  confirmacion: { titulo: "Cupo confirmado", icono: "checkmark-circle-outline", tono: "suave", filtro: "ofertas" },
-  expiracion: { titulo: "Oferta expirada", icono: "time-outline", tono: "apagado", filtro: "ofertas" },
+const TIPO: Record<TipoNotificacion, { icono: keyof typeof Ionicons.glyphMap; tono: "fuerte" | "suave" | "apagado" }> = {
+  "cupo-ultimo-minuto": { icono: "flash", tono: "fuerte" },
+  recordatorio: { icono: "calendar-outline", tono: "suave" },
+  confirmacion: { icono: "checkmark-circle-outline", tono: "suave" },
+  expiracion: { icono: "time-outline", tono: "apagado" },
 };
 
 /**
- * Notificaciones (Avisos) — Nivel 1 (04 · Notificaciones).
- * Una bandeja, no una lista de tarjetas: avisos agrupados por día en filas
- * compactas, filtros Todas · Citas · Ofertas y «Marcar todo como leído».
- * Es también un punto de entrada transversal (docs/03-navegacion.md §4):
- * un cupo disponible abre el detalle de la oferta; un recordatorio, la cita.
+ * Notificaciones — Nivel 1 (04 · Notificaciones).
+ * Una bandeja cronológica (Hoy, Ayer, Esta semana, Anteriores), no una lista
+ * de tarjetas. Cada fila es la notificación tal como llegó: título, mensaje
+ * breve y, si corresponde, una acción. El detalle completo vive en el
+ * destino (docs/03-navegacion.md §4): un recordatorio abre su cita al
+ * tocarlo; un cupo disponible abre la oferta desde «Ver oferta».
  * Sin leer: título en negrita y punto de Acero. Leído: texto atenuado.
  */
 export function NotificationsScreen() {
   const navigation = useNavigation<Nav>();
   const [items, setItems] = useState<Notificacion[]>([]);
-  const [filtro, setFiltro] = useState<Filtro>("todas");
+
+  const { nombre } = usePaciente();
 
   const cargar = useCallback(() => {
-    getNotificaciones().then(setItems);
-  }, []);
+    getNotificaciones(nombre).then(setItems);
+  }, [nombre]);
 
   useCargarDatos(cargar);
 
   const hayNoLeidas = items.some((n) => !n.leida);
 
   const grupos = useMemo(() => {
-    const visibles = filtro === "todas" ? items : items.filter((n) => TIPO[n.tipo].filtro === filtro);
     const porGrupo = new Map<string, Notificacion[]>();
-    for (const n of visibles) {
+    for (const n of items) {
       const g = grupoAviso(n.fechaISO);
       porGrupo.set(g, [...(porGrupo.get(g) ?? []), n]);
     }
     return [...porGrupo.entries()];
-  }, [items, filtro]);
+  }, [items]);
 
+  /** Tocar la notificación la marca como leída; el recordatorio además abre su cita. */
   async function handlePress(n: Notificacion) {
     await marcarComoLeida(n.id);
     cargar();
-    if (!n.referenciaId) return;
-    if (n.tipo === "cupo-ultimo-minuto") {
-      navigation.navigate("OfferDetail", { ofertaId: n.referenciaId });
-    } else if (n.tipo === "recordatorio") {
+    if (n.tipo === "recordatorio" && n.referenciaId) {
       navigation.navigate("Tabs", {
         screen: "MisCitas",
         params: { screen: "AppointmentDetail", params: { citaId: n.referenciaId }, initial: false },
       });
     }
+  }
+
+  /** «Ver oferta»: el destino con el contador y las acciones de la oferta. */
+  async function handleVerOferta(n: Notificacion) {
+    await marcarComoLeida(n.id);
+    cargar();
+    if (n.referenciaId) navigation.navigate("OfferDetail", { ofertaId: n.referenciaId });
   }
 
   async function handleMarcarTodas() {
@@ -110,35 +106,26 @@ export function NotificationsScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.filtros}>
-          {FILTROS.map((f) => {
-            const activo = f.value === filtro;
-            return (
-              <Pressable
-                key={f.value}
-                onPress={() => setFiltro(f.value)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: activo }}
-                style={[styles.filtro, activo && styles.filtroActivo]}
-              >
-                <Text style={[styles.filtroTexto, activo && styles.filtroTextoActivo]}>{f.label}</Text>
-              </Pressable>
-            );
-          })}
+          <View accessibilityState={{ selected: true }} style={[styles.filtro, styles.filtroActivo]}>
+            <Text style={[styles.filtroTexto, styles.filtroTextoActivo]}>Todas</Text>
+          </View>
         </View>
 
         {items.length === 0 ? (
           <EmptyState title="No tenés notificaciones" />
-        ) : grupos.length === 0 ? (
-          <Text style={[body(14, colors.neutral600), styles.vacio]}>
-            {FILTROS.find((f) => f.value === filtro)?.vacio}
-          </Text>
         ) : (
           grupos.map(([grupo, avisos]) => (
             <View key={grupo} style={styles.grupo}>
               <Text style={label(10, colors.neutral600)}>{grupo}</Text>
               <View style={styles.bandeja}>
                 {avisos.map((n, i) => (
-                  <FilaAviso key={n.id} aviso={n} divisor={i > 0} onPress={() => handlePress(n)} />
+                  <FilaAviso
+                    key={n.id}
+                    aviso={n}
+                    divisor={i > 0}
+                    onPress={() => handlePress(n)}
+                    onVerOferta={() => handleVerOferta(n)}
+                  />
                 ))}
               </View>
             </View>
@@ -149,14 +136,25 @@ export function NotificationsScreen() {
   );
 }
 
-function FilaAviso({ aviso, divisor, onPress }: { aviso: Notificacion; divisor: boolean; onPress: () => void }) {
+function FilaAviso({
+  aviso,
+  divisor,
+  onPress,
+  onVerOferta,
+}: {
+  aviso: Notificacion;
+  divisor: boolean;
+  onPress: () => void;
+  onVerOferta: () => void;
+}) {
   const tipo = TIPO[aviso.tipo];
   const noLeida = !aviso.leida;
+  const conOferta = aviso.tipo === "cupo-ultimo-minuto" && !!aviso.referenciaId;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${noLeida ? "Sin leer. " : ""}${tipo.titulo}. ${aviso.titulo}. ${marcaAviso(aviso.fechaISO)}`}
+      accessibilityLabel={`${noLeida ? "Sin leer. " : ""}${aviso.titulo}. ${marcaAviso(aviso.fechaISO)}. ${aviso.cuerpo}`}
       style={({ pressed }) => [styles.fila, pressed && styles.filaPresionada]}
     >
       <View
@@ -179,18 +177,23 @@ function FilaAviso({ aviso, divisor, onPress }: { aviso: Notificacion; divisor: 
             style={[styles.titulo, noLeida ? styles.tituloNoLeido : styles.tituloLeido]}
             numberOfLines={1}
           >
-            {tipo.titulo}
+            {aviso.titulo}
           </Text>
           <Text style={body(12, colors.neutral600)}>{marcaAviso(aviso.fechaISO)}</Text>
           {noLeida ? <View style={styles.punto} /> : null}
         </View>
-        <Text style={body(14, aviso.leida ? colors.neutral700 : colors.text)} numberOfLines={2}>
-          {aviso.titulo}
-        </Text>
-        {aviso.cuerpo ? (
-          <Text style={body(13, colors.neutral600)} numberOfLines={1}>
-            {aviso.cuerpo}
-          </Text>
+        <Text style={[body(14, aviso.leida ? colors.neutral700 : colors.text), styles.mensaje]}>{aviso.cuerpo}</Text>
+        {conOferta ? (
+          <Pressable
+            onPress={onVerOferta}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel="Ver oferta"
+            style={({ pressed }) => [styles.verOferta, pressed && styles.presionado]}
+          >
+            <Text style={styles.verOfertaTexto}>Ver oferta</Text>
+            <Ionicons name="arrow-forward" size={14} color={colors.accent700} />
+          </Pressable>
         ) : null}
       </View>
     </Pressable>
@@ -216,11 +219,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.accent700,
   },
-  vacio: {
-    paddingVertical: 24,
-    textAlign: "center",
-  },
-  // Filtros (mismas pastillas que el historial de Ofertas)
+  // Filtro (misma pastilla que el historial de Ofertas)
   filtros: {
     flexDirection: "row",
     gap: 8,
@@ -305,6 +304,21 @@ const styles = StyleSheet.create({
   tituloLeido: {
     fontFamily: fonts.bodyMedium,
     color: colors.neutral700,
+  },
+  mensaje: {
+    lineHeight: 20,
+  },
+  verOferta: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 4,
+    marginTop: 6,
+  },
+  verOfertaTexto: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: colors.accent700,
   },
   punto: {
     width: 8,
