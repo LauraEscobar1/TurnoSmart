@@ -49,8 +49,8 @@ export function HomeScreen() {
     useCallback(() => {
       getOfertaPendiente().then(setOferta);
       getCitasProximas().then((citas) => setProximaCita(citas[0] ?? null));
-      getNotificaciones().then(setAvisos);
-    }, [])
+      getNotificaciones(paciente.nombre).then(setAvisos);
+    }, [paciente.nombre])
   );
 
   const noLeidos = avisos.filter((a) => !a.leida);
@@ -159,8 +159,8 @@ export function HomeScreen() {
           />
         </Seccion>
 
-        {/* 5. Avisos recientes */}
-        <Seccion titulo="Avisos recientes" accion={noLeidos.length ? "Ver todos" : undefined} onAccion={irA.avisos}>
+        {/* 5. Notificaciones recientes */}
+        <Seccion titulo="Notificaciones recientes" accion={noLeidos.length ? "Ver todos" : undefined} onAccion={irA.avisos}>
           <Card style={styles.avisos}>
             {noLeidos.length ? (
               noLeidos.slice(0, 2).map((a, i) => (
@@ -195,7 +195,7 @@ export function HomeScreen() {
                 </View>
                 <View>
                   <Text style={heading(17, colors.accent900)}>Todo al día</Text>
-                  <Text style={body(13, colors.neutral700)}>No tenés nuevos avisos.</Text>
+                  <Text style={body(13, colors.neutral700)}>No tenés notificaciones nuevas.</Text>
                 </View>
               </View>
             )}
