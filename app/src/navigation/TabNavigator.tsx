@@ -26,7 +26,7 @@ const soloEnRaiz = (route: RouteProp<RootTabParamList>, raiz: string) => ({
 /**
  * Navegación primaria deslizable — docs/03-navegacion.md §2.1 y
  * "NavDeslizable.dc.html". Cinco destinos: se cambia de sección tocando
- * un ícono o arrastrando el contenido a los lados. Solo Ofertas y Avisos
+ * un ícono o arrastrando el contenido a los lados. Solo Ofertas y Notificaciones
  * llevan badge; el de Ofertas cuenta ofertas pendientes de respuesta.
  */
 export function TabNavigator() {
@@ -54,7 +54,7 @@ export function TabNavigator() {
         component={AppointmentsNavigator}
         options={({ route }) => ({ title: "Mis citas", ...soloEnRaiz(route, "AppointmentsList") })}
       />
-      <Tab.Screen name="Notificaciones" component={NotificationsScreen} options={{ title: "Avisos" }} />
+      <Tab.Screen name="Notificaciones" component={NotificationsScreen} options={{ title: "Notificaciones" }} />
       <Tab.Screen
         name="Perfil"
         component={ProfileNavigator}
