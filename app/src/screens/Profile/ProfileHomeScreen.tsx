@@ -11,24 +11,12 @@ import { ProfileStackParamList } from "@/navigation/types";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
 import { abrirAjustes, pedirPermisoNotificaciones } from "@/services/permisosService";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { Paciente } from "@/types/domain";
+import { AvatarPaciente } from "@/components/AvatarPaciente";
+import { elegirFotoPerfil } from "@/services/fotoService";
 import { diasEnEspera } from "@/utils/format";
+import { perfilCompleto } from "@/utils/perfil";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
-
-/** Lo que hace falta para que las ofertas de cupo se ajusten al paciente. */
-function perfilCompleto(p: Paciente) {
-  const pasos = [
-    !!p.nombre && !!p.apellido,
-    !!p.email,
-    !!p.telefono,
-    !!p.dni,
-    !!p.obraSocial.trim(),
-    p.especialidadesInteres.length > 0,
-    p.notificacionesActivas,
-  ];
-  return Math.round((pasos.filter(Boolean).length / pasos.length) * 100);
-}
 
 /** «Cardiología», «Cardiología o Dermatología», «Cardiología, Nutrición o Dermatología». */
 function listaO(items: string[]) {
@@ -39,10 +27,10 @@ function listaO(items: string[]) {
 /**
  * Perfil — Nivel 1 ("NavDeslizable.dc.html", sección 5 / 5).
  * Una ficha amable del paciente: el nombre centrado con accesos redondos a
- * Preferencias y Datos personales, su «personaje» (las iniciales en una
- * figura redondeada que saluda) sobre el arco celeste, cuánto está completo
- * el perfil, el estado de la lista de espera y tres indicadores. Todo sale
- * de los datos del paciente; nada es decorativo inventado.
+ * Preferencias y Datos personales, su círculo (foto o iniciales, con la
+ * cámara para subirla) sobre el arco celeste, el aviso de perfil incompleto
+ * (solo mientras falten datos opcionales), el estado de la lista de espera
+ * y tres indicadores. Todo sale de los datos del paciente.
  */
 export function ProfileHomeScreen() {
   const navigation = useNavigation<Nav>();
@@ -51,17 +39,16 @@ export function ProfileHomeScreen() {
   const [pidiendo, setPidiendo] = useState(false);
   const { width } = useWindowDimensions();
 
-  // «Martín Ávila» → «MA»: las iniciales van sin tilde, como en el mockup.
-  const iniciales = `${paciente.nombre[0] ?? ""}${paciente.apellido[0] ?? ""}`
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toUpperCase();
-
   const completo = perfilCompleto(paciente);
   const dias = diasEnEspera(paciente.registradoEnISO);
   const especialidades = paciente.especialidadesInteres;
   const personasAntes = Math.max(0, paciente.puestoEspera - 1);
   const irAPreferencias = () => navigation.navigate("Preferences");
+
+  async function cambiarFoto() {
+    const uri = await elegirFotoPerfil();
+    if (uri) await actualizar({ fotoUri: uri });
+  }
 
   async function alternarNotificaciones() {
     if (paciente.notificacionesActivas) {
@@ -102,37 +89,32 @@ export function ProfileHomeScreen() {
             />
           </View>
 
-          <View style={styles.personaje} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Ionicons name="hand-left" size={34} color={colors.accent400} style={styles.mano} />
-            <View style={styles.figura}>
-              <Text style={heading(52, colors.accent700)}>{iniciales}</Text>
-            </View>
+          <View style={styles.personaje}>
+            <AvatarPaciente paciente={paciente} size={132} onPress={cambiarFoto} />
           </View>
         </View>
 
         <View style={styles.cuerpo}>
-          {/* Perfil completo */}
-          <Pressable
-            onPress={() => navigation.navigate("PersonalData")}
-            accessibilityRole="button"
-            accessibilityLabel={`Perfil completo al ${completo} %`}
-            style={({ pressed }) => [styles.tarjeta, pressed && styles.presionado]}
-          >
-            <Text style={body(14, colors.neutral700)}>
-              {completo === 100
-                ? "Tu perfil está completo. Así te ofrecemos solo los cupos que realmente te sirven."
-                : "Completá tu perfil para que te ofrezcamos cupos que realmente te sirvan."}
-            </Text>
-            <View style={styles.separador} />
-            <View style={styles.progresoFila}>
-              <Ionicons name="person-circle-outline" size={22} color={colors.accent600} />
-              <Text style={styles.progresoEtiqueta}>Perfil</Text>
-              <View style={styles.pista}>
-                <View style={[styles.relleno, { width: `${completo}%` }]} />
+          {/* Perfil por completar: desaparece cuando ya no falta nada */}
+          {completo < 100 ? (
+            <Pressable
+              onPress={() => navigation.navigate("PersonalData")}
+              accessibilityRole="button"
+              accessibilityLabel={`Completa tu perfil para una mejor experiencia. Llevas ${completo} %`}
+              style={({ pressed }) => [styles.tarjeta, pressed && styles.presionado]}
+            >
+              <Text style={body(14, colors.neutral700)}>Completa tu perfil para una mejor experiencia.</Text>
+              <View style={styles.separador} />
+              <View style={styles.progresoFila}>
+                <Ionicons name="person-circle-outline" size={22} color={colors.accent600} />
+                <Text style={styles.progresoEtiqueta}>Perfil</Text>
+                <View style={styles.pista}>
+                  <View style={[styles.relleno, { width: `${completo}%` }]} />
+                </View>
+                <Text style={heading(18, colors.accent700)}>{completo}%</Text>
               </View>
-              <Text style={heading(18, colors.accent700)}>{completo}%</Text>
-            </View>
-          </Pressable>
+            </Pressable>
+          ) : null}
 
           {/* Lista de espera */}
           <View style={styles.espera}>
@@ -284,9 +266,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 10,
   },
+  // El borde del arco cruza el tercio inferior del círculo, como el personaje
+  // de la referencia sobre la curva.
   arco: {
     position: "absolute",
-    bottom: -44,
+    bottom: 44,
     backgroundColor: colors.fondo,
   },
   barra: {
@@ -312,30 +296,12 @@ const styles = StyleSheet.create({
     ...sombra.sm,
   },
   personaje: {
-    marginTop: 34,
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  figura: {
-    width: 136,
-    height: 150,
-    borderTopLeftRadius: 68,
-    borderTopRightRadius: 68,
-    backgroundColor: colors.accent200,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 8,
-  },
-  mano: {
-    position: "absolute",
-    left: -26,
-    bottom: 38,
-    zIndex: 1,
-    transform: [{ rotate: "-18deg" }],
+    marginTop: 26,
   },
   // Cuerpo
   cuerpo: {
     paddingHorizontal: 20,
+    paddingTop: 22,
     gap: 14,
   },
   tarjeta: {
