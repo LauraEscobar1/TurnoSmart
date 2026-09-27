@@ -29,6 +29,12 @@
       ],
       "expo-asset",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "TurnoSmart usa tus fotos solo para que elijas tu foto de perfil."
+        }
+      ],
+      [
         "expo-local-authentication",
         {
           "faceIDPermission": "TurnoSmart usa Face ID para que ingreses sin escribir tu contraseña."
