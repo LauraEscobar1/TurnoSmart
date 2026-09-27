@@ -281,3 +281,57 @@ describe("Inicio: acciones de cada sección", () => {
     expect(screen.getByText("No tenés nuevos avisos.")).toBeTruthy();
   });
 });
+
+describe("Detalle de cita", () => {
+  async function abrirDetalle() {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("tab", { name: "Mis citas" }));
+    await fireEvent.press(await screen.findByText("Dermatología"));
+    await screen.findByText("Detalle de cita");
+  }
+
+  it("es una ficha completa: especialidad, fecha, hora, estado, especialista, lugar y reserva", async () => {
+    await abrirDetalle();
+    expect(screen.getByText("Especialista")).toBeTruthy();
+    expect(screen.getByText("Dr. J. Peralta")).toBeTruthy();
+    expect(screen.getByText("JP")).toBeTruthy(); // avatar con iniciales, sin inventar foto
+    expect(screen.getByText("Lugar")).toBeTruthy();
+    expect(screen.getByText("Cons. 1C")).toBeTruthy();
+    expect(screen.getByText("Información de la reserva")).toBeTruthy();
+    expect(screen.getByText("Reserva directa")).toBeTruthy();
+    expect(screen.getByText("Confirmada")).toBeTruthy();
+    expect(screen.getByText(/^[A-Z][a-zé]+, \d{1,2} de [a-z]+$/)).toBeTruthy(); // «Domingo, 11 de octubre»
+    expect(screen.getByRole("button", { name: "Reprogramar" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cancelar cita" })).toBeTruthy();
+  });
+
+  it("Reprogramar: elegir un horario disponible actualiza la cita", async () => {
+    await abrirDetalle();
+    await fireEvent.press(screen.getByRole("button", { name: "Reprogramar" }));
+    expect(await screen.findByText("Elegí un nuevo horario")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Confirmar nuevo horario" })).toBeDisabled();
+
+    const horario = screen.getAllByRole("button").find((b) => /, 09:00$/.test(b.props.accessibilityLabel ?? ""))!;
+    await fireEvent.press(horario);
+    await fireEvent.press(screen.getByRole("button", { name: "Confirmar nuevo horario" }));
+
+    expect(await screen.findByText(/^Listo: tu cita quedó para el .+ a las 09:00\.$/)).toBeTruthy();
+    expect(screen.getByText("09:00")).toBeTruthy();
+  });
+
+  it("Cancelar cita pide confirmación; al confirmar queda cancelada y sin acciones", async () => {
+    await abrirDetalle();
+    await fireEvent.press(screen.getByRole("button", { name: "Cancelar cita" }));
+    expect(await screen.findByText("¿Cancelar esta cita?")).toBeTruthy();
+
+    // «Mantener cita» no cambia nada.
+    await fireEvent.press(screen.getByRole("button", { name: "Mantener cita" }));
+    expect(screen.getByText("Confirmada")).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Cancelar cita" }));
+    await fireEvent.press(await screen.findByRole("button", { name: "Sí, cancelar cita" }));
+    expect(await screen.findByText("Cancelada")).toBeTruthy();
+    expect(screen.getByText(/Cancelaste esta cita/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Reprogramar" })).toBeNull();
+  });
+});
