@@ -8,7 +8,8 @@ import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Countdown, useCountdown } from "@/components/Countdown";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { fechaConDia, hora, diaRelativo } from "@/utils/format";
+import { hora, useFormato } from "@/utils/format";
+import { useDato, useT } from "@/i18n";
 
 interface OfferCardProps {
   oferta: OfertaCupo;
@@ -42,46 +43,52 @@ function abreviarProfesional(nombre: string) {
 }
 
 function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress">) {
+  const t = useT();
+  const dato = useDato();
+  const { diaRelativo } = useFormato();
   const segundos = useCountdown(oferta.expiraEnISO);
   const expirada = segundos === 0;
 
   return (
     <Card tono="acento" style={[styles.home, expirada && styles.expired]}>
       <View style={styles.topRow}>
-        <Badge label={expirada ? "Oferta expirada" : "Oferta para vos"} variant={expirada ? "lost" : "accent"} />
+        <Badge label={t(expirada ? "oferta.expirada" : "oferta.paraVos")} variant={expirada ? "lost" : "accent"} />
         {!expirada && (
           <Countdown
             segundos={segundos}
             size={22}
-            caption="restantes"
+            caption={t("oferta.restantes")}
             color={colors.accent800}
             captionStyle={{ fontSize: 8, color: colors.accent800 }}
           />
         )}
       </View>
       <View>
-        <Text style={heading(25, colors.accent900)}>{oferta.especialidad}</Text>
+        <Text style={heading(25, colors.accent900)}>{dato("especialidades", oferta.especialidad)}</Text>
         <Text style={body(13, colors.accent800)}>
           {diaRelativo(oferta.fechaHoraISO)} {hora(oferta.fechaHoraISO)} · {abreviarProfesional(oferta.profesional)}
         </Text>
       </View>
-      <PrimaryButton label="Ver oferta" onPress={onPress} disabled={expirada} />
+      <PrimaryButton label={t("oferta.verOferta")} onPress={onPress} disabled={expirada} />
     </Card>
   );
 }
 
 function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "oferta" | "onAceptar" | "onRechazar">) {
+  const t = useT();
+  const dato = useDato();
+  const { fechaConDia } = useFormato();
   const segundos = useCountdown(oferta.expiraEnISO);
   const expirada = segundos === 0;
 
   return (
     <Card style={styles.full}>
       <View style={styles.topRow}>
-        <Badge label={expirada ? "Oferta expirada" : "Oferta para vos"} variant={expirada ? "lost" : "tint"} />
-        {!expirada && <Countdown segundos={segundos} size={26} caption="para responder" />}
+        <Badge label={t(expirada ? "oferta.expirada" : "oferta.paraVos")} variant={expirada ? "lost" : "tint"} />
+        {!expirada && <Countdown segundos={segundos} size={26} caption={t("oferta.paraResponder")} />}
       </View>
       <View>
-        <Text style={heading(30)}>{oferta.especialidad}</Text>
+        <Text style={heading(30)}>{dato("especialidades", oferta.especialidad)}</Text>
         <Text style={body(14, colors.neutral700)}>
           {oferta.profesional} · {oferta.consultorio}
         </Text>
@@ -89,13 +96,13 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
       <DataRow fecha={fechaConDia(oferta.fechaHoraISO)} hora={hora(oferta.fechaHoraISO)} size={19} />
       <View style={styles.actions}>
         <PrimaryButton
-          label="Rechazar"
+          label={t("oferta.rechazar")}
           variant="secondary"
           onPress={onRechazar}
           disabled={expirada}
           style={styles.action}
         />
-        <PrimaryButton label="Aceptar cupo" onPress={onAceptar} disabled={expirada} style={styles.action} />
+        <PrimaryButton label={t("oferta.aceptar")} onPress={onAceptar} disabled={expirada} style={styles.action} />
       </View>
     </Card>
   );
@@ -103,14 +110,15 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
 
 /** Franja FECHA | HORA entre reglas de un pelo. */
 export function DataRow({ fecha, hora: h, size }: { fecha: string; hora: string; size: number }) {
+  const t = useT();
   return (
     <View style={styles.dataRow}>
       <View style={styles.dataCell}>
-        <Text style={label(9)}>Fecha</Text>
+        <Text style={label(9)}>{t("comun.fecha")}</Text>
         <Text style={heading(size)}>{fecha}</Text>
       </View>
       <View style={[styles.dataCell, styles.dataCellRight]}>
-        <Text style={label(9)}>Hora</Text>
+        <Text style={label(9)}>{t("comun.hora")}</Text>
         <Text style={heading(size)}>{h}</Text>
       </View>
     </View>

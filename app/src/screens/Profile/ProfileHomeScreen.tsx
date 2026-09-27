@@ -14,14 +14,16 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { AvatarPaciente } from "@/components/AvatarPaciente";
 import { elegirFotoPerfil } from "@/services/fotoService";
 import { diasEnEspera } from "@/utils/format";
+import { Idioma, useDato, useT } from "@/i18n";
+import { useAjustes } from "@/ajustes/AjustesContext";
 import { perfilCompleto } from "@/utils/perfil";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
 /** «Cardiología», «Cardiología o Dermatología», «Cardiología, Nutrición o Dermatología». */
-function listaO(items: string[]) {
+function listaO(items: string[], idioma: Idioma) {
   if (items.length <= 1) return items[0] ?? "";
-  return `${items.slice(0, -1).join(", ")} o ${items[items.length - 1]}`;
+  return `${items.slice(0, -1).join(", ")} ${idioma === "en" ? "or" : "o"} ${items[items.length - 1]}`;
 }
 
 /**
@@ -33,6 +35,9 @@ function listaO(items: string[]) {
  * y tres indicadores. Todo sale de los datos del paciente.
  */
 export function ProfileHomeScreen() {
+  const t = useT();
+  const dato = useDato();
+  const { idioma } = useAjustes();
   const navigation = useNavigation<Nav>();
   const paciente = usePaciente();
   const { actualizar, cerrarSesion } = useAuth();
@@ -73,7 +78,7 @@ export function ProfileHomeScreen() {
           />
 
           <View style={styles.barra}>
-            <BotonRedondo icono="settings-outline" etiqueta="Preferencias" onPress={irAPreferencias} />
+            <BotonRedondo icono="settings-outline" etiqueta={t("preferencias.titulo")} onPress={irAPreferencias} />
             <View style={styles.identidad}>
               <Text style={[heading(30, colors.accent900), styles.centrado]} numberOfLines={1}>
                 {paciente.nombre} {paciente.apellido}
@@ -84,7 +89,7 @@ export function ProfileHomeScreen() {
             </View>
             <BotonRedondo
               icono="create-outline"
-              etiqueta="Datos personales"
+              etiqueta={t("datos.titulo")}
               onPress={() => navigation.navigate("PersonalData")}
             />
           </View>
@@ -100,14 +105,14 @@ export function ProfileHomeScreen() {
             <Pressable
               onPress={() => navigation.navigate("PersonalData")}
               accessibilityRole="button"
-              accessibilityLabel={`Completa tu perfil para una mejor experiencia. Llevas ${completo} %`}
+              accessibilityLabel={t("perfil.completarA11y", { porcentaje: completo })}
               style={({ pressed }) => [styles.tarjeta, pressed && styles.presionado]}
             >
-              <Text style={body(14, colors.neutral700)}>Completa tu perfil para una mejor experiencia.</Text>
+              <Text style={body(14, colors.neutral700)}>{t("perfil.completar")}</Text>
               <View style={styles.separador} />
               <View style={styles.progresoFila}>
                 <Ionicons name="person-circle-outline" size={22} color={colors.accent600} />
-                <Text style={styles.progresoEtiqueta}>Perfil</Text>
+                <Text style={styles.progresoEtiqueta}>{t("nav.perfil")}</Text>
                 <View style={styles.pista}>
                   <View style={[styles.relleno, { width: `${completo}%` }]} />
                 </View>
@@ -123,34 +128,40 @@ export function ProfileHomeScreen() {
                 <Ionicons name="hourglass-outline" size={30} color={colors.accent600} />
               </View>
               <View style={styles.flex}>
-                <Text style={heading(21, colors.accent900)}>Esperando tu cupo…</Text>
+                <Text style={heading(21, colors.accent900)}>{t("perfil.esperando")}</Text>
                 <Text style={body(13, colors.neutral700)}>
                   {especialidades.length
-                    ? `${personasAntes === 1 ? "Hay 1 persona" : `Hay ${personasAntes} personas`} antes que vos. Te avisamos cuando se libere un cupo de ${listaO(especialidades)}.`
-                    : "Sumá una especialidad para entrar en la lista de espera."}
+                    ? t("perfil.esperandoTexto", {
+                        count: personasAntes,
+                        especialidades: listaO(
+                          especialidades.map((e) => dato("especialidades", e)),
+                          idioma
+                        ),
+                      })
+                    : t("perfil.sinEspecialidades")}
                 </Text>
               </View>
             </View>
-            <PrimaryButton label="Editar preferencias" onPress={irAPreferencias} />
+            <PrimaryButton label={t("perfil.editarPreferencias")} onPress={irAPreferencias} />
           </View>
 
           {/* Indicadores */}
           <Indicador
             icono="calendar-outline"
-            valor={`${dias} ${dias === 1 ? "día" : "días"}`}
-            etiqueta="En lista de espera"
+            valor={t("comun.nDias", { count: dias })}
+            etiqueta={t("perfil.enListaEspera")}
           />
           <View style={styles.par}>
             <Indicador
               icono="medkit-outline"
               valor={String(especialidades.length)}
-              etiqueta="Especialidades en espera"
+              etiqueta={t("preferencias.especialidades")}
               onPress={irAPreferencias}
             />
             <Indicador
               icono="time-outline"
-              valor={paciente.franjaPreferida}
-              etiqueta="Franja preferida"
+              valor={dato("franjas", paciente.franjaPreferida)}
+              etiqueta={t("perfil.franjaPreferida")}
               onPress={irAPreferencias}
             />
           </View>
@@ -160,13 +171,13 @@ export function ProfileHomeScreen() {
             <Pressable
               onPress={alternarNotificaciones}
               accessibilityRole="button"
-              accessibilityLabel={`Notificaciones: ${paciente.notificacionesActivas ? "Activadas" : "Desactivadas"}`}
+              accessibilityLabel={`${t("notificaciones.titulo")}: ${t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}`}
               style={({ pressed }) => [styles.fila, pressed && styles.presionado]}
             >
               <Ionicons name="notifications-outline" size={20} color={colors.accent700} />
-              <Text style={[body(15), styles.flex]}>Notificaciones</Text>
+              <Text style={[body(15), styles.flex]}>{t("notificaciones.titulo")}</Text>
               <Text style={body(14, colors.neutral600)}>
-                {pidiendo ? "…" : paciente.notificacionesActivas ? "Activadas" : "Desactivadas"}
+                {pidiendo ? "…" : t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}
               </Text>
             </Pressable>
             <Pressable
@@ -175,7 +186,7 @@ export function ProfileHomeScreen() {
               style={({ pressed }) => [styles.fila, styles.divisor, pressed && styles.presionado]}
             >
               <Ionicons name="log-out-outline" size={20} color={colors.accent700} />
-              <Text style={[body(15, colors.accent700), styles.flex]}>Cerrar sesión</Text>
+              <Text style={[body(15, colors.accent700), styles.flex]}>{t("perfil.cerrarSesion")}</Text>
             </Pressable>
           </View>
         </View>
@@ -228,9 +239,7 @@ function Indicador({
       <Ionicons name={icono} size={20} color={colors.accent600} style={styles.indicadorIcono} />
       <View style={styles.flex}>
         <Text style={heading(22, colors.accent900)}>{valor}</Text>
-        <Text style={body(13, colors.neutral600)} numberOfLines={2}>
-          {etiqueta}
-        </Text>
+        <Text style={body(13, colors.neutral600)}>{etiqueta}</Text>
       </View>
     </Pressable>
   );

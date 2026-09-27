@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/theme/colors";
 import { radius } from "@/theme/spacing";
 import { body, heading } from "@/theme/typography";
+import { useT } from "@/i18n";
 
 interface HojaInferiorProps {
   visible: boolean;
@@ -19,10 +20,11 @@ interface HojaInferiorProps {
  */
 export function HojaInferior({ visible, onCerrar, titulo, descripcion, children }: HojaInferiorProps) {
   const insets = useSafeAreaInsets();
+  const t = useT();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCerrar}>
       <View style={styles.contenedor}>
-        <Pressable style={styles.fondo} onPress={onCerrar} accessibilityLabel="Cerrar" />
+        <Pressable style={styles.fondo} onPress={onCerrar} accessibilityLabel={t("comun.cerrar")} />
         <View style={[styles.hoja, { paddingBottom: 20 + insets.bottom }]} accessibilityViewIsModal>
           <View style={styles.tirador} />
           <Text style={heading(22, colors.accent900)}>{titulo}</Text>

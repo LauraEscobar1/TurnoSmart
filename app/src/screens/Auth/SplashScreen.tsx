@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { colors } from "@/theme/colors";
 import { label } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { Logo } from "@/components/Logo";
 
 /**
@@ -12,11 +13,12 @@ import { Logo } from "@/components/Logo";
  * el mismo color de fondo (app.json).
  */
 export function SplashScreen() {
+  const t = useT();
   return (
-    <View style={styles.field} accessibilityLabel="TurnoSmart, cargando">
+    <View style={styles.field} accessibilityLabel={t("splash.cargando")}>
       <StatusBar style="light" />
       <Logo size={84} color="#ffffff" acento={colors.accent400} wordmark />
-      <Text style={[label(10, colors.bg), styles.bajada]}>Cupos médicos de último minuto</Text>
+      <Text style={[label(10, colors.bg), styles.bajada]}>{t("splash.bajada")}</Text>
     </View>
   );
 }

@@ -2,6 +2,7 @@ import React from "react";
 import Svg, { Circle, G, Path } from "react-native-svg";
 import { colors } from "@/theme/colors";
 import { LOGO_TRAZOS, LOGO_VIEWBOX } from "@/components/Logo";
+import { useT } from "@/i18n";
 
 /**
  * Estado vacío de Ofertas: el isotipo de TurnoSmart (estetoscopio con
@@ -9,6 +10,7 @@ import { LOGO_TRAZOS, LOGO_VIEWBOX } from "@/components/Logo";
  * buscando cupos. Minimalista y en la paleta de la app.
  */
 export function IlustracionSinOfertas({ size = 150 }: { size?: number }) {
+  const tr = useT();
   const t = LOGO_TRAZOS;
   const { x, y, w, h } = LOGO_VIEWBOX;
   // Isotipo de 44 de alto centrado en (100, 80).
@@ -17,7 +19,7 @@ export function IlustracionSinOfertas({ size = 150 }: { size?: number }) {
   const dy = 80 - (y + h / 2) * escala;
 
   return (
-    <Svg width={size} height={(size * 160) / 200} viewBox="0 0 200 160" accessibilityLabel="Buscando cupos">
+    <Svg width={size} height={(size * 160) / 200} viewBox="0 0 200 160" accessibilityLabel={tr("ofertas.buscandoCupos")}>
       <Circle cx={100} cy={80} r={76} fill={colors.accent100} />
       <Circle cx={100} cy={80} r={58} fill={colors.accent200} opacity={0.6} />
       <Circle cx={100} cy={80} r={76} fill="none" stroke={colors.accent300} strokeWidth={1.2} strokeDasharray="3 6" />

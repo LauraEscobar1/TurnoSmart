@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
 import { sombra } from "@/theme/spacing";
 import { label } from "@/theme/typography";
+import { useT } from "@/i18n";
 
 interface StepHeaderProps {
   title: string;
@@ -14,9 +15,10 @@ interface StepHeaderProps {
 
 /** Barra de «Crear cuenta»: flecha, título en versalitas y «1 / 3» a la derecha. */
 export function StepHeader({ title, step, total, onBack }: StepHeaderProps) {
+  const t = useT();
   return (
     <View style={styles.bar}>
-      <Pressable onPress={onBack} hitSlop={12} accessibilityLabel="Volver" style={styles.back}>
+      <Pressable onPress={onBack} hitSlop={12} accessibilityLabel={t("comun.volver")} style={styles.back}>
         <Ionicons name="arrow-back" size={18} color={colors.text} />
       </Pressable>
       <Text style={label(11, colors.text)}>{title}</Text>
@@ -29,9 +31,10 @@ export function StepHeader({ title, step, total, onBack }: StepHeaderProps) {
 
 /** Solo la flecha de volver, sin título ni regla (acceso: login, restablecer). */
 export function BackBar({ onBack }: { onBack: () => void }) {
+  const t = useT();
   return (
     <View style={styles.backBar}>
-      <Pressable onPress={onBack} hitSlop={12} accessibilityLabel="Volver" style={styles.back}>
+      <Pressable onPress={onBack} hitSlop={12} accessibilityLabel={t("comun.volver")} style={styles.back}>
         <Ionicons name="arrow-back" size={18} color={colors.text} />
       </Pressable>
     </View>
@@ -40,8 +43,9 @@ export function BackBar({ onBack }: { onBack: () => void }) {
 
 /** Barras de progreso de 3 px: completas en acero, pendientes en neutro 300. */
 export function StepProgress({ step, total }: { step: number; total: number }) {
+  const t = useT();
   return (
-    <View style={styles.progress} accessibilityLabel={`Paso ${step} de ${total}`}>
+    <View style={styles.progress} accessibilityLabel={t("registro.pasoDe", { paso: step, total })}>
       {Array.from({ length: total }, (_, i) => (
         <View key={i} style={[styles.segment, { backgroundColor: i < step ? colors.accent : colors.accent200 }]} />
       ))}

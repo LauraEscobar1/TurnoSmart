@@ -13,21 +13,25 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import { Card } from "@/components/Card";
 import { HojaInferior } from "@/components/HojaInferior";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { diaSemanaCorto, fechaCorta, fechaLarga, hora } from "@/utils/format";
+import { fechaLarga as fechaLargaEn, hora, useFormato } from "@/utils/format";
+import { Idioma, useDato, useT } from "@/i18n";
 
 type Props = NativeStackScreenProps<AppointmentsStackParamList, "AppointmentDetail">;
 
-const ESTADO: Record<Cita["estado"], { label: string; activo: boolean }> = {
-  confirmada: { label: "Confirmada", activo: true },
-  asistida: { label: "Asistida", activo: false },
-  cancelada: { label: "Cancelada", activo: false },
-  reasignada: { label: "Reasignada", activo: false },
-  "no-show": { label: "No asistió", activo: false },
+/** Solo la cita confirmada se ve «activa» (acero); el resto, en gris. El texto sale de i18n. */
+const ACTIVO: Record<Cita["estado"], boolean> = {
+  confirmada: true,
+  asistida: false,
+  cancelada: false,
+  reasignada: false,
+  "no-show": false,
 };
 
-/** "Jueves, 8 de octubre" */
-function fechaTitulo(iso: string) {
-  const [diaSemana, ...resto] = fechaLarga(new Date(iso)).split(" ");
+/** "Jueves, 8 de octubre" · "Thursday, October 8" */
+function fechaTitulo(iso: string, idioma: Idioma) {
+  const larga = fechaLargaEn(new Date(iso), idioma);
+  if (idioma !== "es") return larga;
+  const [diaSemana, ...resto] = larga.split(" ");
   return `${diaSemana[0].toUpperCase()}${diaSemana.slice(1)}, ${resto.join(" ")}`;
 }
 
@@ -50,6 +54,9 @@ const iniciales = (nombre: string) =>
  * esté confirmada y por venir. Solo muestra datos que la app tiene.
  */
 export function AppointmentDetailScreen({ route, navigation }: Props) {
+  const t = useT();
+  const dato = useDato();
+  const { idioma, diaSemanaCorto, fechaCorta, fechaLarga } = useFormato();
   const { citaId } = route.params;
   const [cita, setCita] = useState<Cita | null>(null);
   const [hoja, setHoja] = useState<"cancelar" | "reprogramar" | null>(null);
@@ -66,12 +73,13 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   if (!cita) {
     return (
       <SafeAreaView edges={["top"]} style={styles.safe}>
-        <ScreenHeader title="Detalle de cita" onBack={volver} />
+        <ScreenHeader title={t("citas.detalle")} onBack={volver} />
       </SafeAreaView>
     );
   }
 
-  const estado = ESTADO[cita.estado];
+  const estado = { activo: ACTIVO[cita.estado] };
+  const especialidad = dato("especialidades", cita.especialidad);
   const porVenir = new Date(cita.fechaHoraISO).getTime() > Date.now();
   const editable = cita.estado === "confirmada" && porVenir;
   const recuperada = cita.origen === "cupo-recuperado";
@@ -87,7 +95,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
     const nueva = await reprogramarCita(cita!.id, elegido);
     if (nueva) {
       setCita({ ...nueva });
-      setAviso(`Listo: tu cita quedó para el ${fechaCorta(elegido)} a las ${hora(elegido)}.`);
+      setAviso(t("citas.reprogramada", { fecha: fechaCorta(elegido), hora: hora(elegido) }));
     }
     setHoja(null);
   }
@@ -96,14 +104,14 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
     const cancelada = await cancelarCita(cita!.id);
     if (cancelada) {
       setCita({ ...cancelada });
-      setAviso("Cancelaste esta cita. El horario se ofrecerá a otro paciente en espera.");
+      setAviso(t("citas.canceladaAviso"));
     }
     setHoja(null);
   }
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
-      <ScreenHeader title="Detalle de cita" onBack={volver} />
+      <ScreenHeader title={t("citas.detalle")} onBack={volver} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {aviso ? (
           <View style={styles.aviso} accessibilityLiveRegion="polite">
@@ -114,8 +122,8 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 
         {/* Encabezado de la ficha */}
         <View style={[styles.hero, !estado.activo && styles.heroInactivo]}>
-          <Text style={heading(32, colors.accent900)}>{cita.especialidad}</Text>
-          <Text style={[body(16, colors.accent800), styles.heroFecha]}>{fechaTitulo(cita.fechaHoraISO)}</Text>
+          <Text style={heading(32, colors.accent900)}>{especialidad}</Text>
+          <Text style={[body(16, colors.accent800), styles.heroFecha]}>{fechaTitulo(cita.fechaHoraISO, idioma)}</Text>
           <View style={styles.heroFila}>
             <Text style={[styles.heroHora, !estado.activo && styles.heroHoraInactiva]}>{hora(cita.fechaHoraISO)}</Text>
             <View style={[styles.estado, !estado.activo && styles.estadoInactivo]}>
@@ -127,49 +135,49 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
                   cita.estado === "cancelada" && styles.tachado,
                 ]}
               >
-                {estado.label}
+                {dato("estadosCita", cita.estado)}
               </Text>
             </View>
           </View>
         </View>
 
         {/* Especialista */}
-        <Seccion titulo="Especialista">
+        <Seccion titulo={t("comun.especialista")}>
           <Card style={styles.fila}>
             <View style={styles.avatar}>
               <Text style={heading(18, colors.accent700)}>{iniciales(cita.profesional)}</Text>
             </View>
             <View style={styles.flex}>
               <Text style={heading(19, colors.accent900)}>{cita.profesional}</Text>
-              <Text style={body(13, colors.neutral700)}>{cita.especialidad}</Text>
+              <Text style={body(13, colors.neutral700)}>{especialidad}</Text>
             </View>
           </Card>
         </Seccion>
 
         {/* Lugar */}
-        <Seccion titulo="Lugar">
+        <Seccion titulo={t("citas.lugar")}>
           <Card style={styles.fila}>
             <View style={styles.icono}>
               <Ionicons name="location-outline" size={20} color={colors.accent700} />
             </View>
             <View style={styles.flex}>
-              <Text style={body(12, colors.neutral600)}>Consultorio</Text>
+              <Text style={body(12, colors.neutral600)}>{t("comun.consultorio")}</Text>
               <Text style={heading(19, colors.accent900)}>{cita.consultorio}</Text>
             </View>
           </Card>
         </Seccion>
 
         {/* Información de la reserva */}
-        <Seccion titulo="Información de la reserva">
+        <Seccion titulo={t("citas.infoReserva")}>
           <Card style={styles.lista}>
             <Dato
               icono={recuperada ? "flash-outline" : "calendar-outline"}
-              etiqueta="Origen"
-              valor={recuperada ? "Cupo recuperado" : "Reserva directa"}
-              detalle={recuperada ? "Aceptaste una oferta de cupo de último minuto." : undefined}
+              etiqueta={t("citas.origen")}
+              valor={t(recuperada ? "citas.cupoRecuperado" : "citas.reservaDirecta")}
+              detalle={recuperada ? t("citas.cupoRecuperadoDetalle") : undefined}
             />
             {editable ? (
-              <Dato icono="notifications-outline" etiqueta="Recordatorio" valor="2 horas antes" divisor />
+              <Dato icono="notifications-outline" etiqueta={t("citas.recordatorio")} valor={t("citas.dosHorasAntes")} divisor />
             ) : null}
           </Card>
         </Seccion>
@@ -177,14 +185,14 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 
       {editable ? (
         <View style={styles.acciones}>
-          <PrimaryButton label="Reprogramar" onPress={abrirReprogramar} style={styles.flex} />
+          <PrimaryButton label={t("citas.reprogramar")} onPress={abrirReprogramar} style={styles.flex} />
           <Pressable
             onPress={() => setHoja("cancelar")}
             accessibilityRole="button"
-            accessibilityLabel="Cancelar cita"
+            accessibilityLabel={t("citas.cancelarCita")}
             style={({ pressed }) => [styles.cancelar, pressed && styles.presionado]}
           >
-            <Text style={styles.cancelarTexto}>Cancelar cita</Text>
+            <Text style={styles.cancelarTexto}>{t("citas.cancelarCita")}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -192,18 +200,22 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
       <HojaInferior
         visible={hoja === "cancelar"}
         onCerrar={() => setHoja(null)}
-        titulo="¿Cancelar esta cita?"
-        descripcion={`${cita.especialidad} · ${fechaCorta(cita.fechaHoraISO)} a las ${hora(cita.fechaHoraISO)}. El horario se ofrecerá a otro paciente y no se puede deshacer.`}
+        titulo={t("citas.cancelarPregunta")}
+        descripcion={t("citas.cancelarDescripcion", {
+          especialidad,
+          fecha: fechaCorta(cita.fechaHoraISO),
+          hora: hora(cita.fechaHoraISO),
+        })}
       >
-        <PrimaryButton label="Sí, cancelar cita" onPress={confirmarCancelacion} />
-        <PrimaryButton label="Mantener cita" variant="secondary" onPress={() => setHoja(null)} />
+        <PrimaryButton label={t("citas.siCancelar")} onPress={confirmarCancelacion} />
+        <PrimaryButton label={t("citas.mantener")} variant="secondary" onPress={() => setHoja(null)} />
       </HojaInferior>
 
       <HojaInferior
         visible={hoja === "reprogramar"}
         onCerrar={() => setHoja(null)}
-        titulo="Elegí un nuevo horario"
-        descripcion={`Horarios disponibles con ${cita.profesional}.`}
+        titulo={t("citas.elegirHorario")}
+        descripcion={t("citas.horariosCon", { profesional: cita.profesional })}
       >
         <View style={styles.horarios}>
           {horarios.map((iso) => {
@@ -225,7 +237,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             );
           })}
         </View>
-        <PrimaryButton label="Confirmar nuevo horario" onPress={confirmarReprogramacion} disabled={!elegido} />
+        <PrimaryButton label={t("citas.confirmarHorario")} onPress={confirmarReprogramacion} disabled={!elegido} />
       </HojaInferior>
     </SafeAreaView>
   );

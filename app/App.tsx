@@ -7,6 +7,7 @@ import { Barlow_400Regular, Barlow_500Medium, Barlow_700Bold } from "@expo-googl
 import { BarlowCondensed_600SemiBold } from "@expo-google-fonts/barlow-condensed";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { AuthProvider, useAuth } from "@/auth/AuthContext";
+import { AjustesProvider } from "@/ajustes/AjustesContext";
 import { SplashScreen } from "@/screens/Auth/SplashScreen";
 
 // El splash nativo (mismo color de campo, app.json) queda hasta tener fuentes.
@@ -44,9 +45,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <AuthProvider>
-        <Main />
-      </AuthProvider>
+      <AjustesProvider>
+        <AuthProvider>
+          <Main />
+        </AuthProvider>
+      </AjustesProvider>
     </SafeAreaProvider>
   );
 }

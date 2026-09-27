@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "@/theme/colors";
 import { body, heading } from "@/theme/typography";
 import { mmss } from "@/utils/format";
+import { useT } from "@/i18n";
 import { radius } from "@/theme/spacing";
 
 export const LARGO_CODIGO = 6;
@@ -46,16 +47,17 @@ export function ReenviarCodigo({
   codigoPrueba: string | null;
   onReenviar: () => void;
 }) {
+  const t = useT();
   return (
     <View style={styles.reenvio}>
       {restante > 0 ? (
-        <Text style={body(12, colors.neutral600)}>Reenviar código en {mmss(restante).replace(/^0/, "")}</Text>
+        <Text style={body(12, colors.neutral600)}>{t("codigo.reenviarEn", { tiempo: mmss(restante).replace(/^0/, "") })}</Text>
       ) : (
         <Pressable onPress={onReenviar} hitSlop={8} style={{ alignSelf: "flex-start" }}>
-          <Text style={body(12, colors.accent700)}>Reenviar código</Text>
+          <Text style={body(12, colors.accent700)}>{t("codigo.reenviar")}</Text>
         </Pressable>
       )}
-      {codigoPrueba ? <Text style={body(12, colors.neutral600)}>Código de prueba: {codigoPrueba}</Text> : null}
+      {codigoPrueba ? <Text style={body(12, colors.neutral600)}>{t("codigo.dePrueba", { codigo: codigoPrueba })}</Text> : null}
     </View>
   );
 }
@@ -73,13 +75,14 @@ interface CodeInputProps {
  * sistema puede autocompletar el código que llega por SMS.
  */
 export function CodeInput({ value, onChange, autoFocus, testID = "codigo-input" }: CodeInputProps) {
+  const t = useT();
   const inputRef = useRef<TextInput>(null);
 
   return (
     <Pressable
       onPress={() => inputRef.current?.focus()}
       style={styles.cells}
-      accessibilityLabel="Código de verificación"
+      accessibilityLabel={t("codigo.etiqueta")}
     >
       {Array.from({ length: LARGO_CODIGO }, (_, i) => (
         <View key={i} style={[styles.cell, i === Math.min(value.length, LARGO_CODIGO - 1) && styles.cellActive]}>
