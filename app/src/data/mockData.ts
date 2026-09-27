@@ -1,5 +1,5 @@
 import { Cita, Notificacion, OfertaCupo, Paciente } from "@/types/domain";
-import { fechaCorta, hora } from "@/utils/format";
+import { fechaCorta, fechaLarga, hora } from "@/utils/format";
 
 /**
  * Datos de ejemplo para desarrollar la UI sin backend real.
@@ -142,12 +142,23 @@ export const citasMock: Cita[] = [
   },
 ];
 
+/** «el Dr. J. Peralta», «la Dra. Elena Ruiz». */
+const conArticulo = (profesional: string) => `${/^Dra\./.test(profesional) ? "la" : "el"} ${profesional}`;
+/** «Cons. 1C» / «Consultorio 1C» → «consultorio 1C». */
+const enConsultorio = (consultorio: string) => `consultorio ${consultorio.replace(/^(Cons\.|Consultorio)\s*/i, "")}`;
+
+/**
+ * Cada aviso guarda lo que llegaría en la notificación push: un título y un
+ * mensaje breve, escrito al enviarlo. `{nombre}` es el nombre del paciente
+ * con sesión abierta: lo completa notificationsService al leerlos. El detalle completo vive en el destino
+ * (la oferta o la cita), al que se llega desde la notificación.
+ */
 export const notificacionesMock: Notificacion[] = [
   {
     id: "n-001",
     tipo: "cupo-ultimo-minuto",
-    titulo: `Cardiología hoy ${hora(ofertaActivaISO)}`,
-    cuerpo: "Respondé antes de que expire.",
+    titulo: "Cupo disponible",
+    cuerpo: `Hola, {nombre}. Tenemos un cupo disponible que podría interesarte en ${ofertasMock[0].especialidad}. Échale un vistazo antes de que expire.`,
     fechaISO: new Date().toISOString(),
     leida: false,
     referenciaId: "of-001",
@@ -155,8 +166,8 @@ export const notificacionesMock: Notificacion[] = [
   {
     id: "n-002",
     tipo: "recordatorio",
-    titulo: `Dermatología · ${fechaCorta(citasMock[0].fechaHoraISO)} ${hora(citasMock[0].fechaHoraISO)}`,
-    cuerpo: "Consultorio 1C, planta baja.",
+    titulo: "Recordatorio de cita",
+    cuerpo: `Hola, {nombre}. Te recordamos que el ${fechaLarga(new Date(citasMock[0].fechaHoraISO))} tienes una cita de ${citasMock[0].especialidad} a las ${hora(citasMock[0].fechaHoraISO)} con ${conArticulo(citasMock[0].profesional)}, en el ${enConsultorio(citasMock[0].consultorio)}.`,
     fechaISO: new Date(Date.now() - DIA).toISOString(),
     leida: false,
     referenciaId: "c-050",
@@ -164,8 +175,8 @@ export const notificacionesMock: Notificacion[] = [
   {
     id: "n-003",
     tipo: "expiracion",
-    titulo: `Clínica médica · ${fechaCorta(ofertasMock[1].fechaHoraISO)} ${hora(ofertasMock[1].fechaHoraISO)}`,
-    cuerpo: "Se ofreció a otro paciente.",
+    titulo: "Oferta expirada",
+    cuerpo: `El cupo de ${ofertasMock[2].especialidad} del ${fechaCorta(ofertasMock[2].fechaHoraISO)} a las ${hora(ofertasMock[2].fechaHoraISO)} ya se ofreció a otro paciente. Sigues en la lista de espera.`,
     fechaISO: new Date(Date.now() - 6 * DIA).toISOString(),
     leida: true,
     referenciaId: "of-000",
@@ -173,8 +184,8 @@ export const notificacionesMock: Notificacion[] = [
   {
     id: "n-004",
     tipo: "confirmacion",
-    titulo: "Cupo aceptado · Nutrición",
-    cuerpo: "",
+    titulo: "Cupo confirmado",
+    cuerpo: `Listo, {nombre}. Tu cita de ${ofertasMock[3].especialidad} con ${conArticulo(ofertasMock[3].profesional)} quedó confirmada para el ${fechaLarga(new Date(ofertasMock[3].fechaHoraISO))} a las ${hora(ofertasMock[3].fechaHoraISO)}.`,
     fechaISO: new Date(Date.now() - 12 * DIA).toISOString(),
     leida: true,
     referenciaId: "of-099",
