@@ -17,22 +17,33 @@ afterEach(() => {
 const AVISO_CUPO = /^Cardiología hoy \d\d:\d\d$/;
 
 describe("Home", () => {
-  it("muestra saludo, oferta activa, próxima cita, lista de espera y la barra de 5 destinos", async () => {
+  it("tablero: saludo, accesos rápidos, oferta, próxima cita, lista de espera, avisos y la barra de 5 destinos", async () => {
     await montarApp();
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
+    expect(screen.getByText("Tenés una oferta de cupo esperando respuesta.")).toBeTruthy();
+    for (const acceso of ["Buscar especialista", "Mis citas", "Lista de espera", "Avisos"]) {
+      expect(screen.getByRole("button", { name: acceso })).toBeTruthy();
+    }
     expect(screen.getByText("Oferta para vos")).toBeTruthy();
     expect(screen.getByText("Ver oferta")).toBeTruthy();
-    expect(screen.getByText("Próxima cita confirmada")).toBeTruthy();
-    expect(screen.getByText(/Dermatología · \d\d:\d\d/)).toBeTruthy();
-    expect(screen.getByText("34 días · puesto 3")).toBeTruthy();
+    // Próxima cita: especialidad → fecha → especialista → consultorio → estado.
+    expect(screen.getByText("Próxima cita")).toBeTruthy();
+    expect(screen.getByText("Dermatología")).toBeTruthy();
+    expect(screen.getByText("Dr. J. Peralta")).toBeTruthy();
+    expect(screen.getByText("Confirmada")).toBeTruthy();
+    // Lista de espera: puesto 3 → 2 personas antes.
+    expect(screen.getByText("2 personas antes que vos. Te avisamos cuando se libere un cupo.")).toBeTruthy();
+    // Avisos recientes: los 2 sin leer.
+    expect(screen.getByText("Avisos recientes")).toBeTruthy();
+    expect(screen.getByText("Consultorio 1C, planta baja.")).toBeTruthy();
 
     for (const tab of ["Inicio", "Ofertas", "Mis citas", "Avisos", "Perfil"]) {
       expect(screen.getByRole("tab", { name: tab })).toBeTruthy();
     }
     expect(screen.getByRole("tab", { name: "Inicio", selected: true })).toBeTruthy();
     // Badges: 1 oferta pendiente y 2 avisos sin leer.
-    expect(screen.getByText("1")).toBeTruthy();
-    expect(screen.getByText("2")).toBeTruthy();
+    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("1");
+    expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("2");
     // Sin emojis sueltos en la interfaz.
     expect(screen.queryByText(/👋|✅|👍/)).toBeNull();
   });
@@ -182,13 +193,47 @@ describe("Regresiones", () => {
   it("el badge de Avisos baja al leer el aviso", async () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Avisos" }));
-    expect(screen.getByText("2")).toBeTruthy();
+    expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("2");
 
     await fireEvent.press(await screen.findByText(AVISO_CUPO));
     await fireEvent.press(screen.getByLabelText("Volver"));
 
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
-    expect(screen.queryByText("2")).toBeNull();
-    expect(screen.getAllByText("1")).toHaveLength(2); // Ofertas 1 y Avisos 1
+    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("1");
+    expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("1");
+  });
+});
+
+describe("Inicio: accesos rápidos", () => {
+  it("Buscar especialista suma una especialidad a la lista de espera", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("button", { name: "Buscar especialista" }));
+    await fireEvent.changeText(await screen.findByLabelText("Especialidad"), "PEDIA");
+    expect(screen.getByText("Pediatría")).toBeTruthy();
+    expect(screen.queryByText("Cardiología")).toBeNull();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Sumarme a Pediatría" }));
+    expect(await screen.findByText("En tu lista de espera")).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText("Volver"));
+    await fireEvent.press(await screen.findByRole("tab", { name: "Perfil" }));
+    // Especialidades en espera: 2 → 3.
+    expect(await screen.findByText("3")).toBeTruthy();
+  });
+
+  it("sin oferta ni avisos nuevos muestra «Sin ofertas por ahora» y «Todo al día»", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByText("Ver oferta"));
+    await fireEvent.press(await screen.findByText("Rechazar"));
+    await fireEvent.press(await screen.findByText("Volver al inicio"));
+
+    expect(await screen.findByText("Sin ofertas por ahora")).toBeTruthy();
+    expect(screen.getByText(/Alertas activas · 2 especialidades/)).toBeTruthy();
+    // Queda el recordatorio sin leer; al leerlo, el Inicio queda «Todo al día».
+    await fireEvent.press(screen.getByText("Consultorio 1C, planta baja."));
+    await fireEvent.press(await screen.findByText(/^Dermatología · /));
+    await fireEvent.press(screen.getByRole("tab", { name: "Inicio" }));
+    expect(await screen.findByText("Todo al día")).toBeTruthy();
+    expect(screen.getByText("No tenés nuevos avisos.")).toBeTruthy();
   });
 });
