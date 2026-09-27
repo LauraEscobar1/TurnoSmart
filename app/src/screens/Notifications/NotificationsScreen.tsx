@@ -14,7 +14,8 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import { Notificacion, TipoNotificacion } from "@/types/domain";
 import { getNotificaciones, marcarComoLeida, marcarTodasComoLeidas } from "@/services/notificationsService";
 import { RootStackParamList } from "@/navigation/types";
-import { grupoAviso, marcaAviso } from "@/utils/format";
+import { useFormato } from "@/utils/format";
+import { useT } from "@/i18n";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -40,14 +41,16 @@ const TIPO: Record<TipoNotificacion, { icono: keyof typeof Ionicons.glyphMap; to
  * Sin leer: título en negrita y punto de Acero. Leído: texto atenuado.
  */
 export function NotificationsScreen() {
+  const t = useT();
+  const { idioma, grupoAviso } = useFormato();
   const navigation = useNavigation<Nav>();
   const [items, setItems] = useState<Notificacion[]>([]);
 
   const { nombre } = usePaciente();
 
   const cargar = useCallback(() => {
-    getNotificaciones(nombre).then(setItems);
-  }, [nombre]);
+    getNotificaciones(nombre, idioma).then(setItems);
+  }, [nombre, idioma]);
 
   useCargarDatos(cargar);
 
@@ -60,7 +63,7 @@ export function NotificationsScreen() {
       porGrupo.set(g, [...(porGrupo.get(g) ?? []), n]);
     }
     return [...porGrupo.entries()];
-  }, [items]);
+  }, [items, grupoAviso]);
 
   /** Tocar la notificación la marca como leída; el recordatorio además abre su cita. */
   async function handlePress(n: Notificacion) {
@@ -89,7 +92,7 @@ export function NotificationsScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <ScreenHeader
-        title="Notificaciones"
+        title={t("notificaciones.titulo")}
         accion={
           hayNoLeidas ? (
             <Pressable
@@ -98,7 +101,7 @@ export function NotificationsScreen() {
               accessibilityRole="button"
               style={({ pressed }) => pressed && styles.presionado}
             >
-              <Text style={styles.marcarTodas}>Marcar todo como leído</Text>
+              <Text style={styles.marcarTodas}>{t("notificaciones.marcarTodo")}</Text>
             </Pressable>
           ) : null
         }
@@ -107,12 +110,12 @@ export function NotificationsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.filtros}>
           <View accessibilityState={{ selected: true }} style={[styles.filtro, styles.filtroActivo]}>
-            <Text style={[styles.filtroTexto, styles.filtroTextoActivo]}>Todas</Text>
+            <Text style={[styles.filtroTexto, styles.filtroTextoActivo]}>{t("notificaciones.todas")}</Text>
           </View>
         </View>
 
         {items.length === 0 ? (
-          <EmptyState title="No tenés notificaciones" />
+          <EmptyState title={t("notificaciones.vacio")} />
         ) : (
           grupos.map(([grupo, avisos]) => (
             <View key={grupo} style={styles.grupo}>
@@ -147,6 +150,8 @@ function FilaAviso({
   onPress: () => void;
   onVerOferta: () => void;
 }) {
+  const t = useT();
+  const { marcaAviso } = useFormato();
   const tipo = TIPO[aviso.tipo];
   const noLeida = !aviso.leida;
   const conOferta = aviso.tipo === "cupo-ultimo-minuto" && !!aviso.referenciaId;
@@ -154,7 +159,7 @@ function FilaAviso({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${noLeida ? "Sin leer. " : ""}${aviso.titulo}. ${marcaAviso(aviso.fechaISO)}. ${aviso.cuerpo}`}
+      accessibilityLabel={`${noLeida ? `${t("notificaciones.sinLeer")}. ` : ""}${aviso.titulo}. ${marcaAviso(aviso.fechaISO)}. ${aviso.cuerpo}`}
       style={({ pressed }) => [styles.fila, pressed && styles.filaPresionada]}
     >
       <View
@@ -174,8 +179,9 @@ function FilaAviso({
       <View style={[styles.texto, divisor && styles.divisor]}>
         <View style={styles.encabezado}>
           <Text
+            // Sin límite de líneas: si el título y la hora no entran juntos
+            // (p. ej. «Appointment reminder» en inglés), el título pasa a dos líneas.
             style={[styles.titulo, noLeida ? styles.tituloNoLeido : styles.tituloLeido]}
-            numberOfLines={1}
           >
             {aviso.titulo}
           </Text>
@@ -188,10 +194,10 @@ function FilaAviso({
             onPress={onVerOferta}
             hitSlop={8}
             accessibilityRole="link"
-            accessibilityLabel="Ver oferta"
+            accessibilityLabel={t("oferta.verOferta")}
             style={({ pressed }) => [styles.verOferta, pressed && styles.presionado]}
           >
-            <Text style={styles.verOfertaTexto}>Ver oferta</Text>
+            <Text style={styles.verOfertaTexto}>{t("oferta.verOferta")}</Text>
             <Ionicons name="arrow-forward" size={14} color={colors.accent700} />
           </Pressable>
         ) : null}

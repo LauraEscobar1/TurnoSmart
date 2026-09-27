@@ -3,6 +3,7 @@ import { Animated, Easing, StyleProp, StyleSheet, Text, TextStyle, View, ViewSty
 import { colors } from "@/theme/colors";
 import { heading, label } from "@/theme/typography";
 import { mmss } from "@/utils/format";
+import { useT } from "@/i18n";
 
 /** Umbral bajo el cual el contador pasa a acento 800 y dice «expira pronto». */
 export const UMBRAL_EXPIRA_PRONTO = 120;
@@ -39,6 +40,7 @@ interface CountdownProps {
  * sistema: pulsa la opacidad 1 → 0,35 en un ciclo de 2 s.
  */
 export function Countdown({ segundos, size, caption, align = "right", hideCaption, color = colors.accent700, captionStyle, style }: CountdownProps) {
+  const t = useT();
   const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export function Countdown({ segundos, size, caption, align = "right", hideCaptio
       </Animated.Text>
       {!hideCaption && (
         <Text style={[label(size > 40 ? 10 : 9), captionStyle, urgente && { color: colors.accent800 }]}>
-          {urgente ? "expira pronto" : caption}
+          {urgente ? t("oferta.expiraPronto") : caption}
         </Text>
       )}
     </View>

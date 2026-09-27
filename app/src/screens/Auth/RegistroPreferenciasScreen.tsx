@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, heading } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { StepHeader, StepProgress } from "@/components/StepHeader";
@@ -18,13 +19,14 @@ type Props = NativeStackScreenProps<AuthStackParamList, "RegistroPreferencias">;
  * explicabilidad: especialidad, franja y distancia.
  */
 export function RegistroPreferenciasScreen({ navigation }: Props) {
+  const t = useT();
   const { preferencias, setPreferencias } = useRegistro();
   const [form, setForm] = useState(preferencias);
   const [error, setError] = useState<string>();
 
   function continuar() {
     if (form.especialidadesInteres.length === 0) {
-      setError("Elegí al menos una especialidad.");
+      setError(t("preferencias.errorEspecialidad"));
       return;
     }
     setPreferencias(form);
@@ -33,14 +35,14 @@ export function RegistroPreferenciasScreen({ navigation }: Props) {
 
   return (
     <FormScreen
-      header={<StepHeader title="Crear cuenta" step={2} total={3} onBack={navigation.goBack} />}
-      footer={<PrimaryButton label="Continuar" onPress={continuar} />}
+      header={<StepHeader title={t("login.crearCuenta")} step={2} total={3} onBack={navigation.goBack} />}
+      footer={<PrimaryButton label={t("registro.continuar")} onPress={continuar} />}
     >
       <StepProgress step={2} total={3} />
       <View>
-        <Text style={heading(26)}>¿Qué cupos te sirven?</Text>
+        <Text style={heading(26)}>{t("registro.queCupos")}</Text>
         <Text style={[body(13, colors.neutral700), { marginTop: 4 }]}>
-          Con esto la IA decide qué ofertas enviarte. Te mostraremos siempre por qué.
+          {t("registro.queCuposBajada")}
         </Text>
       </View>
       <PreferenciasForm

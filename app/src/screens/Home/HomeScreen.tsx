@@ -18,17 +18,18 @@ import { getCitasProximas } from "@/services/appointmentsService";
 import { getNotificaciones } from "@/services/notificationsService";
 import { RootStackParamList } from "@/navigation/types";
 import { usePaciente } from "@/auth/AuthContext";
-import { diasEnEspera, fechaCorta, haceCuanto } from "@/utils/format";
+import { diasEnEspera, useFormato } from "@/utils/format";
+import { T, useT } from "@/i18n";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const MARGEN = 20;
 
-function saludo() {
+function saludo(t: T) {
   const h = new Date().getHours();
-  if (h < 12) return "Buen día";
-  if (h < 20) return "Buenas tardes";
-  return "Buenas noches";
+  if (h < 12) return t("inicio.saludo.manana");
+  if (h < 20) return t("inicio.saludo.tarde");
+  return t("inicio.saludo.noche");
 }
 
 /**
@@ -40,6 +41,8 @@ function saludo() {
  * lista liviana) para que no se lea como una pila de tarjetas iguales.
  */
 export function HomeScreen() {
+  const t = useT();
+  const { idioma, fechaCorta, haceCuanto } = useFormato();
   const navigation = useNavigation<Nav>();
   const paciente = usePaciente();
   const [ajustesAbiertos, setAjustesAbiertos] = useState(false);
@@ -51,18 +54,18 @@ export function HomeScreen() {
     useCallback(() => {
       getOfertaPendiente().then(setOferta);
       getCitasProximas().then((citas) => setProximaCita(citas[0] ?? null));
-      getNotificaciones(paciente.nombre).then(setAvisos);
-    }, [paciente.nombre])
+      getNotificaciones(paciente.nombre, idioma).then(setAvisos);
+    }, [paciente.nombre, idioma])
   );
 
   const noLeidos = avisos.filter((a) => !a.leida);
 
   // Frase breve según el estado: lo más urgente primero.
   const bajada = oferta
-    ? "Tenés una oferta de cupo esperando respuesta."
+    ? t("inicio.bajada.oferta")
     : proximaCita
-      ? `Tu próxima cita es el ${fechaCorta(proximaCita.fechaHoraISO)}.`
-      : "Te avisamos apenas se libere un cupo para vos.";
+      ? t("inicio.bajada.cita", { fecha: fechaCorta(proximaCita.fechaHoraISO) })
+      : t("inicio.bajada.nada");
 
   const irA = {
     buscar: () => navigation.navigate("BuscarEspecialista"),
@@ -78,7 +81,7 @@ export function HomeScreen() {
         {/* 1. Saludo */}
         <View style={styles.saludo}>
           <View style={styles.flex}>
-            <Text style={label(10)}>{saludo()}</Text>
+            <Text style={label(10)}>{saludo(t)}</Text>
             <Text style={heading(28, colors.accent900)} numberOfLines={1}>
               {paciente.nombre} {paciente.apellido}
             </Text>
@@ -88,7 +91,7 @@ export function HomeScreen() {
             onPress={() => setAjustesAbiertos(true)}
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel="Ajustes"
+            accessibilityLabel={t("ajustes.titulo")}
             style={({ pressed }) => [styles.menu, pressed && styles.presionado]}
           >
             <Ionicons name="menu-outline" size={24} color={colors.accent900} />
@@ -96,7 +99,7 @@ export function HomeScreen() {
         </View>
 
         {/* 2. Ofertas */}
-        <Seccion titulo="Ofertas de cupo" accion="Ver todas" onAccion={irA.ofertas}>
+        <Seccion titulo={t("inicio.ofertas")} accion={t("inicio.verTodas")} onAccion={irA.ofertas}>
           {oferta ? (
             <OfferCard
               variant="home"
@@ -110,16 +113,13 @@ export function HomeScreen() {
                 <Ionicons name="notifications-outline" size={20} color="#ffffff" />
               </View>
               <View style={styles.flex}>
-                <Text style={heading(18, colors.accent900)}>Sin ofertas por ahora</Text>
-                <Text style={body(13, colors.accent800)}>
-                  Te avisaremos apenas se libere un cupo que te pueda interesar.
-                </Text>
+                <Text style={heading(18, colors.accent900)}>{t("inicio.sinOfertas")}</Text>
+                <Text style={body(13, colors.accent800)}>{t("inicio.sinOfertasTexto")}</Text>
                 <View style={styles.estadoAlertas}>
                   <View style={[styles.puntoEstado, !paciente.notificacionesActivas && styles.puntoApagado]} />
                   <Text style={styles.estadoTexto}>
-                    {paciente.notificacionesActivas ? "Alertas activas" : "Alertas desactivadas"} ·{" "}
-                    {paciente.especialidadesInteres.length}{" "}
-                    {paciente.especialidadesInteres.length === 1 ? "especialidad" : "especialidades"}
+                    {t(paciente.notificacionesActivas ? "inicio.alertasActivas" : "inicio.alertasDesactivadas")} ·{" "}
+                    {t("inicio.nEspecialidades", { count: paciente.especialidadesInteres.length })}
                   </Text>
                 </View>
               </View>
@@ -128,7 +128,7 @@ export function HomeScreen() {
         </Seccion>
 
         {/* 3. Próxima cita */}
-        <Seccion titulo="Próxima cita" accion={proximaCita ? "Ver citas" : undefined} onAccion={irA.citas}>
+        <Seccion titulo={t("inicio.proximaCita")} accion={proximaCita ? t("inicio.verCitas") : undefined} onAccion={irA.citas}>
           {proximaCita ? (
             <AppointmentCard
               cita={proximaCita}
@@ -143,13 +143,13 @@ export function HomeScreen() {
           ) : (
             <Card style={styles.filaSimple}>
               <Ionicons name="calendar-clear-outline" size={20} color={colors.neutral600} />
-              <Text style={body(14, colors.neutral700)}>No tenés citas confirmadas.</Text>
+              <Text style={body(14, colors.neutral700)}>{t("inicio.sinCitas")}</Text>
             </Card>
           )}
         </Seccion>
 
         {/* 4. Lista de espera */}
-        <Seccion titulo="Tu lista de espera" accion="Sumar especialidad" onAccion={irA.buscar}>
+        <Seccion titulo={t("inicio.listaEspera")} accion={t("inicio.sumarEspecialidad")} onAccion={irA.buscar}>
           <ListaEspera
             puesto={paciente.puestoEspera}
             dias={diasEnEspera(paciente.registradoEnISO)}
@@ -158,7 +158,11 @@ export function HomeScreen() {
         </Seccion>
 
         {/* 5. Notificaciones recientes */}
-        <Seccion titulo="Notificaciones recientes" accion={noLeidos.length ? "Ver todos" : undefined} onAccion={irA.avisos}>
+        <Seccion
+          titulo={t("inicio.notificacionesRecientes")}
+          accion={noLeidos.length ? t("inicio.verTodos") : undefined}
+          onAccion={irA.avisos}
+        >
           <Card style={styles.avisos}>
             {noLeidos.length ? (
               noLeidos.slice(0, 2).map((a, i) => (
@@ -192,8 +196,8 @@ export function HomeScreen() {
                   <Ionicons name="checkmark" size={18} color="#ffffff" />
                 </View>
                 <View>
-                  <Text style={heading(17, colors.accent900)}>Todo al día</Text>
-                  <Text style={body(13, colors.neutral700)}>No tenés notificaciones nuevas.</Text>
+                  <Text style={heading(17, colors.accent900)}>{t("inicio.todoAlDia")}</Text>
+                  <Text style={body(13, colors.neutral700)}>{t("inicio.sinNotificaciones")}</Text>
                 </View>
               </View>
             )}
@@ -236,39 +240,38 @@ function Seccion({
  * (los que están antes, tenues; vos, la píldora de acero).
  */
 function ListaEspera({ puesto, dias, onPress }: { puesto: number; dias: number; onPress: () => void }) {
+  const t = useT();
   const antes = Math.max(0, puesto - 1);
   const visibles = Math.min(antes, 9);
 
   return (
-    <Card onPress={onPress} accessibilityRole="button" accessibilityLabel="Ver lista de espera" style={styles.espera}>
+    <Card onPress={onPress} accessibilityRole="button" accessibilityLabel={t("inicio.verListaEspera")} style={styles.espera}>
       <View style={styles.esperaDatos}>
         <View style={styles.flex}>
-          <Text style={label(9)}>Puesto</Text>
+          <Text style={label(9)}>{t("inicio.puesto")}</Text>
           <Text style={styles.esperaNumero}>{puesto}</Text>
         </View>
         <View style={styles.esperaSeparador} />
         <View style={styles.flex}>
-          <Text style={label(9)}>En espera</Text>
+          <Text style={label(9)}>{t("inicio.enEspera")}</Text>
           <Text style={styles.esperaNumero}>
             {dias}
-            <Text style={heading(17, colors.neutral600)}> {dias === 1 ? "día" : "días"}</Text>
+            <Text style={heading(17, colors.neutral600)}> {t("comun.dias", { count: dias })}</Text>
           </Text>
         </View>
       </View>
 
-      <View style={styles.cola} accessibilityLabel={`${antes} personas antes que vos`}>
+      <View style={styles.cola} accessibilityLabel={t("inicio.personasAntes", { count: antes })}>
         {antes > visibles ? <Text style={styles.colaMas}>+{antes - visibles}</Text> : null}
         {Array.from({ length: visibles }, (_, i) => (
           <View key={i} style={[styles.colaPunto, { opacity: 0.35 + (0.5 * (i + 1)) / Math.max(visibles, 1) }]} />
         ))}
         <View style={styles.colaVos}>
-          <Text style={styles.colaVosTexto}>Vos</Text>
+          <Text style={styles.colaVosTexto}>{t("inicio.vos")}</Text>
         </View>
       </View>
       <Text style={body(13, colors.neutral700)}>
-        {antes === 0
-          ? "Sos el primero: el próximo cupo que te sirva es tuyo."
-          : `${antes} ${antes === 1 ? "persona" : "personas"} antes que vos. Te avisamos cuando se libere un cupo.`}
+        {antes === 0 ? t("inicio.sosPrimero") : t("inicio.personasAntesAviso", { count: antes })}
       </Text>
     </Card>
   );

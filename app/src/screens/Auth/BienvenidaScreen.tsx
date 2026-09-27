@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, fonts } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { DoctoraIlustracion, PROPORCION_ILUSTRACION } from "@/components/DoctoraIlustracion";
 import { Logo } from "@/components/Logo";
@@ -18,6 +19,7 @@ const MARGEN = 28;
  * acciones sobre el mismo margen izquierdo.
  */
 export function BienvenidaScreen({ navigation }: Props) {
+  const t = useT();
   const { width, height } = useWindowDimensions();
   // El retrato ocupa el ancho del contenido (así el arco cierra en el margen
   // derecho del texto) sin pasar del 47% del alto, para que la pantalla respire.
@@ -36,10 +38,11 @@ export function BienvenidaScreen({ navigation }: Props) {
 
       <View style={styles.texto}>
         <Text style={styles.titular} accessibilityRole="header">
-          Tu salud{"\n"}no espera<Text style={styles.punto}>.</Text>
+          {t("bienvenida.titular")}
+          <Text style={styles.punto}>.</Text>
         </Text>
         <Text style={[body(15, colors.neutral700), styles.bajada]}>
-          Te avisamos cuando se libera un cupo con tu especialista, y lo tomás en dos toques.
+          {t("bienvenida.bajada")}
         </Text>
       </View>
 
@@ -47,20 +50,20 @@ export function BienvenidaScreen({ navigation }: Props) {
         <Pressable
           onPress={() => navigation.navigate("RegistroDatos")}
           accessibilityRole="button"
-          accessibilityLabel="Empezar"
+          accessibilityLabel={t("intro.empezar")}
           style={({ pressed }) => [styles.boton, pressed && styles.presionado]}
         >
-          <Text style={styles.botonTexto}>Empezar</Text>
+          <Text style={styles.botonTexto}>{t("intro.empezar")}</Text>
         </Pressable>
         <View style={styles.ingresar}>
-          <Text style={body(14, colors.neutral700)}>¿Ya tenés cuenta? </Text>
+          <Text style={body(14, colors.neutral700)}>{t("bienvenida.yaTenesCuenta")} </Text>
           <Pressable
             onPress={() => navigation.navigate("Login")}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Iniciar sesión"
+            accessibilityLabel={t("login.iniciarSesion")}
           >
-            <Text style={styles.link}>Iniciá sesión</Text>
+            <Text style={styles.link}>{t("bienvenida.iniciaSesion")}</Text>
           </Pressable>
         </View>
       </View>

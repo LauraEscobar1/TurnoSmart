@@ -15,30 +15,27 @@ import { OfertaPendienteCard } from "@/components/OfertaPendienteCard";
 import { EstadoOferta, OfertaCupo } from "@/types/domain";
 import { aceptarOferta, getHistorialOfertas, getOfertasPendientes } from "@/services/offersService";
 import { RootStackParamList } from "@/navigation/types";
-import { fechaCorta, hora } from "@/utils/format";
+import { hora, useFormato } from "@/utils/format";
+import { Clave, useDato, useT } from "@/i18n";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 type Filtro = "todas" | "aceptada" | "rechazada" | "expirada";
 
-const FILTROS: { value: Filtro; label: string }[] = [
-  { value: "todas", label: "Todas" },
-  { value: "aceptada", label: "Aceptadas" },
-  { value: "rechazada", label: "Canceladas" },
-  { value: "expirada", label: "Expiradas" },
+const FILTROS: { value: Filtro; label: Clave; vacio: Clave }[] = [
+  { value: "todas", label: "ofertas.filtros.todas", vacio: "ofertas.vacios.todas" },
+  { value: "aceptada", label: "ofertas.filtros.aceptadas", vacio: "ofertas.vacios.aceptadas" },
+  { value: "rechazada", label: "ofertas.filtros.canceladas", vacio: "ofertas.vacios.canceladas" },
+  { value: "expirada", label: "ofertas.filtros.expiradas", vacio: "ofertas.vacios.expiradas" },
 ];
 
-const ESTADO: Record<Exclude<EstadoOferta, "pendiente">, { label: string; variant: BadgeVariant; icono: keyof typeof Ionicons.glyphMap }> = {
-  aceptada: { label: "Aceptada", variant: "solid", icono: "checkmark" },
-  rechazada: { label: "Cancelada", variant: "neutral", icono: "close" },
-  expirada: { label: "Expirada", variant: "lost", icono: "time-outline" },
+const ESTADO: Record<Exclude<EstadoOferta, "pendiente">, { label: Clave; variant: BadgeVariant; icono: keyof typeof Ionicons.glyphMap }> = {
+  aceptada: { label: "ofertas.estados.aceptada", variant: "solid", icono: "checkmark" },
+  rechazada: { label: "ofertas.estados.cancelada", variant: "neutral", icono: "close" },
+  expirada: { label: "ofertas.estados.expirada", variant: "lost", icono: "time-outline" },
 };
 
-const PASOS = [
-  "Cuando alguien cancela una cita, ese cupo queda libre.",
-  "Lo ofrecemos a quien mejor coincide: tiempo en espera, especialidad, horario y distancia. Siempre te mostramos por qué.",
-  "Tenés unos minutos para aceptarlo con un toque. Si no respondés, pasa al siguiente paciente de la lista.",
-];
+const PASOS: Clave[] = ["ofertas.pasos.uno", "ofertas.pasos.dos", "ofertas.pasos.tres"];
 
 /**
  * Ofertas — el centro donde el paciente recibe y responde cupos
@@ -48,6 +45,7 @@ const PASOS = [
  *   3. «¿Cómo funcionan las ofertas?», colapsable, para quien recién empieza.
  */
 export function OffersListScreen() {
+  const t = useT();
   const navigation = useNavigation<Nav>();
   const [pendientes, setPendientes] = useState<OfertaCupo[]>([]);
   const [historial, setHistorial] = useState<OfertaCupo[]>([]);
@@ -79,11 +77,9 @@ export function OffersListScreen() {
         {/* Encabezado */}
         <View>
           <Text style={heading(30, colors.accent900)} accessibilityRole="header">
-            Ofertas para vos
+            {t("ofertas.titulo")}
           </Text>
-          <Text style={[body(14, colors.neutral700), styles.bajada]}>
-            Encontrá acá los cupos disponibles relacionados con tus solicitudes.
-          </Text>
+          <Text style={[body(14, colors.neutral700), styles.bajada]}>{t("ofertas.bajada")}</Text>
         </View>
 
         {/* 1. Lo que requiere respuesta */}
@@ -93,9 +89,7 @@ export function OffersListScreen() {
               <View style={styles.avisoIcono}>
                 <Ionicons name="flash" size={18} color={colors.accent900} />
               </View>
-              <Text style={styles.avisoTexto}>
-                {n} {n === 1 ? "oferta requiere" : "ofertas requieren"} tu respuesta
-              </Text>
+              <Text style={styles.avisoTexto}>{t("ofertas.requierenRespuesta", { count: n })}</Text>
             </View>
             {pendientes.map((o) => (
               <OfertaPendienteCard
@@ -109,9 +103,9 @@ export function OffersListScreen() {
         ) : (
           <View style={styles.vacio}>
             <IlustracionSinOfertas />
-            <Text style={[heading(22, colors.accent900), styles.centro]}>No hay nuevas ofertas por ahora</Text>
+            <Text style={[heading(22, colors.accent900), styles.centro]}>{t("ofertas.sinNuevas")}</Text>
             <Text style={[body(14, colors.neutral700), styles.centro, styles.vacioTexto]}>
-              Te avisaremos cuando encontremos un cupo que pueda interesarte.
+              {t("ofertas.sinNuevasTexto")}
             </Text>
           </View>
         )}
@@ -119,7 +113,7 @@ export function OffersListScreen() {
         {/* 2. Historial compacto */}
         {historial.length > 0 && (
           <View style={styles.bloque}>
-            <Text style={heading(18, colors.accent900)}>Historial</Text>
+            <Text style={heading(18, colors.accent900)}>{t("ofertas.historial")}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -136,7 +130,7 @@ export function OffersListScreen() {
                     accessibilityState={{ selected: activo }}
                     style={[styles.filtro, activo && styles.filtroActivo]}
                   >
-                    <Text style={[styles.filtroTexto, activo && styles.filtroTextoActivo]}>{f.label}</Text>
+                    <Text style={[styles.filtroTexto, activo && styles.filtroTextoActivo]}>{t(f.label)}</Text>
                   </Pressable>
                 );
               })}
@@ -147,7 +141,7 @@ export function OffersListScreen() {
                 filtradas.map((o, i) => <FilaHistorial key={o.id} oferta={o} divisor={i > 0} />)
               ) : (
                 <Text style={[body(13, colors.neutral600), styles.listaVacia]}>
-                  No tenés ofertas {FILTROS.find((f) => f.value === filtro)?.label.toLowerCase()}.
+                  {t(FILTROS.find((f) => f.value === filtro)!.vacio)}
                 </Text>
               )}
             </Card>
@@ -162,7 +156,7 @@ export function OffersListScreen() {
             accessibilityState={{ expanded: ayudaAbierta }}
             style={styles.ayudaCabecera}
           >
-            <Text style={heading(17, colors.accent900)}>¿Cómo funcionan las ofertas?</Text>
+            <Text style={heading(17, colors.accent900)}>{t("ofertas.comoFuncionan")}</Text>
             <Ionicons name={ayudaAbierta ? "remove" : "add"} size={20} color={colors.accent700} />
           </Pressable>
           {ayudaAbierta && (
@@ -172,7 +166,7 @@ export function OffersListScreen() {
                   <View style={styles.pasoNumero}>
                     <Text style={styles.pasoNumeroTexto}>{i + 1}</Text>
                   </View>
-                  <Text style={[body(13, colors.neutral700), styles.flex]}>{p}</Text>
+                  <Text style={[body(13, colors.neutral700), styles.flex]}>{t(p)}</Text>
                 </View>
               ))}
             </View>
@@ -185,6 +179,9 @@ export function OffersListScreen() {
 
 /** Una línea por oferta resuelta: ya no requieren acción, así que ocupan poco. */
 function FilaHistorial({ oferta, divisor }: { oferta: OfertaCupo; divisor: boolean }) {
+  const t = useT();
+  const dato = useDato();
+  const { fechaCorta } = useFormato();
   const e = ESTADO[oferta.estado as Exclude<EstadoOferta, "pendiente">];
   return (
     <View style={[styles.fila, divisor && styles.filaDivisor]}>
@@ -193,13 +190,13 @@ function FilaHistorial({ oferta, divisor }: { oferta: OfertaCupo; divisor: boole
       </View>
       <View style={styles.flex}>
         <Text style={heading(16, colors.accent900)} numberOfLines={1}>
-          {oferta.especialidad}
+          {dato("especialidades", oferta.especialidad)}
         </Text>
         <Text style={body(12, colors.neutral600)} numberOfLines={1}>
           {fechaCorta(oferta.fechaHoraISO)} · {hora(oferta.fechaHoraISO)} · {oferta.profesional}
         </Text>
       </View>
-      <Badge label={e.label} variant={e.variant} style={styles.centrado} />
+      <Badge label={t(e.label)} variant={e.variant} style={styles.centrado} />
     </View>
   );
 }

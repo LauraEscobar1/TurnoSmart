@@ -7,20 +7,16 @@ import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
 import { Card } from "@/components/Card";
-import { dia, diaRelativo, diaSemanaCorto, fechaCorta, hora, mes } from "@/utils/format";
+import { dia, esDiaCercano, hora, useFormato } from "@/utils/format";
+import { useDato, useT } from "@/i18n";
 
-/** "Hoy, 24 sep", "Mañana, 25 sep" o "Jue 8 oct". */
-function fechaCita(iso: string) {
-  const rel = diaRelativo(iso);
-  return rel === "Hoy" || rel === "Mañana" ? `${rel}, ${fechaCorta(iso)}` : `${diaSemanaCorto(new Date(iso))} ${fechaCorta(iso)}`;
-}
-
-export const estadoCita: Record<Cita["estado"], { label: string; variant: BadgeVariant }> = {
-  confirmada: { label: "Confirmada", variant: "solid" },
-  asistida: { label: "Asistida", variant: "neutral" },
-  cancelada: { label: "Cancelada", variant: "lost" },
-  reasignada: { label: "Reasignada", variant: "outline" },
-  "no-show": { label: "No asistió", variant: "neutral" },
+/** Relleno de la etiqueta de cada estado; el texto sale de i18n (datos.estadosCita). */
+export const varianteEstado: Record<Cita["estado"], BadgeVariant> = {
+  confirmada: "solid",
+  asistida: "neutral",
+  cancelada: "lost",
+  reasignada: "outline",
+  "no-show": "neutral",
 };
 
 interface AppointmentCardProps {
@@ -41,7 +37,14 @@ interface AppointmentCardProps {
  *   especialidad + hora → profesional → consultorio → estado.
  */
 export function AppointmentCard({ cita, onPress, past, compact, conFecha }: AppointmentCardProps) {
-  const e = estadoCita[cita.estado];
+  const t = useT();
+  const dato = useDato();
+  const { diaRelativo, diaSemanaCorto, fechaCorta, mes } = useFormato();
+  const especialidad = dato("especialidades", cita.especialidad);
+
+  /** "Hoy, 24 sep", "Mañana, 25 sep" o "Jue 8 oct". */
+  const fechaCita = (iso: string) =>
+    esDiaCercano(iso) ? `${diaRelativo(iso)}, ${fechaCorta(iso)}` : `${diaSemanaCorto(new Date(iso))} ${fechaCorta(iso)}`;
 
   if (compact) {
     return (
@@ -52,7 +55,7 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
         </View>
         <View style={styles.info}>
           <Text style={heading(17)} numberOfLines={1}>
-            {cita.especialidad} · {hora(cita.fechaHoraISO)}
+            {especialidad} · {hora(cita.fechaHoraISO)}
           </Text>
           <Text style={body(12, colors.neutral700)} numberOfLines={1}>
             {cita.profesional} · {cita.consultorio}
@@ -68,7 +71,7 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
     <Card onPress={accion} style={[styles.completa, past && styles.past]}>
       <View style={styles.encabezado}>
         <Text style={[heading(20, colors.accent900), styles.flex]} numberOfLines={1}>
-          {cita.especialidad}
+          {especialidad}
         </Text>
         <View style={styles.hora}>
           <Ionicons name="time-outline" size={14} color={colors.accent700} />
@@ -96,8 +99,10 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
       </View>
 
       <View style={styles.pie}>
-        <Badge label={e.label} variant={e.variant} />
-        {cita.origen === "cupo-recuperado" ? <Text style={body(12, colors.neutral600)}>Cupo recuperado</Text> : null}
+        <Badge label={dato("estadosCita", cita.estado)} variant={varianteEstado[cita.estado]} />
+        {cita.origen === "cupo-recuperado" ? (
+          <Text style={body(12, colors.neutral600)}>{t("citas.cupoRecuperado")}</Text>
+        ) : null}
         {accion ? <Ionicons name="chevron-forward" size={18} color={colors.neutral600} style={styles.chevron} /> : null}
       </View>
     </Card>

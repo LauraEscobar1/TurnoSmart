@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
 import { radius, sombra } from "@/theme/spacing";
 import { fonts, heading } from "@/theme/typography";
-import { claveDia, diaSemanaCorto, fechaLarga, mesYAnio } from "@/utils/format";
+import { claveDia, useFormato } from "@/utils/format";
+import { useT } from "@/i18n";
 
 interface CalendarioHorizontalProps {
   dias: Date[];
@@ -25,6 +26,8 @@ const PASO = ANCHO + SEPARACION;
  * semana, para que se entienda que el calendario se desplaza.
  */
 export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasPorDia = {} }: CalendarioHorizontalProps) {
+  const t = useT();
+  const { diaSemanaCorto, fechaLarga, mesYAnio } = useFormato();
   const scrollRef = useRef<ScrollView>(null);
   const [ancho, setAncho] = useState(0);
   const offset = useRef(0);
@@ -53,7 +56,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
             onPress={() => desplazar(-1)}
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel="Semana anterior"
+            accessibilityLabel={t("citas.semanaAnterior")}
             style={({ pressed }) => [styles.flecha, pressed && styles.flechaPresionada]}
           >
             <Ionicons name="chevron-back" size={16} color={colors.accent700} />
@@ -62,7 +65,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
             onPress={() => desplazar(1)}
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel="Semana siguiente"
+            accessibilityLabel={t("citas.semanaSiguiente")}
             style={({ pressed }) => [styles.flecha, pressed && styles.flechaPresionada]}
           >
             <Ionicons name="chevron-forward" size={16} color={colors.accent700} />
@@ -93,7 +96,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
               onPress={() => onSeleccionar(d)}
               accessibilityRole="button"
               accessibilityState={{ selected: activo }}
-              accessibilityLabel={`${fechaLarga(d)}${cantidad ? `, ${cantidad} ${cantidad === 1 ? "cita" : "citas"}` : ""}`}
+              accessibilityLabel={`${fechaLarga(d)}${cantidad ? `, ${t("citas.nCitas", { count: cantidad })}` : ""}`}
               style={({ pressed }) => [
                 styles.capsula,
                 activo ? styles.capsulaActiva : styles.capsulaInactiva,

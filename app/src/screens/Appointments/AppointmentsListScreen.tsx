@@ -14,7 +14,8 @@ import { Segmented } from "@/components/forms";
 import { Cita } from "@/types/domain";
 import { getCitasPasadas, getCitasProximas } from "@/services/appointmentsService";
 import { AppointmentsStackParamList } from "@/navigation/types";
-import { claveDia, fechaCorta, fechaLarga, rangoDias } from "@/utils/format";
+import { claveDia, rangoDias, useFormato } from "@/utils/format";
+import { useT } from "@/i18n";
 
 type Props = NativeStackScreenProps<AppointmentsStackParamList, "AppointmentsList">;
 
@@ -32,6 +33,8 @@ const RANGO: Record<Tab, { desde: number; dias: number }> = {
  * que cambian el rango del calendario, y las citas del día elegido.
  */
 export function AppointmentsListScreen({ navigation, route }: Props) {
+  const t = useT();
+  const { fechaCorta, fechaLarga } = useFormato();
   const [tab, setTab] = useState<Tab>(route.params?.tab ?? "proximas");
   const [proximas, setProximas] = useState<Cita[]>([]);
   const [pasadas, setPasadas] = useState<Cita[]>([]);
@@ -89,7 +92,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Mis citas" />
+      <ScreenHeader title={t("nav.citas")} />
       <FlatList
         contentContainerStyle={styles.content}
         ListHeaderComponent={
@@ -100,8 +103,8 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
               value={tab}
               onChange={setTab}
               options={[
-                { value: "proximas", label: "Próximas" },
-                { value: "pasadas", label: "Pasadas" },
+                { value: "proximas", label: t("citas.proximas") },
+                { value: "pasadas", label: t("citas.pasadas") },
               ]}
             />
             <View style={styles.titulo}>
@@ -109,7 +112,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
                 {fechaLarga(dia).replace(/^./, (c) => c.toUpperCase())}
               </Text>
               <Text style={body(13, colors.neutral600)}>
-                {delDia.length ? `${delDia.length} ${delDia.length === 1 ? "cita" : "citas"}` : "Sin citas"}
+                {delDia.length ? t("citas.nCitas", { count: delDia.length }) : t("citas.sinCitas")}
               </Text>
             </View>
           </View>
@@ -126,17 +129,15 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
         ListEmptyComponent={
           <View style={styles.vacio}>
             <EmptyState
-              title={`No tenés citas el ${fechaCorta(dia.toISOString())}`}
+              title={t("citas.sinCitasEl", { fecha: fechaCorta(dia.toISOString()) })}
               description={
                 cercana
-                  ? `${esPasada ? "Tu cita anterior fue" : "Tu próxima cita es"} el ${fechaCorta(cercana.toISOString())}.`
-                  : esPasada
-                    ? "Todavía no tenés historial."
-                    : "Te avisamos apenas se libere un cupo que te sirva."
+                  ? t(esPasada ? "citas.anteriorFue" : "citas.proximaEs", { fecha: fechaCorta(cercana.toISOString()) })
+                  : t(esPasada ? "citas.sinHistorial" : "citas.teAvisamos")
               }
             />
             {cercana ? (
-              <PrimaryButton label="Ir a ese día" variant="secondary" onPress={() => setSeleccionado(cercana)} />
+              <PrimaryButton label={t("citas.irAEseDia")} variant="secondary" onPress={() => setSeleccionado(cercana)} />
             ) : null}
           </View>
         }

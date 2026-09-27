@@ -10,7 +10,8 @@ import { RootStackParamList } from "@/navigation/types";
 import { OfertaCupo } from "@/types/domain";
 import { getOfertaPorId } from "@/services/offersService";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { diaRelativo, hora } from "@/utils/format";
+import { esDiaCercano, hora, useFormato } from "@/utils/format";
+import { useDato, useT } from "@/i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "OfferConfirmation">;
 
@@ -23,6 +24,9 @@ const AUTO_NAV_MS = 2000;
  * Rechazada: mismo molde con el campo sólido reemplazado por contorno.
  */
 export function OfferConfirmationScreen({ route, navigation }: Props) {
+  const t = useT();
+  const dato = useDato();
+  const { diaRelativo } = useFormato();
   const { ofertaId, resultado } = route.params;
   const esAceptada = resultado === "aceptada";
   const [oferta, setOferta] = useState<OfertaCupo | null>(null);
@@ -60,10 +64,14 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
             <Ionicons name={esAceptada ? "checkmark" : "close"} size={34} color={fg} />
           </View>
         </View>
-        <Text style={[heading(34, fg), styles.center]}>{esAceptada ? "Cupo confirmado" : "Oferta rechazada"}</Text>
+        <Text style={[heading(34, fg), styles.center]}>{t(esAceptada ? "confirmacion.confirmado" : "confirmacion.rechazada")}</Text>
         {oferta && (
           <Text style={[body(14, fg), styles.center, styles.soft]}>
-            {oferta.especialidad} · {diaRelativo(oferta.fechaHoraISO).toLowerCase()} {hora(oferta.fechaHoraISO)}
+            {dato("especialidades", oferta.especialidad)} ·{" "}
+            {esDiaCercano(oferta.fechaHoraISO)
+              ? diaRelativo(oferta.fechaHoraISO).toLowerCase()
+              : diaRelativo(oferta.fechaHoraISO)}{" "}
+            {hora(oferta.fechaHoraISO)}
             {"\n"}
             {oferta.profesional} · {oferta.consultorio}
           </Text>
@@ -71,19 +79,19 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
         <View style={[styles.note, { borderTopColor: rule }]}>
           <Text style={[body(12, fg), styles.center, styles.faint]}>
             {esAceptada
-              ? "Te enviamos un recordatorio 2 horas antes. Podés cancelar desde Mis citas."
-              : "Gracias por avisarnos. Se lo ofrecemos a otro paciente."}
+              ? t("confirmacion.confirmadoTexto")
+              : t("confirmacion.rechazadaTexto")}
           </Text>
         </View>
       </View>
       <View style={styles.footer}>
         {esAceptada ? (
           <>
-            <PrimaryButton label="Ver cita" variant="inverse" onPress={irAMisCitas} />
-            <Text style={[label(10, colors.bg), styles.center, styles.hint]}>Volviendo a Mis citas en 2 s</Text>
+            <PrimaryButton label={t("confirmacion.verCita")} variant="inverse" onPress={irAMisCitas} />
+            <Text style={[label(10, colors.bg), styles.center, styles.hint]}>{t("confirmacion.volviendo")}</Text>
           </>
         ) : (
-          <PrimaryButton label="Volver al inicio" variant="secondary" onPress={irAInicio} />
+          <PrimaryButton label={t("confirmacion.volverInicio")} variant="secondary" onPress={irAInicio} />
         )}
       </View>
     </SafeAreaView>
