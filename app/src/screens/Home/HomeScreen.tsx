@@ -11,6 +11,7 @@ import { body, fonts, heading, label } from "@/theme/typography";
 import { OfferCard } from "@/components/OfferCard";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { Card } from "@/components/Card";
+import { MenuAjustes } from "@/components/MenuAjustes";
 import { Cita, Notificacion, OfertaCupo } from "@/types/domain";
 import { getOfertaPendiente } from "@/services/offersService";
 import { getCitasProximas } from "@/services/appointmentsService";
@@ -32,7 +33,7 @@ function saludo() {
 
 /**
  * Inicio — Nivel 1 (docs/02-jerarquia.md §2), como un tablero:
- *   saludo → oferta (la máxima prioridad) → próxima cita → lista de
+ *   saludo (con el menú ☰ de Ajustes) → oferta (la máxima prioridad) → próxima cita → lista de
  *   espera → avisos recientes. La navegación global vive solo en la barra
  *   inferior; cada sección ofrece únicamente sus propias acciones.
  * Cada bloque tiene un peso visual distinto (sin tarjeta, tinte, blanco,
@@ -41,6 +42,7 @@ function saludo() {
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const paciente = usePaciente();
+  const [ajustesAbiertos, setAjustesAbiertos] = useState(false);
   const [oferta, setOferta] = useState<OfertaCupo | null>(null);
   const [proximaCita, setProximaCita] = useState<Cita | null>(null);
   const [avisos, setAvisos] = useState<Notificacion[]>([]);
@@ -54,10 +56,6 @@ export function HomeScreen() {
   );
 
   const noLeidos = avisos.filter((a) => !a.leida);
-  const iniciales = `${paciente.nombre[0] ?? ""}${paciente.apellido[0] ?? ""}`
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toUpperCase();
 
   // Frase breve según el estado: lo más urgente primero.
   const bajada = oferta
@@ -72,7 +70,6 @@ export function HomeScreen() {
     espera: () => navigation.navigate("Tabs", { screen: "Perfil", params: { screen: "Preferences", initial: false } }),
     avisos: () => navigation.navigate("Tabs", { screen: "Notificaciones" }),
     ofertas: () => navigation.navigate("Tabs", { screen: "Ofertas" }),
-    perfil: () => navigation.navigate("Tabs", { screen: "Perfil" }),
   };
 
   return (
@@ -88,12 +85,13 @@ export function HomeScreen() {
             <Text style={[body(14, colors.neutral700), styles.bajada]}>{bajada}</Text>
           </View>
           <Pressable
-            onPress={irA.perfil}
+            onPress={() => setAjustesAbiertos(true)}
+            hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel="Perfil"
-            style={({ pressed }) => [styles.avatar, pressed && styles.presionado]}
+            accessibilityLabel="Ajustes"
+            style={({ pressed }) => [styles.menu, pressed && styles.presionado]}
           >
-            <Text style={heading(17, colors.accent700)}>{iniciales}</Text>
+            <Ionicons name="menu-outline" size={24} color={colors.accent900} />
           </Pressable>
         </View>
 
@@ -202,6 +200,7 @@ export function HomeScreen() {
           </Card>
         </Seccion>
       </ScrollView>
+      <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
     </SafeAreaView>
   );
 }
@@ -302,7 +301,7 @@ const styles = StyleSheet.create({
   bajada: {
     marginTop: 2,
   },
-  avatar: {
+  menu: {
     width: 46,
     height: 46,
     borderRadius: 23,
