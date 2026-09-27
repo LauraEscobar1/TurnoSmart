@@ -65,6 +65,28 @@ export function haceCuanto(iso: string) {
   return fechaCorta(iso);
 }
 
+/** Sección de la bandeja de avisos según el día: "Hoy", "Ayer", "Esta semana" o "Anteriores". */
+export function grupoAviso(iso: string) {
+  const diff = diasDesdeHoy(new Date(iso));
+  if (diff >= 0) return "Hoy";
+  if (diff === -1) return "Ayer";
+  if (diff >= -6) return "Esta semana";
+  return "Anteriores";
+}
+
+/** Marca de tiempo en la bandeja: "Ahora", "Hace 20 min", "Hace 3 h", "Ayer · 20:00", "18 sep · 10:00". */
+export function marcaAviso(iso: string) {
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  const diff = diasDesdeHoy(new Date(iso));
+  if (diff >= 0) {
+    if (min < 1) return "Ahora";
+    if (min < 60) return `Hace ${min} min`;
+    return `Hace ${Math.floor(min / 60)} h`;
+  }
+  if (diff === -1) return `Ayer · ${hora(iso)}`;
+  return `${fechaCorta(iso)} · ${hora(iso)}`;
+}
+
 /** "07:39" */
 export function mmss(segundos: number) {
   const s = Math.max(0, Math.floor(segundos));
