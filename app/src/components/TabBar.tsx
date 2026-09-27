@@ -10,6 +10,12 @@ import { RootTabParamList } from "@/navigation/types";
 
 const ICON_SIZE = 20;
 const BAR_HEIGHT = 64;
+/**
+ * «Notificaciones» no entra en la pestaña con el tracking de las demás
+ * (≈78 px contra ≈63 px de bloque en un teléfono de 375 pt): esa etiqueta
+ * cierra el espaciado y, si aún no entra, se achica hasta un 75 %.
+ */
+const ETIQUETA_LARGA = 10;
 
 const iconByRoute: Record<keyof RootTabParamList, keyof typeof Ionicons.glyphMap> = {
   Inicio: "home-outline",
@@ -63,6 +69,7 @@ export function TabBar({
           const title = typeof options.tabBarLabel === "string" ? options.tabBarLabel : (options.title ?? route.name);
           const badge = badges[route.name as keyof RootTabParamList];
           const icon = iconByRoute[route.name as keyof RootTabParamList];
+          const largo = title.length > ETIQUETA_LARGA;
 
           // La sección «actual» es la más cercana a la posición del arrastre.
           const range = [i - 0.5, i - 0.499, i + 0.499, i + 0.5];
@@ -98,10 +105,20 @@ export function TabBar({
                 </Animated.View>
               </Animated.View>
               <View style={styles.labelBox}>
-                <Animated.Text style={[styles.label, styles.labelOff, { opacity: off }]} numberOfLines={1}>
+                <Animated.Text
+                  style={[styles.label, largo && styles.labelLargo, styles.labelOff, { opacity: off }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}
+                >
                   {title}
                 </Animated.Text>
-                <Animated.Text style={[styles.label, styles.labelOn, { opacity: on }]} numberOfLines={1}>
+                <Animated.Text
+                  style={[styles.label, largo && styles.labelLargo, styles.labelOn, { opacity: on }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}
+                >
                   {title}
                 </Animated.Text>
               </View>
@@ -165,6 +182,8 @@ const styles = StyleSheet.create({
   labelBox: {
     height: 12,
     alignSelf: "stretch",
+    // Dentro del bloque activo (inset 6) con 2 px de aire a cada lado.
+    marginHorizontal: 8,
   },
   label: {
     position: "absolute",
@@ -175,6 +194,9 @@ const styles = StyleSheet.create({
     lineHeight: 12,
     letterSpacing: 0.72,
     textTransform: "uppercase",
+  },
+  labelLargo: {
+    letterSpacing: 0.1,
   },
   labelOff: {
     fontFamily: fonts.bodyMedium,
