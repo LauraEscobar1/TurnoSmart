@@ -4,10 +4,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { Cita } from "@/types/domain";
 import { colors } from "@/theme/colors";
 import { radius } from "@/theme/spacing";
-import { body, heading, label } from "@/theme/typography";
+import { body, fonts, heading, label } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
 import { Card } from "@/components/Card";
-import { dia, hora, mes } from "@/utils/format";
+import { dia, diaRelativo, diaSemanaCorto, fechaCorta, hora, mes } from "@/utils/format";
+
+/** "Hoy, 24 sep", "Mañana, 25 sep" o "Jue 8 oct". */
+function fechaCita(iso: string) {
+  const rel = diaRelativo(iso);
+  return rel === "Hoy" || rel === "Mañana" ? `${rel}, ${fechaCorta(iso)}` : `${diaSemanaCorto(new Date(iso))} ${fechaCorta(iso)}`;
+}
 
 export const estadoCita: Record<Cita["estado"], { label: string; variant: BadgeVariant }> = {
   confirmada: { label: "Confirmada", variant: "solid" },
@@ -22,8 +28,10 @@ interface AppointmentCardProps {
   onPress?: () => void;
   /** Pasada: se atenúa y pierde la acción. */
   past?: boolean;
-  /** Versión compacta de Home: fecha a la izquierda, sin estado. */
+  /** Versión compacta: fecha a la izquierda, sin estado. */
   compact?: boolean;
+  /** Muestra la fecha bajo la especialidad (Inicio, donde no hay calendario). */
+  conFecha?: boolean;
 }
 
 /**
@@ -32,7 +40,7 @@ interface AppointmentCardProps {
  * - Completa (Mis citas, donde el día ya lo da el calendario): jerarquía
  *   especialidad + hora → profesional → consultorio → estado.
  */
-export function AppointmentCard({ cita, onPress, past, compact }: AppointmentCardProps) {
+export function AppointmentCard({ cita, onPress, past, compact, conFecha }: AppointmentCardProps) {
   const e = estadoCita[cita.estado];
 
   if (compact) {
@@ -68,6 +76,12 @@ export function AppointmentCard({ cita, onPress, past, compact }: AppointmentCar
         </View>
       </View>
 
+      {conFecha ? (
+        <View style={styles.dato}>
+          <Ionicons name="calendar-outline" size={15} color={colors.accent700} />
+          <Text style={[body(14, colors.accent700), styles.fecha]}>{fechaCita(cita.fechaHoraISO)}</Text>
+        </View>
+      ) : null}
       <View style={styles.dato}>
         <Ionicons name="person-outline" size={15} color={colors.accent700} />
         <Text style={[body(14, colors.text), styles.flex]} numberOfLines={1}>
@@ -161,5 +175,8 @@ const styles = StyleSheet.create({
   },
   chevron: {
     marginLeft: "auto",
+  },
+  fecha: {
+    fontFamily: fonts.bodyMedium,
   },
 });
