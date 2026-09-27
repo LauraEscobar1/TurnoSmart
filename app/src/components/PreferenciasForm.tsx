@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { DistanciaMaxima, FranjaHoraria } from "@/types/domain";
 import { PreferenciasCupo } from "@/services/authService";
 import { ESPECIALIDADES } from "@/data/mockData";
-import { ChipSelect, Segmented, TextField } from "@/components/forms";
+import { ChipSelect, Segmented } from "@/components/forms";
 
 interface PreferenciasFormProps {
   value: PreferenciasCupo;
@@ -53,12 +53,6 @@ export function PreferenciasForm({ value, onChange, errorEspecialidades }: Prefe
         options={DISTANCIAS}
         value={value.distanciaMaxKm}
         onChange={(v) => set("distanciaMaxKm", v)}
-      />
-      <TextField
-        label="Obra social / prepaga"
-        placeholder="Ej.: OSDE 310"
-        value={value.obraSocial}
-        onChangeText={(v) => set("obraSocial", v)}
       />
     </View>
   );
