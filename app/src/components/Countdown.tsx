@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { heading, label } from "@/theme/typography";
 import { mmss } from "@/utils/format";
 import { useT } from "@/i18n";
@@ -39,7 +40,9 @@ interface CountdownProps {
  * Contador de expiración de la oferta. Es el ÚNICO elemento animado del
  * sistema: pulsa la opacidad 1 → 0,35 en un ciclo de 2 s.
  */
-export function Countdown({ segundos, size, caption, align = "right", hideCaption, color = colors.accent700, captionStyle, style }: CountdownProps) {
+export function Countdown({ segundos, size, caption, align = "right", hideCaption, color, captionStyle, style }: CountdownProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -55,7 +58,7 @@ export function Countdown({ segundos, size, caption, align = "right", hideCaptio
   }, [opacity]);
 
   const urgente = segundos < UMBRAL_EXPIRA_PRONTO;
-  const numberColor = urgente ? colors.accent800 : color;
+  const numberColor = urgente ? colors.accent800 : (color ?? colors.accent700);
 
   return (
     <View style={[{ alignItems: align === "right" ? "flex-end" : "center" }, style]}>
@@ -71,7 +74,8 @@ export function Countdown({ segundos, size, caption, align = "right", hideCaptio
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   number: {
     fontVariant: ["tabular-nums"],
     includeFontPadding: false,

@@ -2,7 +2,8 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { OfertaCupo } from "@/types/domain";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { Badge } from "@/components/Badge";
@@ -25,6 +26,8 @@ interface Props {
  * (un toque: sin «¿seguro?», regla de 2 toques) y «Ver detalles».
  */
 export function OfertaPendienteCard({ oferta, onAceptar, onVerDetalles }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { fechaConDia } = useFormato();
@@ -67,13 +70,15 @@ function Dato({
   etiqueta: string;
   valor: string;
 }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   return (
     <View style={styles.dato}>
       <View style={styles.datoIcono}>
         <Ionicons name={icono} size={15} color={colors.accent700} />
       </View>
       <View style={styles.flex}>
-        <Text style={label(9)}>{etiqueta}</Text>
+        <Text style={label(9, colors.neutral600)}>{etiqueta}</Text>
         <Text style={[body(14, colors.text), styles.datoValor]} numberOfLines={1}>
           {valor}
         </Text>
@@ -82,7 +87,8 @@ function Dato({
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   card: {
     padding: 18,
     gap: 14,

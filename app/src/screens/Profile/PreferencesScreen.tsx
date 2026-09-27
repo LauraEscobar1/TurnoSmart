@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
@@ -17,6 +18,8 @@ import { ScreenHeader } from "@/components/ScreenHeader";
  * al motor de priorización de IA (docs/01-arquitectura-informacion.md §2.2).
  */
 export function PreferencesScreen() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const navigation = useNavigation();
   const paciente = usePaciente();
@@ -65,7 +68,8 @@ export function PreferencesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,

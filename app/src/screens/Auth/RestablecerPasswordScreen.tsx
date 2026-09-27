@@ -2,7 +2,8 @@ import React, { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -21,6 +22,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, "RestablecerPassword">;
  * 1) el correo y «Enviar código»; 2) el código y la contraseña nueva.
  */
 export function RestablecerPasswordScreen({ navigation, route }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const [email, setEmail] = useState(route.params?.email ?? "");
   const [enviado, setEnviado] = useState(false);
@@ -81,7 +84,7 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
     >
       <View style={styles.marca}>
         <Logo size={44} wordmark />
-        <Text style={[heading(24), styles.center, styles.titulo]}>{t("restablecer.titulo")}</Text>
+        <Text style={[heading(24, colors.text), styles.center, styles.titulo]}>{t("restablecer.titulo")}</Text>
         <Text style={[body(13, colors.neutral700), styles.center]}>
           {enviado
             ? t("restablecer.enviamos", { email: email.trim() })
@@ -134,7 +137,8 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   marca: {
     alignItems: "center",
     paddingTop: 4,

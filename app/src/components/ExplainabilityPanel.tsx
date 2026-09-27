@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { FactorPrioridad } from "@/types/domain";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, label } from "@/theme/typography";
 import { useT, useValorFactor } from "@/i18n";
 
@@ -16,6 +17,8 @@ interface ExplainabilityPanelProps {
  * muestra la razón.
  */
 export function ExplainabilityPanel({ factores, title }: ExplainabilityPanelProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const valorFactor = useValorFactor();
   const top = [...factores].sort((a, b) => b.peso - a.peso).slice(0, 4);
@@ -27,7 +30,7 @@ export function ExplainabilityPanel({ factores, title }: ExplainabilityPanelProp
         {top.map((f) => (
           <View key={f.etiqueta}>
             <View style={styles.row}>
-              <Text style={[body(13), styles.etiqueta]}>{valorFactor(f.etiqueta)}</Text>
+              <Text style={[body(13, colors.text), styles.etiqueta]}>{valorFactor(f.etiqueta)}</Text>
               <Text style={[body(13, colors.neutral600), styles.valor]}>{valorFactor(f.valor)}</Text>
             </View>
             <View style={styles.track}>
@@ -40,7 +43,8 @@ export function ExplainabilityPanel({ factores, title }: ExplainabilityPanelProp
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   title: {
     marginBottom: 10,
   },

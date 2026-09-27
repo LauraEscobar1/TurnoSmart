@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -18,6 +19,8 @@ type Errores = Partial<Record<keyof DatosCuenta | "confirmar", string>>;
 
 /** 04 · Acceso — 02 Registro, datos (1 / 3). */
 export function RegistroDatosScreen({ navigation }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { datos, setDatos } = useRegistro();
   const [form, setForm] = useState(datos);
@@ -58,7 +61,7 @@ export function RegistroDatosScreen({ navigation }: Props) {
     >
       <View style={styles.marca}>
         <Logo size={40} />
-        <Text style={[heading(26), styles.center, styles.titulo]}>{t("registro.tusDatos")}</Text>
+        <Text style={[heading(26, colors.text), styles.center, styles.titulo]}>{t("registro.tusDatos")}</Text>
         <Text style={[body(13, colors.neutral700), styles.center]}>
           {t("registro.tusDatosBajada")}
         </Text>
@@ -103,7 +106,8 @@ export function RegistroDatosScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   marca: {
     alignItems: "center",
   },
