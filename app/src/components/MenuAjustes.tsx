@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts } from "@/theme/typography";
 import { HojaInferior } from "@/components/HojaInferior";
@@ -22,6 +23,8 @@ const IDIOMAS: { value: Idioma; label: string }[] = [
  * se aplica a toda la app (AjustesProvider).
  */
 export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar: () => void }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { cambiar, ...ajustes } = useAjustes();
 
@@ -32,7 +35,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
           <View style={styles.icono}>
             <Ionicons name={ajustes.modoOscuro ? "moon" : "moon-outline"} size={18} color={colors.accent700} />
           </View>
-          <Text style={[body(15), styles.etiqueta]}>{t("ajustes.modoOscuro")}</Text>
+          <Text style={[body(15, colors.text), styles.etiqueta]}>{t("ajustes.modoOscuro")}</Text>
           <Switch
             value={ajustes.modoOscuro}
             onValueChange={(modoOscuro) => cambiar({ modoOscuro })}
@@ -48,7 +51,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
             <View style={styles.icono}>
               <Ionicons name="language-outline" size={18} color={colors.accent700} />
             </View>
-            <Text style={[body(15), styles.etiqueta]}>{t("ajustes.idioma")}</Text>
+            <Text style={[body(15, colors.text), styles.etiqueta]}>{t("ajustes.idioma")}</Text>
           </View>
           <Segmented options={IDIOMAS} value={ajustes.idioma} onChange={(idioma) => cambiar({ idioma })} variante="pildora" />
         </View>
@@ -57,7 +60,8 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   grupo: {
     borderRadius: radius.lg,
     borderWidth: 1,

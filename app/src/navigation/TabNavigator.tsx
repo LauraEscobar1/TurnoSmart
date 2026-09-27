@@ -1,7 +1,7 @@
 import React, { useReducer } from "react";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { getFocusedRouteNameFromRoute, RouteProp } from "@react-navigation/native";
-import { colors } from "@/theme/colors";
+import { useTema } from "@/theme/Tema";
 import { RootTabParamList } from "@/navigation/types";
 import { HomeScreen } from "@/screens/Home/HomeScreen";
 import { OffersNavigator } from "@/navigation/OffersNavigator";
@@ -31,6 +31,7 @@ const soloEnRaiz = (route: RouteProp<RootTabParamList>, raiz: string) => ({
  * llevan badge; el de Ofertas cuenta ofertas pendientes de respuesta.
  */
 export function TabNavigator() {
+  const { colors } = useTema();
   const t = useT();
   // Los contadores se leen de los datos en cada cambio de sección,
   // así el badge baja apenas se lee un aviso o se responde una oferta.

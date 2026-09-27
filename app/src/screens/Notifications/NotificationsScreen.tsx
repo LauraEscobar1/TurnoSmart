@@ -6,7 +6,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { usePaciente } from "@/auth/AuthContext";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius, sombra } from "@/theme/spacing";
 import { body, fonts, label } from "@/theme/typography";
 import { EmptyState } from "@/components/EmptyState";
@@ -41,6 +42,8 @@ const TIPO: Record<TipoNotificacion, { icono: keyof typeof Ionicons.glyphMap; to
  * Sin leer: título en negrita y punto de Acero. Leído: texto atenuado.
  */
 export function NotificationsScreen() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { idioma, grupoAviso } = useFormato();
   const navigation = useNavigation<Nav>();
@@ -150,6 +153,8 @@ function FilaAviso({
   onPress: () => void;
   onVerOferta: () => void;
 }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { marcaAviso } = useFormato();
   const tipo = TIPO[aviso.tipo];
@@ -172,7 +177,7 @@ function FilaAviso({
         <Ionicons
           name={tipo.icono}
           size={18}
-          color={tipo.tono === "fuerte" ? "#ffffff" : tipo.tono === "apagado" ? colors.neutral600 : colors.accent700}
+          color={tipo.tono === "fuerte" ? colors.sobreAcento : tipo.tono === "apagado" ? colors.neutral600 : colors.accent700}
         />
       </View>
 
@@ -206,7 +211,8 @@ function FilaAviso({
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,
@@ -239,8 +245,8 @@ const styles = StyleSheet.create({
     borderColor: colors.borde,
   },
   filtroActivo: {
-    backgroundColor: colors.accent900,
-    borderColor: colors.accent900,
+    backgroundColor: colors.campo,
+    borderColor: colors.campo,
   },
   filtroTexto: {
     fontFamily: fonts.bodyMedium,
@@ -248,7 +254,7 @@ const styles = StyleSheet.create({
     color: colors.neutral700,
   },
   filtroTextoActivo: {
-    color: "#ffffff",
+    color: colors.sobreCampo,
   },
   // Bandeja
   grupo: {

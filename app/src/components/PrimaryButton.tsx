@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius, sombra } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 
@@ -18,14 +19,17 @@ interface PrimaryButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const textColor: Record<NonNullable<PrimaryButtonProps["variant"]>, string> = {
-  primary: "#ffffff",
+const crearTextColor = (colors: Paleta): Record<NonNullable<PrimaryButtonProps["variant"]>, string> => ({
+  primary: colors.sobreAcento,
   secondary: colors.text,
   ghost: colors.accent700,
-  inverse: colors.accent900,
-};
+  inverse: colors.campo,
+});
 
 export function PrimaryButton({ label, onPress, variant = "primary", disabled, style }: PrimaryButtonProps) {
+  const styles = useEstilos(crearStyles);
+  const pressedStyle = useEstilos(crearPressedStyle);
+  const textColor = useEstilos(crearTextColor);
   return (
     <Pressable
       onPress={onPress}
@@ -46,7 +50,8 @@ export function PrimaryButton({ label, onPress, variant = "primary", disabled, s
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   base: {
     minHeight: 50,
     paddingHorizontal: 18,
@@ -60,9 +65,10 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     ...sombra.md,
   },
+  // Sólido sobre el campo: en claro, blanco con texto Campo.
   inverse: {
-    backgroundColor: "#ffffff",
-    borderColor: "#ffffff",
+    backgroundColor: colors.sobreCampo,
+    borderColor: colors.sobreCampo,
   },
   secondary: {
     backgroundColor: colors.superficie,
@@ -82,7 +88,8 @@ const styles = StyleSheet.create({
   },
 });
 
-const pressedStyle = StyleSheet.create({
+const crearPressedStyle = (colors: Paleta) =>
+  StyleSheet.create({
   primary: { backgroundColor: colors.accent700, borderColor: colors.accent700 },
   inverse: { backgroundColor: colors.accent100 },
   secondary: { backgroundColor: colors.accent100 },

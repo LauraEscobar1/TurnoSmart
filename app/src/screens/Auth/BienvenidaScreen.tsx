@@ -2,7 +2,8 @@ import React from "react";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, fonts } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -19,6 +20,8 @@ const MARGEN = 28;
  * acciones sobre el mismo margen izquierdo.
  */
 export function BienvenidaScreen({ navigation }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { width, height } = useWindowDimensions();
   // El retrato ocupa el ancho del contenido (así el arco cierra en el margen
@@ -71,7 +74,8 @@ export function BienvenidaScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.accent100,
@@ -118,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.accent900,
+    shadowColor: colors.colorSombra,
     shadowOpacity: 0.18,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
@@ -131,7 +135,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading,
     fontSize: 19,
     letterSpacing: 0.3,
-    color: "#ffffff",
+    color: colors.sobreAcento,
   },
   ingresar: {
     flexDirection: "row",

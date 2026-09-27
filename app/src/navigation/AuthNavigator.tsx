@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { useTema } from "@/theme/Tema";
 import { AuthStackParamList } from "@/navigation/types";
 import { introVista } from "@/services/authService";
 import { IntroScreen } from "@/screens/Auth/IntroScreen";
@@ -19,6 +19,7 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
  * Registro (datos → preferencias → verificación) / Restablecer contraseña.
  */
 export function AuthNavigator() {
+  const { colors } = useTema();
   const [inicial, setInicial] = useState<"Intro" | "Bienvenida" | null>(null);
 
   useEffect(() => {
