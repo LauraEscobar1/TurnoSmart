@@ -193,7 +193,8 @@ describe("Acceso en pantalla", () => {
 
     expect(await screen.findByText("Laura Escobar")).toBeTruthy();
     expect(Notifications.requestPermissionsAsync).toHaveBeenCalled();
-    expect(screen.getByText("0 días · puesto 12")).toBeTruthy();
+    // Lista de espera del paciente nuevo: puesto 12, recién sumado.
+    expect(screen.getByText("11 personas antes que vos. Te avisamos cuando se libere un cupo.")).toBeTruthy();
 
     // Lo elegido en el paso 2 aparece en Perfil.
     await fireEvent.press(screen.getByRole("tab", { name: "Perfil" }));
