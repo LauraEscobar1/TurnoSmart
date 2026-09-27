@@ -1,6 +1,7 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { montarApp, reiniciarDatos } from "@/test-utils/app";
 import * as fotoService from "@/services/fotoService";
+import { getAjustes } from "@/services/ajustesService";
 
 /**
  * Flujos de punta a punta sobre el navegador real, con la sesión de la
@@ -270,6 +271,20 @@ describe("Perfil por completar", () => {
     await screen.findByText("Esperando tu cupo…");
     expect(screen.queryByText("Completa tu perfil para una mejor experiencia.")).toBeNull();
     expect(screen.queryByText(/\d+%$/)).toBeNull();
+  });
+});
+
+describe("Ajustes", () => {
+  it("el menú ☰ de Inicio abre Ajustes con modo oscuro e idioma, y guarda los cambios", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("button", { name: "Ajustes" }));
+    expect(await screen.findByText("Modo oscuro")).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Español", checked: true })).toBeTruthy();
+
+    await fireEvent(screen.getByLabelText("Modo oscuro"), "valueChange", true);
+    await fireEvent.press(screen.getByRole("radio", { name: "English" }));
+    expect(screen.getByRole("radio", { name: "English", checked: true })).toBeTruthy();
+    expect(await getAjustes()).toEqual({ modoOscuro: true, idioma: "en" });
   });
 });
 
