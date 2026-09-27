@@ -11,12 +11,23 @@ export async function getOfertaPendiente(): Promise<OfertaCupo | null> {
   return ofertasMock.find((o) => o.estado === "pendiente") ?? null;
 }
 
+/** Ofertas que esperan respuesta y siguen vigentes, la que vence primero arriba. */
+export async function getOfertasPendientes(): Promise<OfertaCupo[]> {
+  const ahora = Date.now();
+  return ofertasMock
+    .filter((o) => o.estado === "pendiente" && new Date(o.expiraEnISO).getTime() > ahora)
+    .sort((a, b) => new Date(a.expiraEnISO).getTime() - new Date(b.expiraEnISO).getTime());
+}
+
 export async function getOfertaPorId(ofertaId: string): Promise<OfertaCupo | null> {
   return ofertasMock.find((o) => o.id === ofertaId) ?? null;
 }
 
+/** Ofertas ya resueltas, de la más reciente a la más antigua. */
 export async function getHistorialOfertas(): Promise<OfertaCupo[]> {
-  return ofertasMock.filter((o) => o.estado !== "pendiente");
+  return ofertasMock
+    .filter((o) => o.estado !== "pendiente")
+    .sort((a, b) => new Date(b.fechaHoraISO).getTime() - new Date(a.fechaHoraISO).getTime());
 }
 
 /** Al responder una oferta, su aviso de «cupo disponible» deja de estar pendiente. */
