@@ -24,8 +24,8 @@ export function ExplainabilityPanel({ factores, title = "Por qué te lo ofrecemo
         {top.map((f) => (
           <View key={f.etiqueta}>
             <View style={styles.row}>
-              <Text style={body(13)}>{f.etiqueta}</Text>
-              <Text style={body(13, colors.neutral600)}>{f.valor}</Text>
+              <Text style={[body(13), styles.etiqueta]}>{f.etiqueta}</Text>
+              <Text style={[body(13, colors.neutral600), styles.valor]}>{f.valor}</Text>
             </View>
             <View style={styles.track}>
               <View style={[styles.fill, { width: `${Math.round(f.peso * 100)}%` }]} />
@@ -49,6 +49,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "baseline",
     gap: 12,
+  },
+  // En teléfonos angostos la etiqueta se ajusta en líneas; el dato no se corta.
+  etiqueta: {
+    flexShrink: 1,
+  },
+  valor: {
+    flexShrink: 0,
+    textAlign: "right",
   },
   track: {
     height: 6,
