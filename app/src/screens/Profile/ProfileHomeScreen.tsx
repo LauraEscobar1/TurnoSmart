@@ -85,6 +85,7 @@ export function ProfileHomeScreen() {
               key={f.label}
               onPress={f.onPress}
               accessibilityRole="button"
+              accessibilityLabel={f.valor ? `${f.label}: ${f.valor}` : f.label}
               style={({ pressed }) => [styles.row, i > 0 && styles.rowDivider, pressed && styles.pressed]}
             >
               <Text style={body(14, f.label === "Cerrar sesión" ? colors.accent700 : colors.text)}>{f.label}</Text>
