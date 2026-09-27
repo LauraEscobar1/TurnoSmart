@@ -34,7 +34,8 @@ describe("offersService", () => {
 
     await offers.aceptarOferta("of-001");
 
-    expect(await offers.getOfertaPendiente()).toBeNull();
+    // Sale de las pendientes; la otra oferta sigue esperando respuesta.
+    expect((await offers.getOfertasPendientes()).map((o) => o.id)).toEqual(["of-002"]);
     const historial = await offers.getHistorialOfertas();
     expect(historial.find((o) => o.id === "of-001")?.estado).toBe("aceptada");
     const despues = await citas.getCitasProximas();
