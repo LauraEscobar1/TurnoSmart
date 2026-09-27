@@ -15,3 +15,7 @@ export async function marcarComoLeida(id: string): Promise<void> {
 export function contarNoLeidas(notificaciones: Notificacion[]): number {
   return notificaciones.filter((n) => !n.leida).length;
 }
+
+export async function marcarTodasComoLeidas(): Promise<void> {
+  notificacionesMock.forEach((n) => (n.leida = true));
+}
