@@ -4,6 +4,7 @@ import * as fotoService from "@/services/fotoService";
 import { getAjustes } from "@/services/ajustesService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { es } from "@/i18n/es";
+import { paletaClara, paletaOscura } from "@/theme/colors";
 import { en } from "@/i18n/en";
 
 /**
@@ -372,6 +373,37 @@ describe("Idioma", () => {
     await montarApp({ sesion: false });
     expect(await screen.findByText("Get started")).toBeTruthy();
     expect(screen.getByText("Already have an account?")).toBeTruthy();
+  });
+});
+
+describe("Modo oscuro", () => {
+  it("por defecto la app está en claro", async () => {
+    await montarApp();
+    expect(await screen.findByText("Ofertas de cupo")).toHaveStyle({ color: paletaClara.accent900 });
+  });
+
+  it("el interruptor de Ajustes cambia solo los colores de toda la app, al instante", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("button", { name: "Ajustes" }));
+    await fireEvent(screen.getByLabelText("Modo oscuro"), "valueChange", true);
+    await fireEvent.press(screen.getByLabelText("Cerrar", { includeHiddenElements: true }));
+
+    // Títulos en tinta clara y textos y secciones sin cambios.
+    expect(screen.getByText("Ofertas de cupo")).toHaveStyle({ color: paletaOscura.accent900 });
+    expect(screen.getByText("Próxima cita")).toBeTruthy();
+
+    // Otras pestañas y pantallas de detalle también.
+    await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
+    expect(await screen.findByText("Marcar todo como leído")).toHaveStyle({ color: paletaOscura.accent700 });
+    await fireEvent.press(screen.getByRole("tab", { name: "Inicio" }));
+    await fireEvent.press((await screen.findAllByText("Ver oferta"))[0]);
+    expect(await screen.findByText("Aceptar cupo")).toHaveStyle({ color: paletaOscura.sobreAcento });
+  });
+
+  it("el modo oscuro se guarda y se usa al volver a abrir la app", async () => {
+    await AsyncStorage.setItem("ts.ajustes", JSON.stringify({ modoOscuro: true, idioma: "es" }));
+    await montarApp({ sesion: false });
+    expect(await screen.findByText("Empezar")).toHaveStyle({ color: paletaOscura.sobreAcento });
   });
 });
 
