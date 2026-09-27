@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "@/theme/colors";
 import { body, label } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Card } from "@/components/Card";
@@ -20,6 +21,7 @@ import { fechaADisplay, fechaDesdeDisplay, formatearCedula } from "@/utils/perfi
  * nacimiento, ciudad, EPS y contacto de emergencia.
  */
 export function PersonalDataScreen() {
+  const t = useT();
   const navigation = useNavigation();
   const paciente = usePaciente();
   const { actualizar } = useAuth();
@@ -51,7 +53,7 @@ export function PersonalDataScreen() {
   async function guardar() {
     const fecha = fechaDesdeDisplay(form.fechaNacimiento);
     if (fecha === null) {
-      setErrorFecha("Escríbela como DD/MM/AAAA.");
+      setErrorFecha(t("datos.errorFecha"));
       return;
     }
     const nombre = form.contactoNombre.trim();
@@ -68,33 +70,33 @@ export function PersonalDataScreen() {
   }
 
   const cuenta = [
-    { label: "Nombre", value: `${paciente.nombre} ${paciente.apellido}` },
-    { label: "Cédula", value: formatearCedula(paciente.cedula) },
-    { label: "Correo", value: paciente.email },
-    { label: "Teléfono", value: paciente.telefono },
+    { label: t("datos.nombre"), value: `${paciente.nombre} ${paciente.apellido}` },
+    { label: t("datos.cedula"), value: formatearCedula(paciente.cedula) },
+    { label: t("datos.correo"), value: paciente.email },
+    { label: t("datos.telefono"), value: paciente.telefono },
   ];
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
-      <ScreenHeader title="Datos personales" onBack={navigation.goBack} />
+      <ScreenHeader title={t("datos.titulo")} onBack={navigation.goBack} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.foto}>
             <AvatarPaciente paciente={paciente} size={96} onPress={cambiarFoto} />
             <View style={styles.fotoAcciones}>
               <PrimaryButton
-                label={paciente.fotoUri ? "Cambiar foto" : "Subir foto"}
+                label={t(paciente.fotoUri ? "datos.cambiarFoto" : "datos.subirFoto")}
                 variant="ghost"
                 onPress={cambiarFoto}
               />
               {paciente.fotoUri ? (
-                <PrimaryButton label="Quitar foto" variant="ghost" onPress={() => actualizar({ fotoUri: undefined })} />
+                <PrimaryButton label={t("datos.quitarFoto")} variant="ghost" onPress={() => actualizar({ fotoUri: undefined })} />
               ) : null}
             </View>
           </View>
 
           <View style={styles.seccion}>
-            <Text style={label(10, colors.neutral600)}>Cuenta</Text>
+            <Text style={label(10, colors.neutral600)}>{t("datos.cuenta")}</Text>
             <Card>
               {cuenta.map((c, i) => (
                 <View key={c.label} style={[styles.row, i > 0 && styles.rowDivider]}>
@@ -106,39 +108,39 @@ export function PersonalDataScreen() {
           </View>
 
           <View style={styles.seccion}>
-            <Text style={label(10, colors.neutral600)}>Información adicional · opcional</Text>
+            <Text style={label(10, colors.neutral600)}>{t("datos.adicional")}</Text>
             <Card style={styles.formulario}>
               <TextField
-                label="Fecha de nacimiento"
-                placeholder="DD/MM/AAAA"
+                label={t("datos.nacimiento")}
+                placeholder={t("datos.formatoFecha")}
                 keyboardType="numbers-and-punctuation"
                 value={form.fechaNacimiento}
                 onChangeText={set("fechaNacimiento")}
                 error={errorFecha}
               />
               <TextField
-                label="Ciudad"
-                placeholder="Ej.: Bogotá"
+                label={t("datos.ciudad")}
+                placeholder={t("datos.ciudadEj")}
                 autoComplete="postal-address-locality"
                 textContentType="addressCity"
                 value={form.ciudad}
                 onChangeText={set("ciudad")}
               />
               <TextField
-                label="EPS o medicina prepagada"
-                placeholder="Ej.: Sura EPS"
+                label={t("datos.eps")}
+                placeholder={t("datos.epsEj")}
                 value={form.eps}
                 onChangeText={set("eps")}
               />
               <TextField
-                label="Contacto de emergencia"
-                placeholder="Nombre"
+                label={t("datos.contacto")}
+                placeholder={t("datos.nombre")}
                 value={form.contactoNombre}
                 onChangeText={set("contactoNombre")}
               />
               <TextField
-                label="Teléfono del contacto"
-                placeholder="Ej.: +57 300 123 4567"
+                label={t("datos.contactoTelefono")}
+                placeholder={t("datos.contactoTelefonoEj")}
                 keyboardType="phone-pad"
                 value={form.contactoTelefono}
                 onChangeText={set("contactoTelefono")}
@@ -150,10 +152,10 @@ export function PersonalDataScreen() {
         <View style={styles.footer}>
           {guardado && !cambios ? (
             <Text style={[body(13, colors.accent700), styles.centrado]} accessibilityLiveRegion="polite">
-              Cambios guardados.
+              {t("datos.guardado")}
             </Text>
           ) : null}
-          <PrimaryButton label="Guardar" onPress={guardar} disabled={!cambios || guardando} />
+          <PrimaryButton label={t("comun.guardar")} onPress={guardar} disabled={!cambios || guardando} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

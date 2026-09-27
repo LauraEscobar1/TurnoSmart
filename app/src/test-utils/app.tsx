@@ -2,6 +2,8 @@ import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { AuthProvider } from "@/auth/AuthContext";
+import { AjustesProvider } from "@/ajustes/AjustesContext";
+import { setIdiomaActual } from "@/i18n";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { citasMock, CUENTA_DEMO, notificacionesMock, ofertasMock } from "@/data/mockData";
 
@@ -18,6 +20,7 @@ export async function reiniciarDatos() {
   citasMock.splice(0, citasMock.length, ...copia.citasMock);
   notificacionesMock.splice(0, notificacionesMock.length, ...copia.notificacionesMock);
   await AsyncStorage.clear();
+  setIdiomaActual("es");
 }
 
 /**
@@ -28,9 +31,11 @@ export async function montarApp({ sesion = true, intro = false } = {}) {
   if (sesion) await AsyncStorage.multiSet([["ts.sesion", CUENTA_DEMO.email], ["ts.ultimoUsuario", CUENTA_DEMO.email]]);
   if (!intro) await AsyncStorage.setItem("ts.introVista", "1");
   return render(
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <AjustesProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </AjustesProvider>
   );
 }
 

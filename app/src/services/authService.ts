@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DistanciaMaxima, FranjaHoraria, Paciente } from "@/types/domain";
 import { CUENTA_DEMO, pacienteDemo } from "@/data/mockData";
+import { tr } from "@/i18n";
 
 /**
  * Capa de servicio de cuentas y sesión.
@@ -73,11 +74,11 @@ export async function getSesion(): Promise<Paciente | null> {
 }
 
 export async function iniciarSesion(email: string, password: string): Promise<Paciente> {
-  if (!email.trim()) throw new AuthError("Ingresá tu correo electrónico.", "email");
-  if (!password) throw new AuthError("Ingresá tu contraseña.", "password");
+  if (!email.trim()) throw new AuthError(tr("errores.ingresaCorreo"), "email");
+  if (!password) throw new AuthError(tr("errores.ingresaPassword"), "password");
   const cuenta = (await leerCuentas()).find((c) => c.paciente.email === normalizarEmail(email));
   if (!cuenta || cuenta.password !== password) {
-    throw new AuthError("El correo o la contraseña no coinciden.", "password");
+    throw new AuthError(tr("errores.credenciales"), "password");
   }
   return abrirSesion(cuenta.paciente);
 }
@@ -91,7 +92,7 @@ export async function getUltimoUsuario(): Promise<string | null> {
 export async function iniciarSesionBiometrica(): Promise<Paciente> {
   const email = await getUltimoUsuario();
   const cuenta = email ? (await leerCuentas()).find((c) => c.paciente.email === email) : undefined;
-  if (!cuenta) throw new AuthError("Ingresá una vez con tu correo para activar Face ID.");
+  if (!cuenta) throw new AuthError(tr("errores.faceIdPrimeraVez"));
   return abrirSesion(cuenta.paciente);
 }
 
@@ -116,7 +117,7 @@ let resetPendiente: { email: string; codigo: string } | null = null;
  * responde igual exista o no la cuenta. Simulado como `enviarCodigo`.
  */
 export async function solicitarRestablecimiento(email: string): Promise<string> {
-  if (!validarEmail(email)) throw new AuthError("Ingresá un correo válido.", "email");
+  if (!validarEmail(email)) throw new AuthError(tr("errores.correoValido"), "email");
   const codigo = String(Math.floor(100000 + Math.random() * 900000));
   resetPendiente = { email: normalizarEmail(email), codigo };
   return codigo;
@@ -129,7 +130,7 @@ export async function restablecerPassword(email: string, codigo: string, nueva: 
   const cuentas = await leerCuentas();
   const cuenta = cuentas.find((c) => c.paciente.email === destino);
   if (!resetPendiente || resetPendiente.email !== destino || resetPendiente.codigo !== codigo || !cuenta) {
-    throw new AuthError("El código no es correcto.", "codigo");
+    throw new AuthError(tr("errores.codigo"), "codigo");
   }
   cuenta.password = nueva;
   await guardarCuentas(cuentas);
@@ -159,19 +160,19 @@ export function validarEmail(email: string) {
 
 /** Mismo criterio en el registro y al restablecer la contraseña. */
 export function validarPassword(password: string): string | undefined {
-  if (password.length < 8 || !/\d/.test(password)) return "Mínimo 8 caracteres, un número.";
+  if (password.length < 8 || !/\d/.test(password)) return tr("errores.passwordMinimo");
 }
 
 /** Validación del paso 1. Devuelve un mensaje por campo con error. */
 export function validarDatosCuenta(d: DatosCuenta): Partial<Record<keyof DatosCuenta, string>> {
   const errores: Partial<Record<keyof DatosCuenta, string>> = {};
-  if (!d.nombre.trim()) errores.nombre = "Ingresá tu nombre.";
-  if (!d.apellido.trim()) errores.apellido = "Ingresá tu apellido.";
+  if (!d.nombre.trim()) errores.nombre = tr("errores.nombre");
+  if (!d.apellido.trim()) errores.apellido = tr("errores.apellido");
   if (!/^\d{6,10}$/.test(d.cedula.replace(/\D/g, "")) || /[^\d.\s]/.test(d.cedula)) {
-    errores.cedula = "La cédula tiene entre 6 y 10 números.";
+    errores.cedula = tr("errores.cedula");
   }
-  if (!validarEmail(d.email)) errores.email = "Revisá el correo electrónico.";
-  if (d.telefono.replace(/\D/g, "").length < 8) errores.telefono = "Ingresá un teléfono con código de área.";
+  if (!validarEmail(d.email)) errores.email = tr("errores.revisaCorreo");
+  if (d.telefono.replace(/\D/g, "").length < 8) errores.telefono = tr("errores.telefono");
   const errorPassword = validarPassword(d.password);
   if (errorPassword) errores.password = errorPassword;
   return errores;
@@ -181,11 +182,11 @@ export function validarDatosCuenta(d: DatosCuenta): Partial<Record<keyof DatosCu
 export async function verificarDisponibilidad(d: Pick<DatosCuenta, "email" | "cedula">): Promise<void> {
   const cuentas = await leerCuentas();
   if (cuentas.some((c) => c.paciente.email === normalizarEmail(d.email))) {
-    throw new AuthError("Ya existe una cuenta con este correo.", "email");
+    throw new AuthError(tr("errores.correoExiste"), "email");
   }
   const cedula = d.cedula.replace(/\D/g, "");
   if (cuentas.some((c) => c.paciente.cedula === cedula)) {
-    throw new AuthError("Ya existe una cuenta con esta cédula.", "cedula");
+    throw new AuthError(tr("errores.cedulaExiste"), "cedula");
   }
 }
 
@@ -207,7 +208,7 @@ export async function crearCuenta(
   opciones: { codigo: string; notificacionesActivas: boolean }
 ): Promise<Paciente> {
   if (!codigoPendiente || codigoPendiente.telefono !== datos.telefono || codigoPendiente.codigo !== opciones.codigo) {
-    throw new AuthError("El código no es correcto.", "codigo");
+    throw new AuthError(tr("errores.codigo"), "codigo");
   }
   await verificarDisponibilidad(datos);
   const cuentas = await leerCuentas();
@@ -232,7 +233,7 @@ export async function crearCuenta(
 export async function actualizarPaciente(email: string, cambios: Partial<Paciente>): Promise<Paciente> {
   const cuentas = await leerCuentas();
   const cuenta = cuentas.find((c) => c.paciente.email === email);
-  if (!cuenta) throw new AuthError("No encontramos tu cuenta.");
+  if (!cuenta) throw new AuthError(tr("errores.sinCuenta"));
   cuenta.paciente = { ...cuenta.paciente, ...cambios, email: cuenta.paciente.email, id: cuenta.paciente.id };
   await guardarCuentas(cuentas);
   return cuenta.paciente;

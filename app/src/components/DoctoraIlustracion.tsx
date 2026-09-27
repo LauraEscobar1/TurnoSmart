@@ -1,6 +1,7 @@
 import React from "react";
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { colors } from "@/theme/colors";
+import { useT } from "@/i18n";
 
 interface Props {
   width: number;
@@ -29,6 +30,7 @@ export const PROPORCION_ILUSTRACION = VB.w / VB.h;
  * mano que saluda asoma por la izquierda para que no se vea encerrado.
  */
 export function DoctoraIlustracion({ width }: Props) {
+  const t = useT();
   const height = width / PROPORCION_ILUSTRACION;
 
   return (
@@ -36,7 +38,7 @@ export function DoctoraIlustracion({ width }: Props) {
       width={width}
       height={height}
       viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`}
-      accessibilityLabel="Un doctor te saluda"
+      accessibilityLabel={t("bienvenida.ilustracion")}
     >
       <Defs>
         <LinearGradient id="arco" x1="0" y1="0" x2="0" y2="1">

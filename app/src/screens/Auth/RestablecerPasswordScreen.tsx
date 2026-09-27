@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, fonts, heading } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { AuthError, restablecerPassword, solicitarRestablecimiento } from "@/services/authService";
 import { CodeInput, LARGO_CODIGO, ReenviarCodigo, useEnvioCodigo } from "@/components/CodeInput";
@@ -20,6 +21,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, "RestablecerPassword">;
  * 1) el correo y «Enviar código»; 2) el código y la contraseña nueva.
  */
 export function RestablecerPasswordScreen({ navigation, route }: Props) {
+  const t = useT();
   const [email, setEmail] = useState(route.params?.email ?? "");
   const [enviado, setEnviado] = useState(false);
   const [codigo, setCodigo] = useState("");
@@ -48,14 +50,14 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
 
   async function cambiar() {
     if (password !== confirmar) {
-      setErrores({ confirmar: "Las contraseñas no coinciden." });
+      setErrores({ confirmar: t("errores.noCoinciden") });
       return;
     }
     setErrores({});
     setEnviando(true);
     try {
       await restablecerPassword(email, codigo, password);
-      navigation.navigate("Login", { aviso: "Listo: ya podés ingresar con tu contraseña nueva." });
+      navigation.navigate("Login", { aviso: t("restablecer.listo") });
     } catch (e) {
       if (e instanceof AuthError) setErrores({ [e.campo ?? "codigo"]: e.message });
       setEnviando(false);
@@ -68,22 +70,22 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
       footer={
         enviado ? (
           <PrimaryButton
-            label="Cambiar contraseña"
+            label={t("restablecer.cambiar")}
             onPress={cambiar}
             disabled={enviando || codigo.length < LARGO_CODIGO}
           />
         ) : (
-          <PrimaryButton label="Enviar código" onPress={enviarCodigo} disabled={enviando} />
+          <PrimaryButton label={t("restablecer.enviarCodigo")} onPress={enviarCodigo} disabled={enviando} />
         )
       }
     >
       <View style={styles.marca}>
         <Logo size={44} wordmark />
-        <Text style={[heading(24), styles.center, styles.titulo]}>Restablecer contraseña</Text>
+        <Text style={[heading(24), styles.center, styles.titulo]}>{t("restablecer.titulo")}</Text>
         <Text style={[body(13, colors.neutral700), styles.center]}>
           {enviado
-            ? `Enviamos un código de 6 dígitos a ${email.trim()}.`
-            : "Ingresá tu correo y te enviamos un código para crear una nueva."}
+            ? t("restablecer.enviamos", { email: email.trim() })
+            : t("restablecer.bajada")}
         </Text>
         <View style={styles.sobre}>
           <Ionicons name="mail-outline" size={20} color={colors.accent700} />
@@ -96,17 +98,17 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
           {errores.codigo ? <Text style={styles.error}>{errores.codigo}</Text> : null}
           <ReenviarCodigo restante={envio.restante} codigoPrueba={envio.codigoPrueba} onReenviar={envio.reenviar} />
           <TextField
-            label="Contraseña nueva"
+            label={t("restablecer.nueva")}
             value={password}
             onChangeText={setPassword}
             revelable
             autoComplete="new-password"
             textContentType="newPassword"
-            hint="Mínimo 8 caracteres, un número."
+            hint={t("errores.passwordMinimo")}
             error={errores.password}
           />
           <TextField
-            label="Confirmar contraseña"
+            label={t("comun.confirmarPassword")}
             value={confirmar}
             onChangeText={setConfirmar}
             revelable
@@ -117,8 +119,8 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
         </>
       ) : (
         <TextField
-          label="Correo electrónico"
-          placeholder="nombre@correo.com"
+          label={t("comun.correo")}
+          placeholder={t("comun.correoEj")}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"

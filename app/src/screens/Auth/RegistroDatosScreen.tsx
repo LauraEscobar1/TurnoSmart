@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, heading } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { AuthError, DatosCuenta, validarDatosCuenta, verificarDisponibilidad } from "@/services/authService";
 import { TextField } from "@/components/forms";
@@ -17,6 +18,7 @@ type Errores = Partial<Record<keyof DatosCuenta | "confirmar", string>>;
 
 /** 04 · Acceso — 02 Registro, datos (1 / 3). */
 export function RegistroDatosScreen({ navigation }: Props) {
+  const t = useT();
   const { datos, setDatos } = useRegistro();
   const [form, setForm] = useState(datos);
   const [confirmar, setConfirmar] = useState(datos.password);
@@ -34,7 +36,7 @@ export function RegistroDatosScreen({ navigation }: Props) {
 
   async function continuar() {
     const e: Errores = validarDatosCuenta(form);
-    if (!e.password && confirmar !== form.password) e.confirmar = "Las contraseñas no coinciden.";
+    if (!e.password && confirmar !== form.password) e.confirmar = t("errores.noCoinciden");
     setErrores(e);
     if (Object.keys(e).length) return;
     setEnviando(true);
@@ -51,24 +53,24 @@ export function RegistroDatosScreen({ navigation }: Props) {
 
   return (
     <FormScreen
-      header={<StepHeader title="Crear cuenta" step={1} total={3} onBack={navigation.goBack} />}
-      footer={<PrimaryButton label="Continuar" onPress={continuar} disabled={enviando} />}
+      header={<StepHeader title={t("login.crearCuenta")} step={1} total={3} onBack={navigation.goBack} />}
+      footer={<PrimaryButton label={t("registro.continuar")} onPress={continuar} disabled={enviando} />}
     >
       <View style={styles.marca}>
         <Logo size={40} />
-        <Text style={[heading(26), styles.center, styles.titulo]}>Tus datos</Text>
+        <Text style={[heading(26), styles.center, styles.titulo]}>{t("registro.tusDatos")}</Text>
         <Text style={[body(13, colors.neutral700), styles.center]}>
-          Sumate a TurnoSmart y recibí cupos que se liberan.
+          {t("registro.tusDatosBajada")}
         </Text>
       </View>
       <StepProgress step={1} total={3} />
       <View style={styles.row}>
-        <TextField label="Nombre" autoComplete="given-name" textContentType="givenName" style={styles.half} {...campo("nombre")} />
-        <TextField label="Apellido" autoComplete="family-name" textContentType="familyName" style={styles.half} {...campo("apellido")} />
+        <TextField label={t("datos.nombre")} autoComplete="given-name" textContentType="givenName" style={styles.half} {...campo("nombre")} />
+        <TextField label={t("registro.apellido")} autoComplete="family-name" textContentType="familyName" style={styles.half} {...campo("apellido")} />
       </View>
-      <TextField label="Cédula" keyboardType="number-pad" {...campo("cedula")} />
+      <TextField label={t("datos.cedula")} keyboardType="number-pad" {...campo("cedula")} />
       <TextField
-        label="Correo electrónico"
+        label={t("comun.correo")}
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
@@ -76,17 +78,17 @@ export function RegistroDatosScreen({ navigation }: Props) {
         textContentType="emailAddress"
         {...campo("email")}
       />
-      <TextField label="Teléfono" keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" {...campo("telefono")} />
+      <TextField label={t("datos.telefono")} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" {...campo("telefono")} />
       <TextField
-        label="Contraseña"
+        label={t("comun.password")}
         revelable
         autoComplete="new-password"
         textContentType="newPassword"
-        hint="Mínimo 8 caracteres, un número."
+        hint={t("errores.passwordMinimo")}
         {...campo("password")}
       />
       <TextField
-        label="Confirmar contraseña"
+        label={t("comun.confirmarPassword")}
         revelable
         autoComplete="new-password"
         textContentType="newPassword"

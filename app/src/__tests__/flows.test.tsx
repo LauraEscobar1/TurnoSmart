@@ -2,6 +2,9 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { montarApp, reiniciarDatos } from "@/test-utils/app";
 import * as fotoService from "@/services/fotoService";
 import { getAjustes } from "@/services/ajustesService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { es } from "@/i18n/es";
+import { en } from "@/i18n/en";
 
 /**
  * Flujos de punta a punta sobre el navegador real, con la sesión de la
@@ -285,6 +288,90 @@ describe("Ajustes", () => {
     await fireEvent.press(screen.getByRole("radio", { name: "English" }));
     expect(screen.getByRole("radio", { name: "English", checked: true })).toBeTruthy();
     expect(await getAjustes()).toEqual({ modoOscuro: true, idioma: "en" });
+  });
+});
+
+/** Textos del diccionario español que cambian en inglés (sin parámetros). */
+function textosSoloEnEspanol(): string[] {
+  const hojas = (o: object): string[] =>
+    Object.values(o).flatMap((v) => (typeof v === "string" ? [v] : hojas(v as object)));
+  const ingles = new Set(hojas(en));
+  return hojas(es).filter((t) => !t.includes("{") && !ingles.has(t));
+}
+
+async function elegirIngles() {
+  await fireEvent.press(await screen.findByRole("button", { name: "Ajustes" }));
+  await fireEvent.press(await screen.findByRole("radio", { name: "English" }));
+  await fireEvent.press(screen.getByLabelText("Close", { includeHiddenElements: true }));
+}
+
+describe("Idioma", () => {
+  it("español es el idioma predeterminado", async () => {
+    await montarApp();
+    expect(await screen.findByText("Ofertas de cupo")).toBeTruthy();
+    for (const tab of ["Inicio", "Ofertas", "Mis citas", "Notificaciones", "Perfil"]) {
+      expect(screen.getByRole("tab", { name: tab })).toBeTruthy();
+    }
+  });
+
+  it("al elegir English toda la app cambia al instante, sin textos en español olvidados", async () => {
+    await montarApp();
+    await elegirIngles();
+
+    // Barra inferior e Inicio.
+    for (const tab of ["Home", "Offers", "Appointments", "Notifications", "Profile"]) {
+      expect(screen.getByRole("tab", { name: tab })).toBeTruthy();
+    }
+    expect(await screen.findByText("Appointment offers")).toBeTruthy();
+    expect(screen.getByText("Next appointment")).toBeTruthy();
+    expect(screen.getByText("Your waitlist")).toBeTruthy();
+
+    // Ninguna pestaña (todas quedan montadas) muestra textos del diccionario español.
+    const olvidados = textosSoloEnEspanol().filter(
+      (t) => screen.queryAllByText(t, { includeHiddenElements: true }).length > 0
+    );
+    expect(olvidados).toEqual([]);
+
+    // Notificaciones: la bandeja y los mensajes, en inglés.
+    await fireEvent.press(screen.getByRole("tab", { name: "Notifications" }));
+    expect(await screen.findByText("Mark all as read")).toBeTruthy();
+    expect(screen.getByText("Slot available")).toBeTruthy();
+    expect(screen.getByText(/^Hi, Martín\. We have an open Cardiology slot/)).toBeTruthy();
+    expect(screen.getByText(/^Yesterday · \d\d:\d\d$/)).toBeTruthy();
+
+    // Ofertas, Mis citas y Perfil.
+    await fireEvent.press(screen.getByRole("tab", { name: "Offers" }));
+    expect(await screen.findByText("Offers for you")).toBeTruthy();
+    expect(screen.getByText("2 offers need your reply")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("tab", { name: "Appointments" }));
+    expect(await screen.findByRole("radio", { name: "Upcoming" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("tab", { name: "Profile" }));
+    expect(await screen.findByText("Log out")).toBeTruthy();
+    expect(screen.getByText("Afternoon")).toBeTruthy();
+  });
+
+  it("los detalles de oferta y de cita también se traducen", async () => {
+    await montarApp();
+    await elegirIngles();
+
+    await fireEvent.press((await screen.findAllByText("View offer"))[0]);
+    expect(await screen.findByText("Time left to reply")).toBeTruthy();
+    expect(screen.getByText("Why we're offering it to you")).toBeTruthy();
+    expect(screen.getByText("Time waiting")).toBeTruthy();
+    expect(screen.getByText("Decline")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Back"));
+
+    await fireEvent.press(await screen.findByText("Dermatology"));
+    expect(await screen.findByText("Booking information")).toBeTruthy();
+    expect(screen.getByText("Direct booking")).toBeTruthy();
+    expect(screen.getByText("Cancel appointment")).toBeTruthy();
+  });
+
+  it("el idioma elegido se guarda y se usa al volver a abrir la app, también en el acceso", async () => {
+    await AsyncStorage.setItem("ts.ajustes", JSON.stringify({ modoOscuro: false, idioma: "en" }));
+    await montarApp({ sesion: false });
+    expect(await screen.findByText("Get started")).toBeTruthy();
+    expect(screen.getByText("Already have an account?")).toBeTruthy();
   });
 });
 

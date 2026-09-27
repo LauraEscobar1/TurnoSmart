@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, heading, label } from "@/theme/typography";
+import { Clave, useDato, useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { marcarIntroVista } from "@/services/authService";
 import { Badge } from "@/components/Badge";
@@ -27,25 +28,14 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Intro">;
  * los componentes reales del sistema, así el paciente ve de entrada la
  * oferta, la explicación de la IA y la confirmación que va a usar.
  */
-const PASOS = [
-  {
-    titulo: "Cupos que se liberan",
-    texto: "Cuando alguien cancela, te ofrecemos su cita si coincide con lo que estás esperando.",
-    Figura: FiguraOferta,
-  },
-  {
-    titulo: "Siempre sabés por qué",
-    texto: "La IA prioriza según tu espera, tu especialidad, tu horario y la distancia, y te muestra los motivos.",
-    Figura: FiguraExplicacion,
-  },
-  {
-    titulo: "Aceptá en 2 toques",
-    texto: "Te llega el aviso, abrís la oferta y la aceptás. Sin pasos de más: la cita queda confirmada.",
-    Figura: FiguraConfirmacion,
-  },
+const PASOS: { titulo: Clave; texto: Clave; Figura: () => React.JSX.Element }[] = [
+  { titulo: "intro.uno.titulo", texto: "intro.uno.texto", Figura: FiguraOferta },
+  { titulo: "intro.dos.titulo", texto: "intro.dos.texto", Figura: FiguraExplicacion },
+  { titulo: "intro.tres.titulo", texto: "intro.tres.texto", Figura: FiguraConfirmacion },
 ];
 
 export function IntroScreen({ navigation }: Props) {
+  const t = useT();
   const { width } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
   const [paso, setPaso] = useState(0);
@@ -87,40 +77,42 @@ export function IntroScreen({ navigation }: Props) {
             <View style={styles.figura}>
               <Figura />
             </View>
-            <Text style={[heading(28), styles.center]}>{titulo}</Text>
-            <Text style={[body(14, colors.neutral700), styles.center, styles.texto]}>{texto}</Text>
+            <Text style={[heading(28), styles.center]}>{t(titulo)}</Text>
+            <Text style={[body(14, colors.neutral700), styles.center, styles.texto]}>{t(texto)}</Text>
           </View>
         ))}
       </ScrollView>
 
-      <View style={styles.dots} accessibilityLabel={`Paso ${paso + 1} de ${PASOS.length}`}>
+      <View style={styles.dots} accessibilityLabel={t("registro.pasoDe", { paso: paso + 1, total: PASOS.length })}>
         {PASOS.map((p, i) => (
           <View key={p.titulo} style={[styles.dot, i === paso && styles.dotOn]} />
         ))}
       </View>
 
       <View style={styles.actions}>
-        <PrimaryButton label="Omitir" variant="secondary" onPress={terminar} style={styles.action} />
-        <PrimaryButton label={ultimo ? "Empezar" : "Siguiente"} onPress={siguiente} style={styles.action} />
+        <PrimaryButton label={t("intro.omitir")} variant="secondary" onPress={terminar} style={styles.action} />
+        <PrimaryButton label={t(ultimo ? "intro.empezar" : "intro.siguiente")} onPress={siguiente} style={styles.action} />
       </View>
     </SafeAreaView>
   );
 }
 
 function FiguraOferta() {
+  const t = useT();
+  const dato = useDato();
   return (
     <View style={styles.stack}>
-      <Badge label="Cupo disponible" variant="outline" />
+      <Badge label={t("notificaciones.mensajes.cupo-ultimo-minuto.titulo")} variant="outline" />
       <Card tono="acento" style={styles.ofertaCard}>
         <View style={styles.row}>
-          <Badge label="Oferta para vos" variant="accent" />
+          <Badge label={t("oferta.paraVos")} variant="accent" />
           <View style={{ alignItems: "flex-end" }}>
             <Text style={heading(22, colors.accent800)}>07:39</Text>
-            <Text style={label(8, colors.accent800)}>restantes</Text>
+            <Text style={label(8, colors.accent800)}>{t("oferta.restantes")}</Text>
           </View>
         </View>
-        <Text style={heading(25, colors.accent900)}>Cardiología</Text>
-        <Text style={body(13, colors.accent800)}>Hoy 15:40 · Dra. E. Ruiz</Text>
+        <Text style={heading(25, colors.accent900)}>{dato("especialidades", "Cardiología")}</Text>
+        <Text style={body(13, colors.accent800)}>{t("intro.ofertaEjemplo")}</Text>
       </Card>
     </View>
   );
@@ -141,13 +133,14 @@ function FiguraExplicacion() {
 }
 
 function FiguraConfirmacion() {
+  const t = useT();
   return (
     <Card style={styles.confirmacion}>
       <View style={styles.check}>
         <Ionicons name="checkmark" size={28} color={colors.bg} />
       </View>
-      <Text style={heading(24)}>Cupo confirmado</Text>
-      <Text style={body(13, colors.neutral700)}>Cardiología · hoy 15:40</Text>
+      <Text style={heading(24)}>{t("confirmacion.confirmado")}</Text>
+      <Text style={body(13, colors.neutral700)}>{t("intro.confirmacionEjemplo")}</Text>
     </Card>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
@@ -6,7 +6,9 @@ import { radius } from "@/theme/spacing";
 import { body, fonts } from "@/theme/typography";
 import { HojaInferior } from "@/components/HojaInferior";
 import { Segmented } from "@/components/forms";
-import { Ajustes, getAjustes, guardarAjustes, Idioma } from "@/services/ajustesService";
+import { Idioma } from "@/services/ajustesService";
+import { useAjustes } from "@/ajustes/AjustesContext";
+import { useT } from "@/i18n";
 
 // Cada idioma se nombra en su propio idioma, para encontrarlo sin entender el otro.
 const IDIOMAS: { value: Idioma; label: string }[] = [
@@ -16,33 +18,25 @@ const IDIOMAS: { value: Idioma; label: string }[] = [
 
 /**
  * Ajustes (menú ☰ de Inicio): modo oscuro e idioma, en una hoja que sube
- * desde abajo. Cada cambio se guarda al instante en el teléfono.
+ * desde abajo. Cada cambio se guarda al instante en el teléfono; el idioma
+ * se aplica a toda la app (AjustesProvider).
  */
 export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar: () => void }) {
-  const [ajustes, setAjustes] = useState<Ajustes>({ modoOscuro: false, idioma: "es" });
-
-  useEffect(() => {
-    getAjustes().then(setAjustes);
-  }, []);
-
-  const cambiar = (cambios: Partial<Ajustes>) => {
-    const nuevos = { ...ajustes, ...cambios };
-    setAjustes(nuevos);
-    guardarAjustes(nuevos);
-  };
+  const t = useT();
+  const { cambiar, ...ajustes } = useAjustes();
 
   return (
-    <HojaInferior visible={visible} onCerrar={onCerrar} titulo="Ajustes">
+    <HojaInferior visible={visible} onCerrar={onCerrar} titulo={t("ajustes.titulo")}>
       <View style={styles.grupo}>
         <View style={styles.fila}>
           <View style={styles.icono}>
             <Ionicons name={ajustes.modoOscuro ? "moon" : "moon-outline"} size={18} color={colors.accent700} />
           </View>
-          <Text style={[body(15), styles.etiqueta]}>Modo oscuro</Text>
+          <Text style={[body(15), styles.etiqueta]}>{t("ajustes.modoOscuro")}</Text>
           <Switch
             value={ajustes.modoOscuro}
             onValueChange={(modoOscuro) => cambiar({ modoOscuro })}
-            accessibilityLabel="Modo oscuro"
+            accessibilityLabel={t("ajustes.modoOscuro")}
             trackColor={{ false: colors.neutral300, true: colors.accent }}
             thumbColor="#ffffff"
             ios_backgroundColor={colors.neutral300}
@@ -54,7 +48,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
             <View style={styles.icono}>
               <Ionicons name="language-outline" size={18} color={colors.accent700} />
             </View>
-            <Text style={[body(15), styles.etiqueta]}>Idioma</Text>
+            <Text style={[body(15), styles.etiqueta]}>{t("ajustes.idioma")}</Text>
           </View>
           <Segmented options={IDIOMAS} value={ajustes.idioma} onChange={(idioma) => cambiar({ idioma })} variante="pildora" />
         </View>

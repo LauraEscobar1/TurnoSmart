@@ -14,7 +14,8 @@ import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { DataRow } from "@/components/OfferCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Card } from "@/components/Card";
-import { fechaConDia, hora } from "@/utils/format";
+import { hora, useFormato } from "@/utils/format";
+import { useDato, useT } from "@/i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "OfferDetail">;
 
@@ -25,6 +26,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "OfferDetail">;
  * El back va a Home, nunca a una pantalla intermedia.
  */
 export function OfferDetailScreen({ route, navigation }: Props) {
+  const t = useT();
   const { ofertaId } = route.params;
   const [oferta, setOferta] = useState<OfertaCupo | null | undefined>(undefined);
 
@@ -45,21 +47,21 @@ export function OfferDetailScreen({ route, navigation }: Props) {
 
   return (
     <View style={marco}>
-      <ScreenHeader title="Oferta de cupo" onBack={volverAHome} />
+      <ScreenHeader title={t("oferta.titulo")} onBack={volverAHome} />
       {oferta && oferta.estado === "pendiente" ? (
         <OfertaVigente oferta={oferta} navigation={navigation} />
       ) : oferta?.estado === "aceptada" ? (
         <OfertaResuelta
-          title="Ya aceptaste esta oferta"
-          description="La cita está confirmada en Mis citas."
-          action="Ver en Mis citas"
+          title={t("oferta.yaAceptaste")}
+          description={t("oferta.yaAceptasteTexto")}
+          action={t("oferta.verEnMisCitas")}
           onPress={() => navigation.navigate("Tabs", { screen: "MisCitas" })}
         />
       ) : oferta?.estado === "rechazada" ? (
         <OfertaResuelta
-          title="Rechazaste esta oferta"
-          description="El cupo se ofreció a otro paciente."
-          action="Ver historial"
+          title={t("oferta.rechazaste")}
+          description={t("oferta.rechazasteTexto")}
+          action={t("oferta.verHistorial")}
           onPress={() => navigation.navigate("Tabs", { screen: "Ofertas" })}
         />
       ) : (
@@ -70,6 +72,9 @@ export function OfferDetailScreen({ route, navigation }: Props) {
 }
 
 function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation: Props["navigation"] }) {
+  const t = useT();
+  const dato = useDato();
+  const { fechaConDia } = useFormato();
   const insets = useSafeAreaInsets();
   const segundos = useCountdown(oferta.expiraEnISO);
 
@@ -91,10 +96,10 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
     <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Card tono="acento" style={styles.timer}>
-          <Countdown segundos={segundos} size={52} caption="Tiempo para responder" align="center" />
+          <Countdown segundos={segundos} size={52} caption={t("oferta.tiempoParaResponder")} align="center" />
         </Card>
         <View>
-          <Text style={heading(32)}>{oferta.especialidad}</Text>
+          <Text style={heading(32)}>{dato("especialidades", oferta.especialidad)}</Text>
           <Text style={body(14, colors.neutral700)}>
             {oferta.profesional} · {oferta.consultorio}
           </Text>
@@ -106,19 +111,20 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
       </ScrollView>
       {/* La barra llega al borde inferior y absorbe el inset (indicador de inicio). */}
       <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-        <PrimaryButton label="Rechazar" variant="secondary" onPress={handleRechazar} style={styles.reject} />
-        <PrimaryButton label="Aceptar cupo" onPress={handleAceptar} style={styles.accept} />
+        <PrimaryButton label={t("oferta.rechazar")} variant="secondary" onPress={handleRechazar} style={styles.reject} />
+        <PrimaryButton label={t("oferta.aceptar")} onPress={handleAceptar} style={styles.accept} />
       </View>
     </>
   );
 }
 
 function OfertaExpirada({ onVerHistorial }: { onVerHistorial: () => void }) {
+  const t = useT();
   return (
     <OfertaResuelta
-      title="Oferta expirada"
-      description="Este cupo ya se ofreció a otro paciente."
-      action="Ver historial"
+      title={t("oferta.expirada")}
+      description={t("oferta.expiradaTexto")}
+      action={t("oferta.verHistorial")}
       onPress={onVerHistorial}
     />
   );

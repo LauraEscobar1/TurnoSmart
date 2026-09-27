@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
+import { useT } from "@/i18n";
 
 /**
  * Controles de formulario del sistema Industry (.field, .input, .seg, .radio):
@@ -24,6 +25,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   { label, error, hint, style, onFocus, onBlur, revelable, secureTextEntry, ...input },
   ref
 ) {
+  const t = useT();
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
   return (
@@ -58,7 +60,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
             hitSlop={8}
             style={styles.ojo}
             accessibilityRole="button"
-            accessibilityLabel={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+            accessibilityLabel={t(visible ? "comun.ocultarPassword" : "comun.mostrarPassword")}
           >
             <Ionicons name={visible ? "eye-off-outline" : "eye-outline"} size={18} color={colors.accent700} />
           </Pressable>
@@ -144,13 +146,15 @@ interface ChipSelectProps {
   value: string[];
   onChange: (value: string[]) => void;
   error?: string;
+  /** Texto visible de cada opción (p. ej. la especialidad en el idioma elegido). */
+  etiqueta?: (option: string) => string;
 }
 
 /**
  * Selección múltiple con tags: elegida = campo sólido (acero 900),
  * sin elegir = contorno.
  */
-export function ChipSelect({ label, options, value, onChange, error }: ChipSelectProps) {
+export function ChipSelect({ label, options, value, onChange, error, etiqueta = (o) => o }: ChipSelectProps) {
   const toggle = (o: string) => onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o]);
   return (
     <View>
@@ -164,10 +168,10 @@ export function ChipSelect({ label, options, value, onChange, error }: ChipSelec
               onPress={() => toggle(o)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on }}
-              accessibilityLabel={o}
+              accessibilityLabel={etiqueta(o)}
               style={[styles.chip, on ? styles.chipOn : styles.chipOff]}
             >
-              <Text style={[styles.chipText, { color: on ? colors.bg : colors.accent700 }]}>{o}</Text>
+              <Text style={[styles.chipText, { color: on ? colors.bg : colors.accent700 }]}>{etiqueta(o)}</Text>
             </Pressable>
           );
         })}
