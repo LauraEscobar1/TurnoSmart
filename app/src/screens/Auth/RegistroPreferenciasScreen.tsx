@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -19,6 +20,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, "RegistroPreferencias">;
  * explicabilidad: especialidad, franja y distancia.
  */
 export function RegistroPreferenciasScreen({ navigation }: Props) {
+  const { colors } = useTema();
   const t = useT();
   const { preferencias, setPreferencias } = useRegistro();
   const [form, setForm] = useState(preferencias);
@@ -40,7 +42,7 @@ export function RegistroPreferenciasScreen({ navigation }: Props) {
     >
       <StepProgress step={2} total={3} />
       <View>
-        <Text style={heading(26)}>{t("registro.queCupos")}</Text>
+        <Text style={heading(26, colors.text)}>{t("registro.queCupos")}</Text>
         <Text style={[body(13, colors.neutral700), { marginTop: 4 }]}>
           {t("registro.queCuposBajada")}
         </Text>

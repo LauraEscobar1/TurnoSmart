@@ -1,7 +1,8 @@
 import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 
 interface FormScreenProps {
   header?: React.ReactNode;
@@ -16,6 +17,7 @@ interface FormScreenProps {
  * teclado y las acciones quedan al pie cuando sobra espacio.
  */
 export function FormScreen({ header, children, footer, contentStyle }: FormScreenProps) {
+  const styles = useEstilos(crearStyles);
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
       {header}
@@ -33,7 +35,8 @@ export function FormScreen({ header, children, footer, contentStyle }: FormScree
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,

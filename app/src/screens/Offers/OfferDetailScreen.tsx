@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading } from "@/theme/typography";
 import { RootStackParamList } from "@/navigation/types";
 import { OfertaCupo } from "@/types/domain";
@@ -26,6 +27,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "OfferDetail">;
  * El back va a Home, nunca a una pantalla intermedia.
  */
 export function OfferDetailScreen({ route, navigation }: Props) {
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { ofertaId } = route.params;
   const [oferta, setOferta] = useState<OfertaCupo | null | undefined>(undefined);
@@ -72,6 +74,8 @@ export function OfferDetailScreen({ route, navigation }: Props) {
 }
 
 function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation: Props["navigation"] }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { fechaConDia } = useFormato();
@@ -99,7 +103,7 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
           <Countdown segundos={segundos} size={52} caption={t("oferta.tiempoParaResponder")} align="center" />
         </Card>
         <View>
-          <Text style={heading(32)}>{dato("especialidades", oferta.especialidad)}</Text>
+          <Text style={heading(32, colors.text)}>{dato("especialidades", oferta.especialidad)}</Text>
           <Text style={body(14, colors.neutral700)}>
             {oferta.profesional} · {oferta.consultorio}
           </Text>
@@ -131,6 +135,7 @@ function OfertaExpirada({ onVerHistorial }: { onVerHistorial: () => void }) {
 }
 
 function OfertaResuelta(props: { title: string; description: string; action: string; onPress: () => void }) {
+  const styles = useEstilos(crearStyles);
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 18) }]}>
@@ -140,7 +145,8 @@ function OfertaResuelta(props: { title: string; description: string; action: str
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,

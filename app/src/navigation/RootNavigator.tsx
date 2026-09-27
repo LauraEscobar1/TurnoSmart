@@ -1,7 +1,9 @@
 import React from "react";
 import { DefaultTheme, NavigationContainer, Theme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { StatusBar } from "expo-status-bar";
+import { useTema } from "@/theme/Tema";
+import { Paleta } from "@/theme/colors";
 import { RootStackParamList } from "@/navigation/types";
 import { TabNavigator } from "@/navigation/TabNavigator";
 import { OfferDetailScreen } from "@/screens/Offers/OfferDetailScreen";
@@ -12,7 +14,7 @@ import { useAuth } from "@/auth/AuthContext";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const theme: Theme = {
+const temaNavegacion = (colors: Paleta, oscuro: boolean): Theme => ({
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
@@ -23,7 +25,8 @@ const theme: Theme = {
     border: colors.divider,
     notification: colors.accent,
   },
-};
+  dark: oscuro,
+});
 
 /**
  * Navegador raíz.
@@ -36,9 +39,11 @@ const theme: Theme = {
  */
 export function RootNavigator() {
   const { paciente } = useAuth();
+  const { colors, oscuro } = useTema();
 
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer theme={temaNavegacion(colors, oscuro)}>
+      <StatusBar style={oscuro ? "light" : "dark"} />
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
         {paciente ? (
           <>

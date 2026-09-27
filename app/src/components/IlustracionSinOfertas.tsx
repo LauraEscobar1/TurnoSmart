@@ -1,6 +1,7 @@
 import React from "react";
 import Svg, { Circle, G, Path } from "react-native-svg";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { LOGO_TRAZOS, LOGO_VIEWBOX } from "@/components/Logo";
 import { useT } from "@/i18n";
 
@@ -10,6 +11,7 @@ import { useT } from "@/i18n";
  * buscando cupos. Minimalista y en la paleta de la app.
  */
 export function IlustracionSinOfertas({ size = 150 }: { size?: number }) {
+  const { colors } = useTema();
   const tr = useT();
   const t = LOGO_TRAZOS;
   const { x, y, w, h } = LOGO_VIEWBOX;
@@ -23,7 +25,7 @@ export function IlustracionSinOfertas({ size = 150 }: { size?: number }) {
       <Circle cx={100} cy={80} r={76} fill={colors.accent100} />
       <Circle cx={100} cy={80} r={58} fill={colors.accent200} opacity={0.6} />
       <Circle cx={100} cy={80} r={76} fill="none" stroke={colors.accent300} strokeWidth={1.2} strokeDasharray="3 6" />
-      <Circle cx={100} cy={80} r={38} fill="#ffffff" />
+      <Circle cx={100} cy={80} r={38} fill={colors.superficie} />
       {/* Puntos en órbita: cupos que el radar todavía no encontró */}
       <Circle cx={160} cy={42} r={5} fill={colors.accent} />
       <Circle cx={42} cy={112} r={3.5} fill={colors.accent300} />

@@ -4,7 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius, sombra } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
@@ -35,6 +36,8 @@ function listaO(items: string[], idioma: Idioma) {
  * y tres indicadores. Todo sale de los datos del paciente.
  */
 export function ProfileHomeScreen() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { idioma } = useAjustes();
@@ -175,7 +178,7 @@ export function ProfileHomeScreen() {
               style={({ pressed }) => [styles.fila, pressed && styles.presionado]}
             >
               <Ionicons name="notifications-outline" size={20} color={colors.accent700} />
-              <Text style={[body(15), styles.flex]}>{t("notificaciones.titulo")}</Text>
+              <Text style={[body(15, colors.text), styles.flex]}>{t("notificaciones.titulo")}</Text>
               <Text style={body(14, colors.neutral600)}>
                 {pidiendo ? "…" : t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}
               </Text>
@@ -204,6 +207,8 @@ function BotonRedondo({
   etiqueta: string;
   onPress: () => void;
 }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   return (
     <Pressable
       onPress={onPress}
@@ -228,6 +233,8 @@ function Indicador({
   etiqueta: string;
   onPress?: () => void;
 }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   return (
     <Pressable
       onPress={onPress}
@@ -245,7 +252,8 @@ function Indicador({
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,
