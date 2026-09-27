@@ -89,7 +89,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Mis citas" seccion={3} />
+      <ScreenHeader title="Mis citas" />
       <FlatList
         contentContainerStyle={styles.content}
         ListHeaderComponent={

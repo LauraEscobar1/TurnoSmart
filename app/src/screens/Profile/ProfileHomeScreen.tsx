@@ -59,7 +59,7 @@ export function ProfileHomeScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Perfil" seccion={5} />
+      <ScreenHeader title="Perfil" />
       <ScrollView contentContainerStyle={styles.content}>
         <Card
           style={styles.identity}

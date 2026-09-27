@@ -13,11 +13,9 @@ interface ScreenHeaderProps {
    * Sin `onBack`, es el título grande de una sección de Nivel 1.
    */
   onBack?: () => void;
-  /** Posición en la navegación deslizable: 1–5 (se muestra «2 / 5 · deslizá»). */
-  seccion?: number;
 }
 
-export function ScreenHeader({ title, onBack, seccion }: ScreenHeaderProps) {
+export function ScreenHeader({ title, onBack }: ScreenHeaderProps) {
   if (onBack) {
     return (
       <View style={[styles.bar, styles.backBar]}>
@@ -32,7 +30,6 @@ export function ScreenHeader({ title, onBack, seccion }: ScreenHeaderProps) {
   return (
     <View style={[styles.bar, styles.titleBar]}>
       <Text style={heading(28)}>{title}</Text>
-      {seccion ? <Text style={label(9)}>{seccion} / 5 · deslizá</Text> : null}
     </View>
   );
 }
