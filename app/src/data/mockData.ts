@@ -13,6 +13,21 @@ const DIA = MIN * 60 * 24;
 /** Especialidades que se ofrecen en el registro (paso 2) y en Preferencias. */
 export const ESPECIALIDADES = ["Cardiología", "Dermatología", "Traumatología", "Nutrición", "Clínica médica"];
 
+/** Todas las especialidades con lista de espera (pantalla «Buscar especialista»). */
+export const CATALOGO_ESPECIALIDADES = [
+  ...ESPECIALIDADES,
+  "Pediatría",
+  "Ginecología",
+  "Oftalmología",
+  "Neurología",
+  "Endocrinología",
+  "Gastroenterología",
+  "Otorrinolaringología",
+  "Psiquiatría",
+  "Urología",
+  "Kinesiología",
+];
+
 /** Cuenta de demostración: se puede ingresar con estas credenciales. */
 export const CUENTA_DEMO = { email: "martin.avila@correo.com", password: "contraseña123" };
 
