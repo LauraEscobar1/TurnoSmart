@@ -13,9 +13,11 @@ interface ScreenHeaderProps {
    * Sin `onBack`, es el título grande de una sección de Nivel 1.
    */
   onBack?: () => void;
+  /** Acción discreta a la derecha del título grande (p. ej. «Marcar todo como leído»). */
+  accion?: React.ReactNode;
 }
 
-export function ScreenHeader({ title, onBack }: ScreenHeaderProps) {
+export function ScreenHeader({ title, onBack, accion }: ScreenHeaderProps) {
   if (onBack) {
     return (
       <View style={[styles.bar, styles.backBar]}>
@@ -30,6 +32,7 @@ export function ScreenHeader({ title, onBack }: ScreenHeaderProps) {
   return (
     <View style={[styles.bar, styles.titleBar]}>
       <Text style={heading(28)}>{title}</Text>
+      {accion}
     </View>
   );
 }
