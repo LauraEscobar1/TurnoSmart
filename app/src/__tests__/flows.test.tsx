@@ -17,13 +17,13 @@ afterEach(() => {
 const AVISO_CUPO = /^Cardiología hoy \d\d:\d\d$/;
 
 describe("Home", () => {
-  it("tablero: saludo, accesos rápidos, oferta, próxima cita, lista de espera, avisos y la barra de 5 destinos", async () => {
+  it("tablero: saludo, oferta, próxima cita, lista de espera, avisos y una sola barra de navegación", async () => {
     await montarApp();
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
     expect(screen.getByText("Tenés una oferta de cupo esperando respuesta.")).toBeTruthy();
-    for (const acceso of ["Buscar especialista", "Mis citas", "Lista de espera", "Avisos"]) {
-      expect(screen.getByRole("button", { name: acceso })).toBeTruthy();
-    }
+    // Sin segunda barra de navegación arriba: ni accesos rápidos ni indicador de sección.
+    expect(screen.queryByRole("button", { name: "Buscar especialista" })).toBeNull();
+    expect(screen.queryByText(/\/ 5 · deslizá/)).toBeNull();
     expect(screen.getByText("Oferta para vos")).toBeTruthy();
     expect(screen.getByText("Ver oferta")).toBeTruthy();
     // Próxima cita: especialidad → fecha → especialista → consultorio → estado.
@@ -103,7 +103,6 @@ describe("Secciones", () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Ofertas" }));
     expect(await screen.findByText("Pendiente de respuesta · 1")).toBeTruthy();
-    expect(screen.getByText("2 / 5 · deslizá")).toBeTruthy();
     expect(screen.getByText("Clínica médica")).toBeTruthy();
     expect(screen.getByText("Expirada")).toBeTruthy();
     expect(screen.getByText("Aceptada")).toBeTruthy();
@@ -204,10 +203,10 @@ describe("Regresiones", () => {
   });
 });
 
-describe("Inicio: accesos rápidos", () => {
-  it("Buscar especialista suma una especialidad a la lista de espera", async () => {
+describe("Inicio: acciones de cada sección", () => {
+  it("«Sumar especialidad» abre la búsqueda y suma una especialidad a la lista de espera", async () => {
     await montarApp();
-    await fireEvent.press(await screen.findByRole("button", { name: "Buscar especialista" }));
+    await fireEvent.press(await screen.findByRole("button", { name: "Sumar especialidad" }));
     await fireEvent.changeText(await screen.findByLabelText("Especialidad"), "PEDIA");
     expect(screen.getByText("Pediatría")).toBeTruthy();
     expect(screen.queryByText("Cardiología")).toBeNull();

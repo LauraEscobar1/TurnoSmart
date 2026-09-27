@@ -105,18 +105,23 @@ describe("AppointmentCard", () => {
 });
 
 describe("OfferCard", () => {
-  const oferta: OfertaCupo = {
-    id: "of-1",
-    citaOrigenId: "c-0",
-    especialidad: "Cardiología",
-    profesional: "Dra. Elena Ruiz",
-    consultorio: "Consultorio 4B",
-    fechaHoraISO: new Date(Date.now() + 3_600_000).toISOString(),
-    estado: "pendiente",
-    expiraEnISO: new Date(Date.now() + 459_000).toISOString(),
-    scorePrioridad: 0.87,
-    factores: [],
-  };
+  // Se arma dentro de cada prueba, ya con el reloj falso andando: así el
+  // contador arranca exacto en 07:39 aunque el archivo tarde en cargar.
+  let oferta: OfertaCupo;
+  beforeEach(() => {
+    oferta = {
+      id: "of-1",
+      citaOrigenId: "c-0",
+      especialidad: "Cardiología",
+      profesional: "Dra. Elena Ruiz",
+      consultorio: "Consultorio 4B",
+      fechaHoraISO: new Date(Date.now() + 3_600_000).toISOString(),
+      estado: "pendiente",
+      expiraEnISO: new Date(Date.now() + 459_000).toISOString(),
+      scorePrioridad: 0.87,
+      factores: [],
+    };
+  });
 
   it("versión completa: aceptar y rechazar en un toque, sin mostrar el score", async () => {
     const onAceptar = jest.fn();
