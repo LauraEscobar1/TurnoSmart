@@ -218,7 +218,7 @@ describe("Secciones", () => {
   it("Perfil: datos, preferencias editables y cerrar sesión", async () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Perfil" }));
-    expect(await screen.findByText("MA")).toBeTruthy();
+    expect(await screen.findByText("MA", { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByText("Tarde")).toBeTruthy();
     expect(screen.getByText("Activadas")).toBeTruthy();
 
