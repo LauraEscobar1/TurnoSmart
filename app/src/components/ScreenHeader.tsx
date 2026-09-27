@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/colors";
 import { sombra } from "@/theme/spacing";
 import { heading, label } from "@/theme/typography";
+import { useT } from "@/i18n";
 
 interface ScreenHeaderProps {
   title: string;
@@ -18,10 +19,11 @@ interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({ title, onBack, accion }: ScreenHeaderProps) {
+  const t = useT();
   if (onBack) {
     return (
       <View style={[styles.bar, styles.backBar]}>
-        <Pressable onPress={onBack} hitSlop={12} style={styles.backButton} accessibilityLabel="Volver">
+        <Pressable onPress={onBack} hitSlop={12} style={styles.backButton} accessibilityLabel={t("comun.volver")}>
           <Ionicons name="arrow-back" size={18} color={colors.text} />
         </Pressable>
         <Text style={label(11, colors.text)}>{title}</Text>

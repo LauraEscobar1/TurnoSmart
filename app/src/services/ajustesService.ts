@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
- * Ajustes de la app en este teléfono (menú ☰ de Inicio). Por ahora solo
- * se guardan: aplicar el modo oscuro y traducir la app son los siguientes
- * pasos, y leerán de acá.
+ * Ajustes de la app en este teléfono (menú ☰ de Inicio). El idioma se
+ * aplica a toda la app (AjustesProvider + i18n); el modo oscuro, por ahora,
+ * solo se guarda.
  */
 export type Idioma = "es" | "en";
 

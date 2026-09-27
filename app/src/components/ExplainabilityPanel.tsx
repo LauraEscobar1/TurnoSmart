@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { FactorPrioridad } from "@/types/domain";
 import { colors } from "@/theme/colors";
 import { body, label } from "@/theme/typography";
+import { useT, useValorFactor } from "@/i18n";
 
 interface ExplainabilityPanelProps {
   factores: FactorPrioridad[];
@@ -14,18 +15,20 @@ interface ExplainabilityPanelProps {
  * con el dato concreto a la derecha. Nunca muestra el score numérico:
  * muestra la razón.
  */
-export function ExplainabilityPanel({ factores, title = "Por qué te lo ofrecemos" }: ExplainabilityPanelProps) {
+export function ExplainabilityPanel({ factores, title }: ExplainabilityPanelProps) {
+  const t = useT();
+  const valorFactor = useValorFactor();
   const top = [...factores].sort((a, b) => b.peso - a.peso).slice(0, 4);
 
   return (
     <View>
-      <Text style={[label(10, colors.accent700), styles.title]}>{title}</Text>
+      <Text style={[label(10, colors.accent700), styles.title]}>{title ?? t("oferta.porQue")}</Text>
       <View style={styles.list}>
         {top.map((f) => (
           <View key={f.etiqueta}>
             <View style={styles.row}>
-              <Text style={[body(13), styles.etiqueta]}>{f.etiqueta}</Text>
-              <Text style={[body(13, colors.neutral600), styles.valor]}>{f.valor}</Text>
+              <Text style={[body(13), styles.etiqueta]}>{valorFactor(f.etiqueta)}</Text>
+              <Text style={[body(13, colors.neutral600), styles.valor]}>{valorFactor(f.valor)}</Text>
             </View>
             <View style={styles.track}>
               <View style={[styles.fill, { width: `${Math.round(f.peso * 100)}%` }]} />

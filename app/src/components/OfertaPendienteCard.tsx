@@ -9,7 +9,8 @@ import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Countdown, useCountdown } from "@/components/Countdown";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { fechaConDia, hora } from "@/utils/format";
+import { hora, useFormato } from "@/utils/format";
+import { useDato, useT } from "@/i18n";
 
 interface Props {
   oferta: OfertaCupo;
@@ -24,6 +25,9 @@ interface Props {
  * (un toque: sin «¿seguro?», regla de 2 toques) y «Ver detalles».
  */
 export function OfertaPendienteCard({ oferta, onAceptar, onVerDetalles }: Props) {
+  const t = useT();
+  const dato = useDato();
+  const { fechaConDia } = useFormato();
   const segundos = useCountdown(oferta.expiraEnISO);
   const expirada = segundos === 0;
 
@@ -31,24 +35,24 @@ export function OfertaPendienteCard({ oferta, onAceptar, onVerDetalles }: Props)
     <Card style={[styles.card, expirada && styles.expirada]}>
       <View style={styles.cabecera}>
         <Badge
-          label={expirada ? "Oferta expirada" : "Esperando tu respuesta"}
+          label={t(expirada ? "oferta.expirada" : "oferta.esperandoRespuesta")}
           variant={expirada ? "lost" : "tint"}
         />
-        {!expirada && <Countdown segundos={segundos} size={22} caption="para responder" />}
+        {!expirada && <Countdown segundos={segundos} size={22} caption={t("oferta.paraResponder")} />}
       </View>
 
-      <Text style={heading(26, colors.accent900)}>{oferta.especialidad}</Text>
+      <Text style={heading(26, colors.accent900)}>{dato("especialidades", oferta.especialidad)}</Text>
 
       <View style={styles.grilla}>
-        <Dato icono="calendar-outline" etiqueta="Fecha" valor={fechaConDia(oferta.fechaHoraISO)} />
-        <Dato icono="time-outline" etiqueta="Hora" valor={hora(oferta.fechaHoraISO)} />
-        <Dato icono="person-outline" etiqueta="Especialista" valor={oferta.profesional} />
-        <Dato icono="location-outline" etiqueta="Consultorio" valor={oferta.consultorio} />
+        <Dato icono="calendar-outline" etiqueta={t("comun.fecha")} valor={fechaConDia(oferta.fechaHoraISO)} />
+        <Dato icono="time-outline" etiqueta={t("comun.hora")} valor={hora(oferta.fechaHoraISO)} />
+        <Dato icono="person-outline" etiqueta={t("comun.especialista")} valor={oferta.profesional} />
+        <Dato icono="location-outline" etiqueta={t("comun.consultorio")} valor={oferta.consultorio} />
       </View>
 
       <View style={styles.acciones}>
-        <PrimaryButton label="Ver detalles" variant="secondary" onPress={onVerDetalles} style={styles.secundaria} />
-        <PrimaryButton label="Aceptar cupo" onPress={onAceptar} disabled={expirada} style={styles.principal} />
+        <PrimaryButton label={t("oferta.verDetalles")} variant="secondary" onPress={onVerDetalles} style={styles.secundaria} />
+        <PrimaryButton label={t("oferta.aceptar")} onPress={onAceptar} disabled={expirada} style={styles.principal} />
       </View>
     </Card>
   );

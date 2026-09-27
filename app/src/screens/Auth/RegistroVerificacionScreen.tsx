@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors } from "@/theme/colors";
 import { body, fonts, heading } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { useAuth } from "@/auth/AuthContext";
 import { AuthError, enviarCodigo } from "@/services/authService";
@@ -23,6 +24,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, "RegistroVerificacion">;
  * Verifica el teléfono y pide el permiso de notificaciones.
  */
 export function RegistroVerificacionScreen({ navigation }: Props) {
+  const t = useT();
   const { datos, preferencias } = useRegistro();
   const { crearCuenta } = useAuth();
   const [codigo, setCodigo] = useState("");
@@ -39,7 +41,7 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
       await crearCuenta(datos, preferencias, { codigo, notificacionesActivas });
       // La sesión queda abierta: el navegador raíz pasa solo a la app.
     } catch (e) {
-      setError(e instanceof AuthError ? e.message : "No pudimos crear la cuenta.");
+      setError(e instanceof AuthError ? e.message : t("registro.error"));
       setEnviando(false);
     }
   }
@@ -48,15 +50,15 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
 
   return (
     <FormScreen
-      header={<StepHeader title="Crear cuenta" step={3} total={3} onBack={navigation.goBack} />}
+      header={<StepHeader title={t("login.crearCuenta")} step={3} total={3} onBack={navigation.goBack} />}
       contentStyle={{ gap: 16 }}
-      footer={<PrimaryButton label="Crear cuenta" onPress={crear} disabled={!listo || enviando} />}
+      footer={<PrimaryButton label={t("login.crearCuenta")} onPress={crear} disabled={!listo || enviando} />}
     >
       <StepProgress step={3} total={3} />
       <View>
-        <Text style={heading(26)}>Verificá tu teléfono</Text>
+        <Text style={heading(26)}>{t("registro.verificaTelefono")}</Text>
         <Text style={[body(13, colors.neutral700), { marginTop: 4 }]}>
-          Enviamos un código de 6 dígitos al {datos.telefono}.
+          {t("registro.enviamosAl", { telefono: datos.telefono })}
         </Text>
       </View>
 
@@ -74,13 +76,12 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
       <Card style={styles.notice}>
         <Ionicons name="notifications-outline" size={18} color={colors.accent700} style={{ marginTop: 1 }} />
         <Text style={[body(13, colors.neutral700), { flex: 1 }]}>
-          <Text style={styles.strong}>Activá las notificaciones.</Text> Las ofertas de cupo duran minutos: sin push, te
-          las perdés.
+          <Text style={styles.strong}>{t("registro.activaNotificaciones")}</Text> {t("registro.activaNotificacionesTexto")}
         </Text>
       </Card>
 
       <CheckRow checked={acepta} onChange={setAcepta}>
-        Acepto términos y política de privacidad
+        {t("registro.aceptoTerminos")}
       </CheckRow>
     </FormScreen>
   );

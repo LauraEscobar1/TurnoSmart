@@ -6,6 +6,7 @@ import { sombra } from "@/theme/spacing";
 import { heading } from "@/theme/typography";
 import { Paciente } from "@/types/domain";
 import { iniciales } from "@/utils/perfil";
+import { useT } from "@/i18n";
 
 interface Props {
   paciente: Paciente;
@@ -16,6 +17,7 @@ interface Props {
 
 /** Círculo del paciente: su foto si la subió; si no, sus iniciales. */
 export function AvatarPaciente({ paciente, size, onPress }: Props) {
+  const t = useT();
   const circulo = { width: size, height: size, borderRadius: size / 2 };
   const insignia = Math.round(size * 0.28);
 
@@ -35,7 +37,7 @@ export function AvatarPaciente({ paciente, size, onPress }: Props) {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={paciente.fotoUri ? "Cambiar foto de perfil" : "Subir foto de perfil"}
+      accessibilityLabel={t(paciente.fotoUri ? "perfil.cambiarFotoPerfil" : "perfil.subirFotoPerfil")}
       style={({ pressed }) => pressed && styles.presionado}
     >
       {contenido}

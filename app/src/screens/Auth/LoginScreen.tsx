@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as LocalAuthentication from "expo-local-authentication";
 import { colors } from "@/theme/colors";
 import { body, fonts, heading } from "@/theme/typography";
+import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { useAuth } from "@/auth/AuthContext";
 import { AuthError, getUltimoUsuario } from "@/services/authService";
@@ -17,6 +18,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 /** Acceso — Iniciar sesión: marca centrada, correo, contraseña y Face ID. */
 export function LoginScreen({ navigation, route }: Props) {
+  const t = useT();
   const { iniciarSesion, iniciarSesionBiometrica } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +39,7 @@ export function LoginScreen({ navigation, route }: Props) {
     try {
       await iniciarSesion(email, password);
     } catch (e) {
-      setError(e instanceof AuthError ? { campo: e.campo, mensaje: e.message } : { mensaje: "No pudimos iniciar sesión." });
+      setError(e instanceof AuthError ? { campo: e.campo, mensaje: e.message } : { mensaje: t("login.error") });
       setEnviando(false);
     }
   }
@@ -46,24 +48,24 @@ export function LoginScreen({ navigation, route }: Props) {
     setError(null);
     setAviso(null);
     if (!(await getUltimoUsuario())) {
-      setAviso("Ingresá una vez con tu correo para activar Face ID.");
+      setAviso(t("errores.faceIdPrimeraVez"));
       return;
     }
     const disponible = (await LocalAuthentication.hasHardwareAsync()) && (await LocalAuthentication.isEnrolledAsync());
     if (!disponible) {
-      setAviso("Face ID no está disponible o configurado en este dispositivo.");
+      setAviso(t("login.faceIdNoDisponible"));
       return;
     }
     const r = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Ingresar a TurnoSmart",
-      cancelLabel: "Cancelar",
+      promptMessage: t("login.faceIdPrompt"),
+      cancelLabel: t("comun.cancelar"),
       disableDeviceFallback: false,
     });
     if (!r.success) return; // canceló: no es un error que mostrar
     try {
       await iniciarSesionBiometrica();
     } catch (e) {
-      setAviso(e instanceof AuthError ? e.message : "No pudimos iniciar sesión.");
+      setAviso(e instanceof AuthError ? e.message : t("login.error"));
     }
   }
 
@@ -72,12 +74,12 @@ export function LoginScreen({ navigation, route }: Props) {
       header={navigation.canGoBack() ? <BackBar onBack={navigation.goBack} /> : undefined}
       footer={
         <>
-          <PrimaryButton label="Iniciar sesión" onPress={ingresar} disabled={enviando} />
-          <PrimaryButton label="Ingresar con Face ID" variant="secondary" onPress={ingresarConFaceId} />
+          <PrimaryButton label={t("login.iniciarSesion")} onPress={ingresar} disabled={enviando} />
+          <PrimaryButton label={t("login.conFaceId")} variant="secondary" onPress={ingresarConFaceId} />
           <View style={styles.signup}>
-            <Text style={body(13, colors.neutral700)}>¿No tenés cuenta? </Text>
+            <Text style={body(13, colors.neutral700)}>{t("login.noTenesCuenta")} </Text>
             <Pressable onPress={() => navigation.navigate("RegistroDatos")} hitSlop={8}>
-              <Text style={[body(13, colors.accent700), styles.link]}>Crear cuenta</Text>
+              <Text style={[body(13, colors.accent700), styles.link]}>{t("login.crearCuenta")}</Text>
             </Pressable>
           </View>
         </>
@@ -85,13 +87,13 @@ export function LoginScreen({ navigation, route }: Props) {
     >
       <View style={styles.marca}>
         <Logo size={52} wordmark />
-        <Text style={[heading(24), styles.center, styles.titulo]}>Ingresá a tu cuenta</Text>
-        <Text style={[body(13, colors.neutral700), styles.center]}>Para ver tus ofertas de cupo y tus citas.</Text>
+        <Text style={[heading(24), styles.center, styles.titulo]}>{t("login.titulo")}</Text>
+        <Text style={[body(13, colors.neutral700), styles.center]}>{t("login.bajada")}</Text>
       </View>
 
       <TextField
-        label="Correo electrónico"
-        placeholder="nombre@correo.com"
+        label={t("comun.correo")}
+        placeholder={t("comun.correoEj")}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -105,7 +107,7 @@ export function LoginScreen({ navigation, route }: Props) {
       />
       <TextField
         ref={passwordRef}
-        label="Contraseña"
+        label={t("comun.password")}
         value={password}
         onChangeText={setPassword}
         revelable
@@ -120,7 +122,7 @@ export function LoginScreen({ navigation, route }: Props) {
         style={styles.forgot}
         hitSlop={8}
       >
-        <Text style={body(12, colors.accent700)}>¿Olvidaste tu contraseña?</Text>
+        <Text style={body(12, colors.accent700)}>{t("login.olvidaste")}</Text>
       </Pressable>
       {aviso ? <Text style={body(13, colors.neutral700)}>{aviso}</Text> : null}
     </FormScreen>

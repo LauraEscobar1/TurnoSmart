@@ -9,6 +9,7 @@ import { AppointmentsNavigator } from "@/navigation/AppointmentsNavigator";
 import { NotificationsScreen } from "@/screens/Notifications/NotificationsScreen";
 import { ProfileNavigator } from "@/navigation/ProfileNavigator";
 import { TabBar } from "@/components/TabBar";
+import { useT } from "@/i18n";
 import { contarNoLeidas } from "@/services/notificationsService";
 import { contarOfertasPendientes } from "@/services/offersService";
 import { notificacionesMock, ofertasMock } from "@/data/mockData";
@@ -30,6 +31,7 @@ const soloEnRaiz = (route: RouteProp<RootTabParamList>, raiz: string) => ({
  * llevan badge; el de Ofertas cuenta ofertas pendientes de respuesta.
  */
 export function TabNavigator() {
+  const t = useT();
   // Los contadores se leen de los datos en cada cambio de sección,
   // así el badge baja apenas se lee un aviso o se responde una oferta.
   const [, refrescar] = useReducer((n: number) => n + 1, 0);
@@ -47,18 +49,18 @@ export function TabNavigator() {
       style={{ backgroundColor: colors.fondo }}
       sceneContainerStyle={{ backgroundColor: colors.fondo }}
     >
-      <Tab.Screen name="Inicio" component={HomeScreen} options={{ title: "Inicio" }} />
-      <Tab.Screen name="Ofertas" component={OffersNavigator} options={{ title: "Ofertas" }} />
+      <Tab.Screen name="Inicio" component={HomeScreen} options={{ title: t("nav.inicio") }} />
+      <Tab.Screen name="Ofertas" component={OffersNavigator} options={{ title: t("nav.ofertas") }} />
       <Tab.Screen
         name="MisCitas"
         component={AppointmentsNavigator}
-        options={({ route }) => ({ title: "Mis citas", ...soloEnRaiz(route, "AppointmentsList") })}
+        options={({ route }) => ({ title: t("nav.citas"), ...soloEnRaiz(route, "AppointmentsList") })}
       />
-      <Tab.Screen name="Notificaciones" component={NotificationsScreen} options={{ title: "Notificaciones" }} />
+      <Tab.Screen name="Notificaciones" component={NotificationsScreen} options={{ title: t("nav.notificaciones") }} />
       <Tab.Screen
         name="Perfil"
         component={ProfileNavigator}
-        options={({ route }) => ({ title: "Perfil", ...soloEnRaiz(route, "ProfileHome") })}
+        options={({ route }) => ({ title: t("nav.perfil"), ...soloEnRaiz(route, "ProfileHome") })}
       />
     </Tab.Navigator>
   );

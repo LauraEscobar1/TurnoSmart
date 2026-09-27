@@ -1,6 +1,7 @@
 import React from "react";
 import { colors } from "@/theme/colors";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useT } from "@/i18n";
 import { AppointmentsStackParamList } from "@/navigation/types";
 import { AppointmentsListScreen } from "@/screens/Appointments/AppointmentsListScreen";
 import { AppointmentDetailScreen } from "@/screens/Appointments/AppointmentDetailScreen";
@@ -8,17 +9,18 @@ import { AppointmentDetailScreen } from "@/screens/Appointments/AppointmentDetai
 const Stack = createNativeStackNavigator<AppointmentsStackParamList>();
 
 export function AppointmentsNavigator() {
+  const t = useT();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
       <Stack.Screen
         name="AppointmentsList"
         component={AppointmentsListScreen}
-        options={{ title: "Mis citas" }}
+        options={{ title: t("nav.citas") }}
       />
       <Stack.Screen
         name="AppointmentDetail"
         component={AppointmentDetailScreen}
-        options={{ title: "Detalle de cita" }}
+        options={{ title: t("citas.detalle") }}
       />
     </Stack.Navigator>
   );
