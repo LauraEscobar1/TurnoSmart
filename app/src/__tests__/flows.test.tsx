@@ -42,7 +42,7 @@ describe("Home", () => {
     }
     expect(screen.getByRole("tab", { name: "Inicio", selected: true })).toBeTruthy();
     // Badges: 1 oferta pendiente y 2 avisos sin leer.
-    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("1");
+    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("2");
     expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("2");
     // Sin emojis sueltos en la interfaz.
     expect(screen.queryByText(/👋|✅|👍/)).toBeNull();
@@ -84,7 +84,9 @@ describe("Ruta crítica · 2 toques", () => {
     expect(await screen.findByText("Oferta rechazada")).toBeTruthy();
     await fireEvent.press(screen.getByText("Volver al inicio"));
 
-    expect(await screen.findByText("Sin ofertas por ahora")).toBeTruthy();
+    // De vuelta en Inicio queda la otra oferta pendiente.
+    expect(await screen.findByText("Martín Ávila")).toBeTruthy();
+    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("1");
   });
 
   it("el aviso abre el detalle y el back va a Home", async () => {
@@ -99,16 +101,56 @@ describe("Ruta crítica · 2 toques", () => {
 });
 
 describe("Secciones", () => {
-  it("Ofertas: pendiente de respuesta arriba e historial atenuado", async () => {
+  it("Ofertas: lo pendiente como protagonista, historial compacto con filtros y ayuda colapsable", async () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Ofertas" }));
-    expect(await screen.findByText("Pendiente de respuesta · 1")).toBeTruthy();
-    expect(screen.getByText("Clínica médica")).toBeTruthy();
-    expect(screen.getByText("Expirada")).toBeTruthy();
-    expect(screen.getByText("Aceptada")).toBeTruthy();
+    expect(await screen.findByText("Ofertas para vos")).toBeTruthy();
+    expect(screen.getByText("2 ofertas requieren tu respuesta")).toBeTruthy();
+    // Cada pendiente: especialidad, fecha, hora, especialista, consultorio, estado y acciones.
+    expect(screen.getAllByText("Esperando tu respuesta")).toHaveLength(2);
+    expect(screen.getByText("Dra. Lucía Méndez")).toBeTruthy();
+    expect(screen.getByText("Consultorio 1C")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Aceptar cupo" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Ver detalles" })).toHaveLength(2);
 
-    await fireEvent.press(screen.getByText("Cardiología"));
+    // Historial: todas, y filtrado por estado.
+    expect(screen.getByText("Clínica médica")).toBeTruthy();
+    expect(screen.getByText("Traumatología")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Canceladas" }));
+    expect(screen.getByText("Traumatología")).toBeTruthy();
+    expect(screen.queryByText("Clínica médica")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Expiradas" }));
+    expect(screen.getByText("Clínica médica")).toBeTruthy();
+    expect(screen.queryByText("Traumatología")).toBeNull();
+
+    // Ayuda colapsable.
+    expect(screen.queryByText(/Cuando alguien cancela una cita/)).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: /¿Cómo funcionan las ofertas\?/ }));
+    expect(screen.getByText(/Cuando alguien cancela una cita/)).toBeTruthy();
+
+    // «Ver detalles» abre el detalle con el contador.
+    await fireEvent.press(screen.getAllByRole("button", { name: "Ver detalles" })[0]);
     expect(await screen.findByText("Tiempo para responder")).toBeTruthy();
+  });
+
+  it("Ofertas: «Aceptar cupo» desde la lista confirma en un toque y, sin pendientes, muestra el vacío", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("tab", { name: "Ofertas" }));
+    await fireEvent.press((await screen.findAllByRole("button", { name: "Aceptar cupo" }))[0]);
+    expect(await screen.findByText("Cupo confirmado")).toBeTruthy();
+    await act(async () => {
+      jest.advanceTimersByTime(2100);
+    });
+
+    await fireEvent.press(screen.getByRole("tab", { name: "Ofertas" }));
+    expect(await screen.findByText("1 oferta requiere tu respuesta")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Ver detalles" }));
+    await fireEvent.press(await screen.findByText("Rechazar"));
+    await fireEvent.press(await screen.findByText("Volver al inicio"));
+
+    await fireEvent.press(await screen.findByRole("tab", { name: "Ofertas" }));
+    expect(await screen.findByText("No hay nuevas ofertas por ahora")).toBeTruthy();
+    expect(screen.getByText("Te avisaremos cuando encontremos un cupo que pueda interesarte.")).toBeTruthy();
   });
 
   it("Mis citas: calendario, citas del día elegido, Próximas / Pasadas y detalle", async () => {
@@ -179,8 +221,8 @@ describe("Regresiones", () => {
       jest.advanceTimersByTime(2100);
     });
 
-    // Ofertas ya no tiene badge; Avisos baja de 2 a 1 (queda el recordatorio).
-    expect(screen.queryByTestId("badge-Ofertas")).toBeNull();
+    // Ofertas baja de 2 a 1; Avisos baja de 2 a 1 (queda el recordatorio).
+    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("1");
     expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("1");
 
     await fireEvent.press(screen.getByRole("tab", { name: "Avisos" }));
@@ -198,7 +240,7 @@ describe("Regresiones", () => {
     await fireEvent.press(screen.getByLabelText("Volver"));
 
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
-    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("1");
+    expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("2");
     expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("1");
   });
 });
@@ -222,9 +264,12 @@ describe("Inicio: acciones de cada sección", () => {
 
   it("sin oferta ni avisos nuevos muestra «Sin ofertas por ahora» y «Todo al día»", async () => {
     await montarApp();
-    await fireEvent.press(await screen.findByText("Ver oferta"));
-    await fireEvent.press(await screen.findByText("Rechazar"));
-    await fireEvent.press(await screen.findByText("Volver al inicio"));
+    // Hay dos ofertas pendientes: se rechazan las dos.
+    for (let i = 0; i < 2; i++) {
+      await fireEvent.press(await screen.findByText("Ver oferta"));
+      await fireEvent.press(await screen.findByText("Rechazar"));
+      await fireEvent.press(await screen.findByText("Volver al inicio"));
+    }
 
     expect(await screen.findByText("Sin ofertas por ahora")).toBeTruthy();
     expect(screen.getByText(/Alertas activas · 2 especialidades/)).toBeTruthy();

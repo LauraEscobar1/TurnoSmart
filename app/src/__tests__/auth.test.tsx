@@ -199,8 +199,7 @@ describe("Acceso en pantalla", () => {
     // Lo elegido en el paso 2 aparece en Perfil.
     await fireEvent.press(screen.getByRole("tab", { name: "Perfil" }));
     expect(await screen.findByText("LE")).toBeTruthy();
-    // «2» especialidades en espera (el otro «2» es el badge de Avisos).
-    expect(screen.getAllByText("2")).toHaveLength(2);
+    expect(screen.getByLabelText("Especialidades en espera: 2")).toBeTruthy();
     expect(screen.getByText("Tarde")).toBeTruthy();
     expect(screen.getByText("Activadas")).toBeTruthy();
   });
