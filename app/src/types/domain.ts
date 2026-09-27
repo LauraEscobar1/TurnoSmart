@@ -56,7 +56,8 @@ export interface Paciente {
   id: string;
   nombre: string;
   apellido: string;
-  dni: string;
+  /** Cédula de ciudadanía, solo dígitos. */
+  cedula: string;
   email: string;
   telefono: string;
   /**
@@ -66,11 +67,22 @@ export interface Paciente {
   especialidadesInteres: string[];
   franjaPreferida: FranjaHoraria;
   distanciaMaxKm: DistanciaMaxima;
-  obraSocial: string;
   notificacionesActivas: boolean;
   /** Alta en la lista de espera; de acá sale «34 días». */
   registradoEnISO: string;
   puestoEspera: number;
+  /*
+   * Datos opcionales del perfil: no se piden en el registro y el paciente
+   * los completa (o cambia) cuando quiera desde Perfil › Datos personales.
+   */
+  /** URI local de la foto de perfil; sin foto se muestran las iniciales. */
+  fotoUri?: string;
+  /** Fecha de nacimiento, "AAAA-MM-DD". */
+  fechaNacimiento?: string;
+  ciudad?: string;
+  /** EPS o medicina prepagada. */
+  eps?: string;
+  contactoEmergencia?: { nombre: string; telefono: string };
 }
 
 export type TipoNotificacion =
