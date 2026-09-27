@@ -35,9 +35,18 @@ export class AuthError extends Error {
 
 const normalizarEmail = (email: string) => email.trim().toLowerCase();
 
+/**
+ * Cuentas guardadas antes del cambio a cédula y EPS: `dni` pasa a `cedula`
+ * y la antigua «obra social» a `eps`, para no perder lo ya cargado.
+ */
+type PacienteGuardado = Paciente & { dni?: string; obraSocial?: string };
+function migrar({ dni, obraSocial, ...p }: PacienteGuardado): Paciente {
+  return { ...p, cedula: p.cedula ?? dni ?? "", eps: p.eps ?? (obraSocial?.trim() || undefined) };
+}
+
 async function leerCuentas(): Promise<Cuenta[]> {
   const raw = await AsyncStorage.getItem(KEY_CUENTAS);
-  if (raw) return JSON.parse(raw);
+  if (raw) return (JSON.parse(raw) as Cuenta[]).map((c) => ({ ...c, paciente: migrar(c.paciente) }));
   const semilla = [{ paciente: pacienteDemo, password: CUENTA_DEMO.password }];
   await AsyncStorage.setItem(KEY_CUENTAS, JSON.stringify(semilla));
   return semilla;
@@ -132,7 +141,7 @@ export async function restablecerPassword(email: string, codigo: string, nueva: 
 export interface DatosCuenta {
   nombre: string;
   apellido: string;
-  dni: string;
+  cedula: string;
   email: string;
   telefono: string;
   password: string;
@@ -142,7 +151,6 @@ export interface PreferenciasCupo {
   especialidadesInteres: string[];
   franjaPreferida: FranjaHoraria;
   distanciaMaxKm: DistanciaMaxima;
-  obraSocial: string;
 }
 
 export function validarEmail(email: string) {
@@ -159,7 +167,9 @@ export function validarDatosCuenta(d: DatosCuenta): Partial<Record<keyof DatosCu
   const errores: Partial<Record<keyof DatosCuenta, string>> = {};
   if (!d.nombre.trim()) errores.nombre = "Ingresá tu nombre.";
   if (!d.apellido.trim()) errores.apellido = "Ingresá tu apellido.";
-  if (!/^\d{7,8}$/.test(d.dni.replace(/\D/g, "")) || /[^\d.\s]/.test(d.dni)) errores.dni = "El DNI tiene 7 u 8 números.";
+  if (!/^\d{6,10}$/.test(d.cedula.replace(/\D/g, "")) || /[^\d.\s]/.test(d.cedula)) {
+    errores.cedula = "La cédula tiene entre 6 y 10 números.";
+  }
   if (!validarEmail(d.email)) errores.email = "Revisá el correo electrónico.";
   if (d.telefono.replace(/\D/g, "").length < 8) errores.telefono = "Ingresá un teléfono con código de área.";
   const errorPassword = validarPassword(d.password);
@@ -167,15 +177,15 @@ export function validarDatosCuenta(d: DatosCuenta): Partial<Record<keyof DatosCu
   return errores;
 }
 
-/** Comprueba que el correo y el DNI no estén ya registrados. */
-export async function verificarDisponibilidad(d: Pick<DatosCuenta, "email" | "dni">): Promise<void> {
+/** Comprueba que el correo y la cédula no estén ya registrados. */
+export async function verificarDisponibilidad(d: Pick<DatosCuenta, "email" | "cedula">): Promise<void> {
   const cuentas = await leerCuentas();
   if (cuentas.some((c) => c.paciente.email === normalizarEmail(d.email))) {
     throw new AuthError("Ya existe una cuenta con este correo.", "email");
   }
-  const dni = d.dni.replace(/\D/g, "");
-  if (cuentas.some((c) => c.paciente.dni === dni)) {
-    throw new AuthError("Ya existe una cuenta con este DNI.", "dni");
+  const cedula = d.cedula.replace(/\D/g, "");
+  if (cuentas.some((c) => c.paciente.cedula === cedula)) {
+    throw new AuthError("Ya existe una cuenta con esta cédula.", "cedula");
   }
 }
 
@@ -205,11 +215,10 @@ export async function crearCuenta(
     id: `p-${Date.now()}`,
     nombre: datos.nombre.trim(),
     apellido: datos.apellido.trim(),
-    dni: datos.dni.replace(/\D/g, ""),
+    cedula: datos.cedula.replace(/\D/g, ""),
     email: normalizarEmail(datos.email),
     telefono: datos.telefono.trim(),
     ...preferencias,
-    obraSocial: preferencias.obraSocial.trim(),
     notificacionesActivas: opciones.notificacionesActivas,
     registradoEnISO: new Date().toISOString(),
     puestoEspera: cuentas.length + 11,
