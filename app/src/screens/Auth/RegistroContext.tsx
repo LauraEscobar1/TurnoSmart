@@ -11,12 +11,11 @@ interface RegistroValue {
 
 const RegistroContext = createContext<RegistroValue | null>(null);
 
-const DATOS_VACIOS: DatosCuenta = { nombre: "", apellido: "", dni: "", email: "", telefono: "", password: "" };
+const DATOS_VACIOS: DatosCuenta = { nombre: "", apellido: "", cedula: "", email: "", telefono: "", password: "" };
 const PREFERENCIAS_INICIALES: PreferenciasCupo = {
   especialidadesInteres: [],
   franjaPreferida: "Indistinto",
   distanciaMaxKm: 10,
-  obraSocial: "",
 };
 
 export function RegistroProvider({ children }: { children: React.ReactNode }) {
