@@ -7,6 +7,7 @@ import { TabNavigator } from "@/navigation/TabNavigator";
 import { OfferDetailScreen } from "@/screens/Offers/OfferDetailScreen";
 import { OfferConfirmationScreen } from "@/screens/Offers/OfferConfirmationScreen";
 import { AuthNavigator } from "@/navigation/AuthNavigator";
+import { BuscarEspecialistaScreen } from "@/screens/Home/BuscarEspecialistaScreen";
 import { useAuth } from "@/auth/AuthContext";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +43,7 @@ export function RootNavigator() {
         {paciente ? (
           <>
             <Stack.Screen name="Tabs" component={TabNavigator} />
+            <Stack.Screen name="BuscarEspecialista" component={BuscarEspecialistaScreen} />
             <Stack.Group screenOptions={{ presentation: "fullScreenModal" }}>
               <Stack.Screen name="OfferDetail" component={OfferDetailScreen} />
               <Stack.Screen
