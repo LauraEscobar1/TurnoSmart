@@ -177,15 +177,43 @@ describe("Secciones", () => {
     expect(await screen.findByText("Asistida")).toBeTruthy();
   });
 
-  it("Avisos: lista con tipo y tiempo relativo", async () => {
+  it("Avisos: bandeja agrupada por día, filtros y marcar todo como leído", async () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Avisos" }));
     expect(await screen.findByText("Notificaciones")).toBeTruthy();
+    // Grupos por día y marca de tiempo por aviso.
+    expect(screen.getByText("Hoy")).toBeTruthy();
+    expect(screen.getByText("Ayer")).toBeTruthy();
     expect(screen.getByText("Cupo disponible")).toBeTruthy();
-    expect(screen.getByText("ahora")).toBeTruthy();
-    expect(screen.getByText("Recordatorio")).toBeTruthy();
-    expect(screen.getByText("ayer")).toBeTruthy();
+    expect(screen.getByText("Ahora")).toBeTruthy();
+    expect(screen.getByText("Recordatorio de cita")).toBeTruthy();
+    expect(screen.getByText(/^Ayer · \d\d:\d\d$/)).toBeTruthy();
     expect(screen.getByText("Cupo aceptado · Nutrición")).toBeTruthy();
+
+    // Filtro Citas: solo el recordatorio.
+    await fireEvent.press(screen.getByRole("button", { name: "Citas" }));
+    expect(screen.getByText("Recordatorio de cita")).toBeTruthy();
+    expect(screen.queryByText("Cupo disponible")).toBeNull();
+    // Filtro Ofertas: sin el recordatorio.
+    await fireEvent.press(screen.getByRole("button", { name: "Ofertas" }));
+    expect(screen.getByText("Cupo disponible")).toBeTruthy();
+    expect(screen.queryByText("Recordatorio de cita")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Todas" }));
+
+    // Marcar todo como leído: desaparecen los «sin leer» y la acción.
+    expect(screen.getAllByLabelText(/^Sin leer\./)).toHaveLength(2);
+    await fireEvent.press(screen.getByText("Marcar todo como leído"));
+    expect(await screen.findAllByLabelText(/^Cupo disponible\./)).toHaveLength(1);
+    expect(screen.queryAllByLabelText(/^Sin leer\./)).toHaveLength(0);
+    expect(screen.queryByText("Marcar todo como leído")).toBeNull();
+  });
+
+  it("Avisos: el recordatorio abre el detalle de la cita", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("tab", { name: "Avisos" }));
+    await fireEvent.press(await screen.findByText("Recordatorio de cita"));
+    expect(await screen.findByText("Especialista")).toBeTruthy();
+    expect(screen.getByText("Cons. 1C")).toBeTruthy();
   });
 
   it("Perfil: datos, preferencias editables y cerrar sesión", async () => {
