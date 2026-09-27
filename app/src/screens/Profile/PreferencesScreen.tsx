@@ -11,7 +11,7 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScreenHeader } from "@/components/ScreenHeader";
 
 /**
- * Preferencias del paciente: especialidades, franja, distancia y obra social.
+ * Preferencias del paciente: especialidades, franja y distancia.
  * Es el mismo formulario del paso 2 del registro, y alimenta directamente
  * al motor de priorización de IA (docs/01-arquitectura-informacion.md §2.2).
  */
@@ -23,7 +23,6 @@ export function PreferencesScreen() {
     especialidadesInteres: paciente.especialidadesInteres,
     franjaPreferida: paciente.franjaPreferida,
     distanciaMaxKm: paciente.distanciaMaxKm,
-    obraSocial: paciente.obraSocial,
   });
   const [error, setError] = useState<string>();
   const [guardando, setGuardando] = useState(false);
@@ -34,7 +33,7 @@ export function PreferencesScreen() {
       return;
     }
     setGuardando(true);
-    await actualizar({ ...form, obraSocial: form.obraSocial.trim() });
+    await actualizar(form);
     setGuardando(false);
     navigation.goBack();
   }
