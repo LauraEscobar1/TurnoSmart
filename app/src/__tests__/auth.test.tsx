@@ -202,6 +202,11 @@ describe("Acceso en pantalla", () => {
     expect(screen.getByLabelText("Especialidades en espera: 2")).toBeTruthy();
     expect(screen.getByText("Tarde")).toBeTruthy();
     expect(screen.getByText("Activadas")).toBeTruthy();
+
+    // Las notificaciones saludan a la cuenta nueva, no a la cuenta demo.
+    await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
+    expect(await screen.findByText(/^Hola, Laura\. Tenemos un cupo disponible/)).toBeTruthy();
+    expect(screen.queryByText(/Martín/)).toBeNull();
   });
 
   it("la flecha del registro vuelve a la pantalla anterior", async () => {
