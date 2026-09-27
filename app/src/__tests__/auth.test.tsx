@@ -2,7 +2,8 @@ import * as LocalAuthentication from "expo-local-authentication";
 import * as Notifications from "expo-notifications";
 import { fireEvent, screen } from "@testing-library/react-native";
 import * as auth from "@/services/authService";
-import { CUENTA_DEMO } from "@/data/mockData";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CUENTA_DEMO, pacienteDemo } from "@/data/mockData";
 import { irALogin, montarApp, reiniciarDatos } from "@/test-utils/app";
 
 beforeEach(async () => {
@@ -13,7 +14,7 @@ beforeEach(async () => {
 const datosValidos: auth.DatosCuenta = {
   nombre: "Laura",
   apellido: "Escobar",
-  dni: "30.111.222",
+  cedula: "1.020.304.050",
   email: "Laura@Correo.com ",
   telefono: "+54 11 4444 1234",
   password: "segura123",
@@ -23,7 +24,6 @@ const preferencias: auth.PreferenciasCupo = {
   especialidadesInteres: ["Cardiología"],
   franjaPreferida: "Mañana",
   distanciaMaxKm: null,
-  obraSocial: " OSDE 310 ",
 };
 
 describe("authService", () => {
@@ -46,14 +46,26 @@ describe("authService", () => {
 
   it("valida los datos del paso 1", () => {
     expect(auth.validarDatosCuenta(datosValidos)).toEqual({});
-    const e = auth.validarDatosCuenta({ nombre: " ", apellido: "", dni: "12a", email: "x@", telefono: "123", password: "corta" });
-    expect(Object.keys(e).sort()).toEqual(["apellido", "dni", "email", "nombre", "password", "telefono"]);
+    const e = auth.validarDatosCuenta({ nombre: " ", apellido: "", cedula: "12a", email: "x@", telefono: "123", password: "corta" });
+    expect(Object.keys(e).sort()).toEqual(["apellido", "cedula", "email", "nombre", "password", "telefono"]);
     expect(auth.validarDatosCuenta({ ...datosValidos, password: "sinnumeros" }).password).toBe("Mínimo 8 caracteres, un número.");
   });
 
-  it("no permite repetir correo ni DNI", async () => {
-    await expect(auth.verificarDisponibilidad({ email: CUENTA_DEMO.email, dni: "1" })).rejects.toMatchObject({ campo: "email" });
-    await expect(auth.verificarDisponibilidad({ email: "nuevo@correo.com", dni: "35.482.910" })).rejects.toMatchObject({ campo: "dni" });
+  it("no permite repetir correo ni cédula", async () => {
+    await expect(auth.verificarDisponibilidad({ email: CUENTA_DEMO.email, cedula: "1" })).rejects.toMatchObject({ campo: "email" });
+    await expect(auth.verificarDisponibilidad({ email: "nuevo@correo.com", cedula: "1.023.456.789" })).rejects.toMatchObject({
+      campo: "cedula",
+    });
+  });
+
+  it("migra las cuentas guardadas con DNI y obra social a cédula y EPS", async () => {
+    const vieja = { ...pacienteDemo, cedula: undefined, eps: undefined, dni: "35482910", obraSocial: " Sanitas " };
+    await AsyncStorage.setItem("ts.cuentas", JSON.stringify([{ paciente: vieja, password: "x1234567" }]));
+    await AsyncStorage.setItem("ts.sesion", pacienteDemo.email);
+    const p = await auth.getSesion();
+    expect(p).toMatchObject({ cedula: "35482910", eps: "Sanitas" });
+    expect(p).not.toHaveProperty("dni");
+    expect(p).not.toHaveProperty("obraSocial");
   });
 
   it("crea la cuenta solo con el código correcto y deja la sesión abierta", async () => {
@@ -69,8 +81,7 @@ describe("authService", () => {
     expect(p).toMatchObject({
       nombre: "Laura",
       email: "laura@correo.com",
-      dni: "30111222",
-      obraSocial: "OSDE 310",
+      cedula: "1020304050",
       franjaPreferida: "Mañana",
       distanciaMaxKm: null,
     });
@@ -142,7 +153,7 @@ describe("Acceso en pantalla", () => {
 
     await fireEvent.changeText(screen.getByLabelText("Nombre"), "Laura");
     await fireEvent.changeText(screen.getByLabelText("Apellido"), "Escobar");
-    await fireEvent.changeText(screen.getByLabelText("DNI"), "30.111.222");
+    await fireEvent.changeText(screen.getByLabelText("Cédula"), "1.020.304.050");
     await fireEvent.changeText(screen.getByLabelText("Correo electrónico"), CUENTA_DEMO.email);
     await fireEvent.changeText(screen.getByLabelText("Teléfono"), "+54 11 4444 1234");
     await fireEvent.changeText(screen.getByLabelText("Contraseña"), "segura123");
@@ -166,7 +177,6 @@ describe("Acceso en pantalla", () => {
     await fireEvent.press(screen.getByRole("checkbox", { name: "Nutrición" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Tarde" }));
     await fireEvent.press(screen.getByRole("radio", { name: "3 km" }));
-    await fireEvent.changeText(screen.getByLabelText("Obra social / prepaga"), "OSDE 310");
     await fireEvent.press(screen.getByText("Continuar"));
 
     // Paso 3 — verificación

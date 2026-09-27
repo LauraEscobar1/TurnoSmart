@@ -1,5 +1,6 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { montarApp, reiniciarDatos } from "@/test-utils/app";
+import * as fotoService from "@/services/fotoService";
 
 /**
  * Flujos de punta a punta sobre el navegador real, con la sesión de la
@@ -223,8 +224,8 @@ describe("Secciones", () => {
     expect(screen.getByText("Activadas")).toBeTruthy();
 
     await fireEvent.press(screen.getByLabelText("Datos personales"));
-    expect(await screen.findByText("35.482.910")).toBeTruthy();
-    expect(screen.getByText("OSDE 310")).toBeTruthy();
+    expect(await screen.findByText("1.023.456.789")).toBeTruthy();
+    expect(screen.getByDisplayValue("Sura EPS")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Volver"));
 
     await fireEvent.press(await screen.findByText("Franja preferida"));
@@ -236,6 +237,39 @@ describe("Secciones", () => {
 
     await fireEvent.press(screen.getByText("Cerrar sesión"));
     expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
+  });
+});
+
+describe("Perfil por completar", () => {
+  it("muestra el aviso con la barra mientras falten datos opcionales y lo quita al completarlos", async () => {
+    jest.spyOn(fotoService, "elegirFotoPerfil").mockResolvedValue("file:///foto.jpg");
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("tab", { name: "Perfil" }));
+    // La cuenta demo tiene ciudad y EPS: 2 de 5 → 40 %.
+    expect(await screen.findByText("Completa tu perfil para una mejor experiencia.")).toBeTruthy();
+    expect(screen.getByText("40%")).toBeTruthy();
+
+    // Foto desde el círculo: reemplaza las iniciales.
+    await fireEvent.press(screen.getByLabelText("Subir foto de perfil"));
+    expect(await screen.findByText("60%")).toBeTruthy();
+    expect(screen.queryByText("MA")).toBeNull();
+
+    // El resto, en Datos personales.
+    await fireEvent.press(screen.getByLabelText("Datos personales"));
+    await fireEvent.changeText(await screen.findByLabelText("Fecha de nacimiento"), "31/02/1990");
+    await fireEvent.press(screen.getByText("Guardar"));
+    expect(await screen.findByText("Escríbela como DD/MM/AAAA.")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("Fecha de nacimiento"), "07/03/1990");
+    await fireEvent.changeText(screen.getByLabelText("Contacto de emergencia"), "Ana Castro");
+    await fireEvent.changeText(screen.getByLabelText("Teléfono del contacto"), "+57 300 123 4567");
+    await fireEvent.press(screen.getByText("Guardar"));
+    expect(await screen.findByText("Cambios guardados.")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Volver"));
+
+    // Completo: el aviso y la barra desaparecen.
+    await screen.findByText("Esperando tu cupo…");
+    expect(screen.queryByText("Completa tu perfil para una mejor experiencia.")).toBeNull();
+    expect(screen.queryByText(/\d+%$/)).toBeNull();
   });
 });
 
