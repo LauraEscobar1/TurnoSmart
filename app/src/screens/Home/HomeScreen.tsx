@@ -32,8 +32,9 @@ function saludo() {
 
 /**
  * Inicio — Nivel 1 (docs/02-jerarquia.md §2), como un tablero:
- *   saludo → accesos rápidos → oferta (la máxima prioridad) → próxima
- *   cita → lista de espera → avisos recientes.
+ *   saludo → oferta (la máxima prioridad) → próxima cita → lista de
+ *   espera → avisos recientes. La navegación global vive solo en la barra
+ *   inferior; cada sección ofrece únicamente sus propias acciones.
  * Cada bloque tiene un peso visual distinto (sin tarjeta, tinte, blanco,
  * lista liviana) para que no se lea como una pila de tarjetas iguales.
  */
@@ -96,15 +97,7 @@ export function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* 2. Accesos rápidos */}
-        <View style={styles.accesos}>
-          <Acceso icono="search-outline" texto="Buscar especialista" onPress={irA.buscar} />
-          <Acceso icono="calendar-outline" texto="Mis citas" onPress={irA.citas} />
-          <Acceso icono="people-outline" texto="Lista de espera" onPress={irA.espera} />
-          <Acceso icono="notifications-outline" texto="Avisos" onPress={irA.avisos} badge={noLeidos.length} />
-        </View>
-
-        {/* 3. Ofertas */}
+        {/* 2. Ofertas */}
         <Seccion titulo="Ofertas de cupo" accion="Ver todas" onAccion={irA.ofertas}>
           {oferta ? (
             <OfferCard
@@ -136,7 +129,7 @@ export function HomeScreen() {
           )}
         </Seccion>
 
-        {/* 4. Próxima cita */}
+        {/* 3. Próxima cita */}
         <Seccion titulo="Próxima cita" accion={proximaCita ? "Ver citas" : undefined} onAccion={irA.citas}>
           {proximaCita ? (
             <AppointmentCard
@@ -157,8 +150,8 @@ export function HomeScreen() {
           )}
         </Seccion>
 
-        {/* 5. Lista de espera */}
-        <Seccion titulo="Tu lista de espera">
+        {/* 4. Lista de espera */}
+        <Seccion titulo="Tu lista de espera" accion="Sumar especialidad" onAccion={irA.buscar}>
           <ListaEspera
             puesto={paciente.puestoEspera}
             dias={diasEnEspera(paciente.registradoEnISO)}
@@ -166,7 +159,7 @@ export function HomeScreen() {
           />
         </Seccion>
 
-        {/* 6. Avisos recientes */}
+        {/* 5. Avisos recientes */}
         <Seccion titulo="Avisos recientes" accion={noLeidos.length ? "Ver todos" : undefined} onAccion={irA.avisos}>
           <Card style={styles.avisos}>
             {noLeidos.length ? (
@@ -236,38 +229,6 @@ function Seccion({
       </View>
       {children}
     </View>
-  );
-}
-
-function Acceso({
-  icono,
-  texto,
-  onPress,
-  badge,
-}: {
-  icono: keyof typeof Ionicons.glyphMap;
-  texto: string;
-  onPress: () => void;
-  badge?: number;
-}) {
-  return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={texto} style={styles.acceso}>
-      {({ pressed }) => (
-        <>
-          <View style={[styles.accesoIcono, pressed && styles.accesoPresionado]}>
-            <Ionicons name={icono} size={22} color={colors.accent700} />
-            {badge ? (
-              <View style={styles.accesoBadge}>
-                <Text style={styles.accesoBadgeTexto}>{badge}</Text>
-              </View>
-            ) : null}
-          </View>
-          <Text style={styles.accesoTexto} numberOfLines={2}>
-            {texto}
-          </Text>
-        </>
-      )}
-    </Pressable>
   );
 }
 
@@ -350,56 +311,6 @@ const styles = StyleSheet.create({
     borderColor: colors.borde,
     alignItems: "center",
     justifyContent: "center",
-  },
-  // Accesos rápidos
-  accesos: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: -6,
-  },
-  acceso: {
-    width: "23%",
-    alignItems: "center",
-    gap: 8,
-  },
-  accesoIcono: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
-    backgroundColor: colors.superficie,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  accesoPresionado: {
-    backgroundColor: colors.accent100,
-  },
-  accesoBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 4,
-    borderRadius: 9,
-    backgroundColor: colors.accent,
-    borderWidth: 2,
-    borderColor: colors.fondo,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  accesoBadgeTexto: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 9,
-    color: "#ffffff",
-  },
-  accesoTexto: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    lineHeight: 15,
-    color: colors.accent900,
-    textAlign: "center",
   },
   // Secciones
   seccion: {

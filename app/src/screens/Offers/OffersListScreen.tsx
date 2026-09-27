@@ -34,7 +34,7 @@ export function OffersListScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Ofertas" seccion={2} />
+      <ScreenHeader title="Ofertas" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={label(10)}>Pendiente de respuesta · {pendiente ? 1 : 0}</Text>
         {pendiente ? (

@@ -52,7 +52,7 @@ export function NotificationsScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
-      <ScreenHeader title="Notificaciones" seccion={4} />
+      <ScreenHeader title="Notificaciones" />
       <FlatList
         contentContainerStyle={styles.content}
         data={items}
