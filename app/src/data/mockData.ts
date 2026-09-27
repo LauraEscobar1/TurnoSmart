@@ -35,16 +35,17 @@ export const pacienteDemo: Paciente = {
   id: "p-001",
   nombre: "Martín",
   apellido: "Ávila",
-  dni: "35482910",
+  cedula: "1023456789",
   email: CUENTA_DEMO.email,
   telefono: "+54 11 5555 0192",
   especialidadesInteres: ["Cardiología", "Dermatología"],
   franjaPreferida: "Tarde",
   distanciaMaxKm: 10,
-  obraSocial: "OSDE 310",
   notificacionesActivas: true,
   registradoEnISO: new Date(Date.now() - 34 * DIA).toISOString(),
   puestoEspera: 3,
+  ciudad: "Bogotá",
+  eps: "Sura EPS",
 };
 
 const ofertaActivaISO = new Date(Date.now() + 90 * MIN).toISOString();
