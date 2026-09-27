@@ -14,7 +14,7 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-const AVISO_CUPO = /^Cardiología hoy \d\d:\d\d$/;
+const AVISO_CUPO = "Ver oferta";
 
 describe("Home", () => {
   it("tablero: saludo, oferta, próxima cita, lista de espera, avisos y una sola barra de navegación", async () => {
@@ -33,11 +33,11 @@ describe("Home", () => {
     expect(screen.getByText("Confirmada")).toBeTruthy();
     // Lista de espera: puesto 3 → 2 personas antes.
     expect(screen.getByText("2 personas antes que vos. Te avisamos cuando se libere un cupo.")).toBeTruthy();
-    // Avisos recientes: los 2 sin leer.
-    expect(screen.getByText("Avisos recientes")).toBeTruthy();
-    expect(screen.getByText("Consultorio 1C, planta baja.")).toBeTruthy();
+    // Notificaciones recientes: las 2 sin leer.
+    expect(screen.getByText("Notificaciones recientes")).toBeTruthy();
+    expect(screen.getByText("Recordatorio de cita")).toBeTruthy();
 
-    for (const tab of ["Inicio", "Ofertas", "Mis citas", "Avisos", "Perfil"]) {
+    for (const tab of ["Inicio", "Ofertas", "Mis citas", "Notificaciones", "Perfil"]) {
       expect(screen.getByRole("tab", { name: tab })).toBeTruthy();
     }
     expect(screen.getByRole("tab", { name: "Inicio", selected: true })).toBeTruthy();
@@ -91,7 +91,7 @@ describe("Ruta crítica · 2 toques", () => {
 
   it("el aviso abre el detalle y el back va a Home", async () => {
     await montarApp();
-    await fireEvent.press(await screen.findByRole("tab", { name: "Avisos" }));
+    await fireEvent.press(await screen.findByRole("tab", { name: "Notificaciones" }));
     await fireEvent.press(await screen.findByText(AVISO_CUPO));
     expect(await screen.findByText("Tiempo para responder")).toBeTruthy();
 
@@ -177,40 +177,39 @@ describe("Secciones", () => {
     expect(await screen.findByText("Asistida")).toBeTruthy();
   });
 
-  it("Avisos: bandeja agrupada por día, filtros y marcar todo como leído", async () => {
+  it("Notificaciones: bandeja cronológica con un solo filtro y mensajes breves", async () => {
     await montarApp();
-    await fireEvent.press(await screen.findByRole("tab", { name: "Avisos" }));
-    expect(await screen.findByText("Notificaciones")).toBeTruthy();
-    // Grupos por día y marca de tiempo por aviso.
-    expect(screen.getByText("Hoy")).toBeTruthy();
-    expect(screen.getByText("Ayer")).toBeTruthy();
-    expect(screen.getByText("Cupo disponible")).toBeTruthy();
-    expect(screen.getByText("Ahora")).toBeTruthy();
+    await fireEvent.press(await screen.findByRole("tab", { name: "Notificaciones" }));
+    expect(await screen.findByText("Marcar todo como leído")).toBeTruthy();
+    // Solo el filtro «Todas»: sin categorías.
+    expect(screen.getByText("Todas")).toBeTruthy();
+    expect(screen.queryByText("Citas")).toBeNull();
+    // Grupos cronológicos.
+    for (const grupo of ["Hoy", "Ayer", "Esta semana", "Anteriores"]) expect(screen.getByText(grupo)).toBeTruthy();
+    // La notificación es un mensaje, no la ficha del destino.
     expect(screen.getByText("Recordatorio de cita")).toBeTruthy();
+    expect(
+      screen.getByText(/^Hola, Martín\. Te recordamos que el .+ tienes una cita de Dermatología a las \d\d:\d\d con el Dr\. J\. Peralta, en el consultorio 1C\.$/)
+    ).toBeTruthy();
+    expect(screen.getByText(/^Hola, Martín\. Tenemos un cupo disponible que podría interesarte en Cardiología\./)).toBeTruthy();
     expect(screen.getByText(/^Ayer · \d\d:\d\d$/)).toBeTruthy();
-    expect(screen.getByText("Cupo aceptado · Nutrición")).toBeTruthy();
+    expect(screen.queryByText("Tiempo para responder")).toBeNull();
 
-    // Filtro Citas: solo el recordatorio.
-    await fireEvent.press(screen.getByRole("button", { name: "Citas" }));
-    expect(screen.getByText("Recordatorio de cita")).toBeTruthy();
-    expect(screen.queryByText("Cupo disponible")).toBeNull();
-    // Filtro Ofertas: sin el recordatorio.
-    await fireEvent.press(screen.getByRole("button", { name: "Ofertas" }));
-    expect(screen.getByText("Cupo disponible")).toBeTruthy();
-    expect(screen.queryByText("Recordatorio de cita")).toBeNull();
-    await fireEvent.press(screen.getByRole("button", { name: "Todas" }));
+    // Tocar el cupo solo lo marca como leído; el destino se abre con «Ver oferta».
+    await fireEvent.press(screen.getByText("Cupo disponible"));
+    expect(screen.queryByText("Tiempo para responder")).toBeNull();
+    expect(await screen.findAllByLabelText(/^Sin leer\./)).toHaveLength(1);
 
-    // Marcar todo como leído: desaparecen los «sin leer» y la acción.
-    expect(screen.getAllByLabelText(/^Sin leer\./)).toHaveLength(2);
+    // Marcar todo como leído.
     await fireEvent.press(screen.getByText("Marcar todo como leído"));
-    expect(await screen.findAllByLabelText(/^Cupo disponible\./)).toHaveLength(1);
+    await screen.findAllByLabelText(/^Cupo disponible\./);
     expect(screen.queryAllByLabelText(/^Sin leer\./)).toHaveLength(0);
     expect(screen.queryByText("Marcar todo como leído")).toBeNull();
   });
 
-  it("Avisos: el recordatorio abre el detalle de la cita", async () => {
+  it("Notificaciones: el recordatorio abre el detalle de la cita", async () => {
     await montarApp();
-    await fireEvent.press(await screen.findByRole("tab", { name: "Avisos" }));
+    await fireEvent.press(await screen.findByRole("tab", { name: "Notificaciones" }));
     await fireEvent.press(await screen.findByText("Recordatorio de cita"));
     expect(await screen.findByText("Especialista")).toBeTruthy();
     expect(screen.getByText("Cons. 1C")).toBeTruthy();
@@ -253,7 +252,7 @@ describe("Regresiones", () => {
     expect(screen.getByTestId("badge-Ofertas")).toHaveTextContent("1");
     expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("1");
 
-    await fireEvent.press(screen.getByRole("tab", { name: "Avisos" }));
+    await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
     await fireEvent.press(await screen.findByText(AVISO_CUPO));
     expect(await screen.findByText("Ya aceptaste esta oferta")).toBeTruthy();
     expect(screen.queryByText("Este cupo ya se ofreció a otro paciente.")).toBeNull();
@@ -261,7 +260,7 @@ describe("Regresiones", () => {
 
   it("el badge de Avisos baja al leer el aviso", async () => {
     await montarApp();
-    await fireEvent.press(await screen.findByRole("tab", { name: "Avisos" }));
+    await fireEvent.press(await screen.findByRole("tab", { name: "Notificaciones" }));
     expect(screen.getByTestId("badge-Notificaciones")).toHaveTextContent("2");
 
     await fireEvent.press(await screen.findByText(AVISO_CUPO));
@@ -302,11 +301,13 @@ describe("Inicio: acciones de cada sección", () => {
     expect(await screen.findByText("Sin ofertas por ahora")).toBeTruthy();
     expect(screen.getByText(/Alertas activas · 2 especialidades/)).toBeTruthy();
     // Queda el recordatorio sin leer; al leerlo, el Inicio queda «Todo al día».
-    await fireEvent.press(screen.getByText("Consultorio 1C, planta baja."));
-    await fireEvent.press(await screen.findByText(/^Dermatología · /));
+    await fireEvent.press(screen.getByText("Recordatorio de cita"));
+    // En la bandeja, tocar el recordatorio lo lee y abre la cita.
+    await fireEvent.press(await screen.findByText("Recordatorio de cita"));
+    await screen.findByText("Especialista");
     await fireEvent.press(screen.getByRole("tab", { name: "Inicio" }));
     expect(await screen.findByText("Todo al día")).toBeTruthy();
-    expect(screen.getByText("No tenés nuevos avisos.")).toBeTruthy();
+    expect(screen.getByText("No tenés notificaciones nuevas.")).toBeTruthy();
   });
 });
 
