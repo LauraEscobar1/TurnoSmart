@@ -25,7 +25,7 @@ export type RootTabParamList = {
   Ofertas: undefined;
   MisCitas: NavigatorScreenParams<AppointmentsStackParamList> | undefined;
   Notificaciones: undefined;
-  Perfil: undefined;
+  Perfil: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
 export type OffersStackParamList = {
@@ -54,4 +54,5 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList> | undefined;
   OfferDetail: { ofertaId: string };
   OfferConfirmation: { ofertaId: string; resultado: "aceptada" | "rechazada" };
+  BuscarEspecialista: undefined;
 };
