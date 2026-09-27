@@ -66,7 +66,7 @@ export function RegistroDatosScreen({ navigation }: Props) {
         <TextField label="Nombre" autoComplete="given-name" textContentType="givenName" style={styles.half} {...campo("nombre")} />
         <TextField label="Apellido" autoComplete="family-name" textContentType="familyName" style={styles.half} {...campo("apellido")} />
       </View>
-      <TextField label="DNI" keyboardType="number-pad" {...campo("dni")} />
+      <TextField label="Cédula" keyboardType="number-pad" {...campo("cedula")} />
       <TextField
         label="Correo electrónico"
         keyboardType="email-address"
