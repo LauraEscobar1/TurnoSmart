@@ -10,3 +10,7 @@ web-build/
 *.key
 *.mobileprovision
 *.orig.*
+
+# Variables de entorno locales (claves): nunca al repositorio.
+.env
+.env*.local
