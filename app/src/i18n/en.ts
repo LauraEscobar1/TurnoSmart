@@ -198,6 +198,12 @@ export const en: Diccionario = {
       "Tu especialidad": "Your specialty",
       "Horario preferido": "Preferred time",
       "Distancia al consultorio": "Distance to the office",
+      Disponibilidad: "Availability",
+      Compatibilidad: "Compatibility",
+      "Alertas activas": "Alerts on",
+      Alta: "High",
+      Media: "Medium",
+      Baja: "Low",
     },
     especialidades: {
       Cardiología: "Cardiology",
