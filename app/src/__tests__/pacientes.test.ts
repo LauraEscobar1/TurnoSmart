@@ -15,7 +15,9 @@ import {
   idUsuarioFalso,
   insertsIntentados,
   registrarUsuarioFalso,
+  idEspecialidadFalsa,
   simularPacientesCaido,
+  tablaFalsa,
 } from "@/test-utils/supabaseFalso";
 
 beforeEach(async () => {
@@ -171,7 +173,7 @@ describe("Perfil del paciente: metadata → local → pacientes", () => {
     expect(p.email).toBe(CUENTA_DEMO.email);
   });
 
-  it("foto, especialidades y puesto quedan locales; lo demás se guarda en la base", async () => {
+  it("la foto queda local; especialidades y puesto vienen de la lista de espera real; lo demás, de pacientes", async () => {
     await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
     const id = idUsuarioFalso(CUENTA_DEMO.email)!;
     await auth.actualizarPaciente(CUENTA_DEMO.email, {
@@ -185,17 +187,26 @@ describe("Perfil del paciente: metadata → local → pacientes", () => {
 
     const fila = filaPacienteFalsa(id)!;
     expect(fila).toMatchObject({ ciudad: "Cali", franja_preferida: "Mañana", notificaciones_activas: false });
+    // Las especialidades van a solicitudes_espera: Pediatría entra, Dermatología queda retirada (historial).
+    const solicitudes = tablaFalsa("solicitudes_espera").filter((s) => s.paciente_id === id);
+    expect(solicitudes.filter((s) => s.estado === "activa").map((s) => s.especialidad_id).sort()).toEqual(
+      [idEspecialidadFalsa("Cardiología"), idEspecialidadFalsa("Pediatría")].sort()
+    );
+    expect(solicitudes.find((s) => s.especialidad_id === idEspecialidadFalsa("Dermatología"))).toMatchObject({
+      estado: "retirada",
+    });
     expect(Object.keys(fila)).not.toEqual(expect.arrayContaining(["foto_path"]));
     expect(JSON.stringify(fila)).not.toContain("file:///foto.jpg");
     expect(JSON.stringify(fila)).not.toContain("Pediatría");
 
-    // Al volver a entrar, los campos locales siguen ahí y los de la base vienen de la base.
+    // Al volver a entrar, la foto sigue local y lo demás viene de la base. El
+    // puesto (5, pedido desde la app) se ignora: en Pediatría no espera nadie → 1.
     await auth.cerrarSesion();
     const p = await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
     expect(p).toMatchObject({
       fotoUri: "file:///foto.jpg",
       especialidadesInteres: ["Cardiología", "Pediatría"],
-      puestoEspera: 5,
+      puestoEspera: 1,
       ciudad: "Cali",
       franjaPreferida: "Mañana",
       notificacionesActivas: false,

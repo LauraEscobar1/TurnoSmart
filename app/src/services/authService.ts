@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { DistanciaMaxima, FranjaHoraria, Paciente } from "@/types/domain";
 import { getSupabase } from "@/services/supabaseClient";
 import { actualizarPacienteRemoto, getPacienteRemoto, PacienteRemoto } from "@/services/pacientesService";
+import { getResumenListaEspera, ResumenListaEspera, sincronizarListaEspera } from "@/services/solicitudesEsperaService";
 import { tr } from "@/i18n";
 
 /**
@@ -13,8 +14,9 @@ import { tr } from "@/i18n";
  * - El perfil del paciente se arma en capas: `user_metadata` → perfil local
  *   (`ts.perfiles`, por id de usuario, sin contraseña) → fila de
  *   `public.pacientes` (pacientesService), que gana en las columnas que
- *   tiene. Lo que aún no está en la base (foto, especialidades en espera,
- *   puesto en la lista) sigue solo en el perfil local.
+ *   tiene. La lista de espera viene de `solicitudes_espera`: especialidades
+ *   activas, puesto real y días en espera (desde la solicitud más antigua).
+ *   La foto sigue solo en el perfil local (Storage llegará después).
  * - La fila de `public.pacientes` la crea la base al registrarse (trigger
  *   sobre `auth.users`, supabase/migrations), con el mismo id del usuario
  *   de Auth y a partir de `options.data`. La app nunca inserta en `pacientes`.
@@ -119,9 +121,30 @@ async function leerPacienteRemoto(id: string): Promise<PacienteRemoto | null> {
   }
 }
 
+/** Lista de espera del usuario; si falla la lectura (p. ej. sin red), sigue sin ella. */
+async function leerListaEspera(id: string): Promise<ResumenListaEspera | null> {
+  try {
+    return await getResumenListaEspera(id);
+  } catch (e) {
+    console.warn(`[lista de espera] No se pudo leer de Supabase; se usa el perfil local. ${String(e)}`);
+    return null;
+  }
+}
+
+/** Campos de `Paciente` que salen de la lista de espera real. */
+function camposListaEspera(lista: ResumenListaEspera | null): Partial<Paciente> {
+  if (!lista) return {};
+  return {
+    especialidadesInteres: lista.especialidades,
+    ...(lista.puesto !== null ? { puestoEspera: lista.puesto } : {}),
+    ...(lista.desdeISO ? { registradoEnISO: lista.desdeISO } : {}),
+  };
+}
+
 /**
  * Paciente de la app a partir del usuario de Auth: `user_metadata`, luego el
- * perfil local y, encima, la fila de `public.pacientes` si existe.
+ * perfil local y, encima, la fila de `public.pacientes` y la lista de espera
+ * de `solicitudes_espera` si se pudieron leer.
  */
 async function pacienteDeUsuario(user: User): Promise<Paciente> {
   const m: Metadatos = user.user_metadata ?? {};
@@ -129,7 +152,7 @@ async function pacienteDeUsuario(user: User): Promise<Paciente> {
   const perfiles = await leerMapa(KEY_PERFILES);
   // Primer ingreso con Supabase: se rescata el perfil de la versión local, si había.
   const local: Partial<Paciente> = perfiles[user.id] ?? (await leerMapa(KEY_PERFILES_LEGADO))[email] ?? {};
-  const remoto = await leerPacienteRemoto(user.id);
+  const [remoto, lista] = await Promise.all([leerPacienteRemoto(user.id), leerListaEspera(user.id)]);
   const especialidades = m.especialidadesInteres;
   const paciente: Paciente = {
     nombre: texto(m, "nombre") ?? "",
@@ -150,6 +173,7 @@ async function pacienteDeUsuario(user: User): Promise<Paciente> {
     ...local,
     // La base gana en las columnas que tiene (un NULL borra el valor local).
     ...remoto,
+    ...camposListaEspera(lista),
     id: user.id,
     email,
   };
@@ -372,9 +396,10 @@ export async function crearCuenta(
 
 /**
  * Actualiza preferencias u otros datos del paciente con sesión abierta. Las
- * columnas de `public.pacientes` se guardan en Supabase; el perfil local se
- * guarda siempre (tiene además la foto, las especialidades y el puesto). Si
- * Supabase falla (p. ej. sin red), el cambio queda en el teléfono.
+ * columnas de `public.pacientes` se guardan en Supabase y las especialidades
+ * se sincronizan con la lista de espera (`solicitudes_espera`); el perfil
+ * local se guarda siempre (tiene además la foto). Si Supabase falla (p. ej.
+ * sin red), el cambio queda en el teléfono.
  */
 export async function actualizarPaciente(email: string, cambios: Partial<Paciente>): Promise<Paciente> {
   const perfiles = await leerMapa(KEY_PERFILES);
@@ -385,7 +410,16 @@ export async function actualizarPaciente(email: string, cambios: Partial<Pacient
   } catch (e) {
     console.warn(`[pacientes] No se pudo guardar el perfil en Supabase; queda en el teléfono. ${String(e)}`);
   }
-  const paciente: Paciente = { ...actual, ...cambios, email: actual.email, id: actual.id };
+  let lista: ResumenListaEspera | null = null;
+  if (cambios.especialidadesInteres) {
+    try {
+      await sincronizarListaEspera(cambios.especialidadesInteres);
+      lista = await getResumenListaEspera(actual.id);
+    } catch (e) {
+      console.warn(`[lista de espera] No se pudo actualizar en Supabase; queda en el teléfono. ${String(e)}`);
+    }
+  }
+  const paciente: Paciente = { ...actual, ...cambios, ...camposListaEspera(lista), email: actual.email, id: actual.id };
   await guardarPerfil(paciente);
   return paciente;
 }
