@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius, sombra } from "@/theme/spacing";
 import { fonts, heading } from "@/theme/typography";
 import { claveDia, useFormato } from "@/utils/format";
@@ -26,6 +27,8 @@ const PASO = ANCHO + SEPARACION;
  * semana, para que se entienda que el calendario se desplaza.
  */
 export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasPorDia = {} }: CalendarioHorizontalProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { diaSemanaCorto, fechaLarga, mesYAnio } = useFormato();
   const scrollRef = useRef<ScrollView>(null);
@@ -103,14 +106,14 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
                 pressed && !activo && styles.capsulaPresionada,
               ]}
             >
-              <Text style={[styles.diaSemana, { color: activo ? "rgba(255,255,255,0.85)" : colors.neutral600 }]}>
+              <Text style={[styles.diaSemana, activo ? { color: colors.sobreAcento, opacity: 0.85 } : { color: colors.neutral600 }]}>
                 {diaSemanaCorto(d)}
               </Text>
-              <Text style={[styles.numero, { color: activo ? "#ffffff" : colors.accent900 }]}>{d.getDate()}</Text>
+              <Text style={[styles.numero, { color: activo ? colors.sobreAcento : colors.accent900 }]}>{d.getDate()}</Text>
               <View
                 style={[
                   styles.punto,
-                  { backgroundColor: cantidad ? (activo ? "#ffffff" : colors.accent) : "transparent" },
+                  { backgroundColor: cantidad ? (activo ? colors.sobreAcento : colors.accent) : "transparent" },
                 ]}
               />
             </Pressable>
@@ -121,7 +124,8 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   cabecera: {
     flexDirection: "row",
     alignItems: "center",

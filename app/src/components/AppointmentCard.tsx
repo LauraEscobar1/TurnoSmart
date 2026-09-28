@@ -2,7 +2,8 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Cita } from "@/types/domain";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
@@ -37,6 +38,8 @@ interface AppointmentCardProps {
  *   especialidad + hora → profesional → consultorio → estado.
  */
 export function AppointmentCard({ cita, onPress, past, compact, conFecha }: AppointmentCardProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { diaRelativo, diaSemanaCorto, fechaCorta, mes } = useFormato();
@@ -54,7 +57,7 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
           <Text style={label(9, colors.accent700)}>{mes(cita.fechaHoraISO)}</Text>
         </View>
         <View style={styles.info}>
-          <Text style={heading(17)} numberOfLines={1}>
+          <Text style={heading(17, colors.text)} numberOfLines={1}>
             {especialidad} · {hora(cita.fechaHoraISO)}
           </Text>
           <Text style={body(12, colors.neutral700)} numberOfLines={1}>
@@ -109,7 +112,8 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   card: {
     padding: 14,
     flexDirection: "row",

@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading, label } from "@/theme/typography";
 import { Clave, useDato, useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -35,6 +36,8 @@ const PASOS: { titulo: Clave; texto: Clave; Figura: () => React.JSX.Element }[] 
 ];
 
 export function IntroScreen({ navigation }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { width } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
@@ -77,7 +80,7 @@ export function IntroScreen({ navigation }: Props) {
             <View style={styles.figura}>
               <Figura />
             </View>
-            <Text style={[heading(28), styles.center]}>{t(titulo)}</Text>
+            <Text style={[heading(28, colors.text), styles.center]}>{t(titulo)}</Text>
             <Text style={[body(14, colors.neutral700), styles.center, styles.texto]}>{t(texto)}</Text>
           </View>
         ))}
@@ -98,6 +101,8 @@ export function IntroScreen({ navigation }: Props) {
 }
 
 function FiguraOferta() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   return (
@@ -119,6 +124,7 @@ function FiguraOferta() {
 }
 
 function FiguraExplicacion() {
+  const styles = useEstilos(crearStyles);
   return (
     <Card style={styles.panel}>
       <ExplainabilityPanel
@@ -133,19 +139,22 @@ function FiguraExplicacion() {
 }
 
 function FiguraConfirmacion() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   return (
     <Card style={styles.confirmacion}>
       <View style={styles.check}>
         <Ionicons name="checkmark" size={28} color={colors.bg} />
       </View>
-      <Text style={heading(24)}>{t("confirmacion.confirmado")}</Text>
+      <Text style={heading(24, colors.text)}>{t("confirmacion.confirmado")}</Text>
       <Text style={body(13, colors.neutral700)}>{t("intro.confirmacionEjemplo")}</Text>
     </Card>
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,
@@ -197,7 +206,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.accent900,
+    backgroundColor: colors.campo,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -3,7 +3,8 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { useDato, useT } from "@/i18n";
@@ -30,6 +31,8 @@ const normalizar = (t: string) =>
  * registro y en Perfil › Preferencias, y la que usa la IA para ofrecer cupos.
  */
 export function BuscarEspecialistaScreen({ navigation }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const paciente = usePaciente();
@@ -100,7 +103,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
                 ]}
               >
                 {activa ? <Ionicons name="checkmark" size={14} color={colors.accent700} /> : null}
-                <Text style={[styles.botonTexto, { color: activa ? colors.accent700 : "#ffffff" }]}>
+                <Text style={[styles.botonTexto, { color: activa ? colors.accent700 : colors.sobreAcento }]}>
                   {t(activa ? "buscar.enEspera" : "buscar.sumarme")}
                 </Text>
               </Pressable>
@@ -115,7 +118,8 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,

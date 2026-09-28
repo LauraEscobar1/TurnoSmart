@@ -1,7 +1,8 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { sombra } from "@/theme/spacing";
 import { heading, label } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -19,6 +20,8 @@ interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({ title, onBack, accion }: ScreenHeaderProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   if (onBack) {
     return (
@@ -33,13 +36,14 @@ export function ScreenHeader({ title, onBack, accion }: ScreenHeaderProps) {
 
   return (
     <View style={[styles.bar, styles.titleBar]}>
-      <Text style={heading(28)}>{title}</Text>
+      <Text style={heading(28, colors.text)}>{title}</Text>
       {accion}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   bar: {
     paddingHorizontal: 18,
   },

@@ -2,7 +2,8 @@ import React, { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -24,6 +25,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, "RegistroVerificacion">;
  * Verifica el teléfono y pide el permiso de notificaciones.
  */
 export function RegistroVerificacionScreen({ navigation }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { datos, preferencias } = useRegistro();
   const { crearCuenta } = useAuth();
@@ -66,7 +69,7 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
     >
       <StepProgress step={3} total={3} />
       <View>
-        <Text style={heading(26)}>{t("registro.verificaTelefono")}</Text>
+        <Text style={heading(26, colors.text)}>{t("registro.verificaTelefono")}</Text>
         <Text style={[body(13, colors.neutral700), { marginTop: 4 }]}>
           {t("registro.enviamosAl", { telefono: datos.telefono })}
         </Text>
@@ -97,7 +100,8 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   error: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,

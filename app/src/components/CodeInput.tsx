@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading } from "@/theme/typography";
 import { mmss } from "@/utils/format";
 import { useT } from "@/i18n";
@@ -47,6 +48,8 @@ export function ReenviarCodigo({
   codigoPrueba: string | null;
   onReenviar: () => void;
 }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   return (
     <View style={styles.reenvio}>
@@ -75,6 +78,8 @@ interface CodeInputProps {
  * sistema puede autocompletar el código que llega por SMS.
  */
 export function CodeInput({ value, onChange, autoFocus, testID = "codigo-input" }: CodeInputProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const inputRef = useRef<TextInput>(null);
 
@@ -86,7 +91,7 @@ export function CodeInput({ value, onChange, autoFocus, testID = "codigo-input" 
     >
       {Array.from({ length: LARGO_CODIGO }, (_, i) => (
         <View key={i} style={[styles.cell, i === Math.min(value.length, LARGO_CODIGO - 1) && styles.cellActive]}>
-          <Text style={heading(24)}>{value[i] ?? ""}</Text>
+          <Text style={heading(24, colors.text)}>{value[i] ?? ""}</Text>
         </View>
       ))}
       <TextInput
@@ -106,7 +111,8 @@ export function CodeInput({ value, onChange, autoFocus, testID = "codigo-input" 
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   reenvio: {
     gap: 6,
   },
@@ -120,7 +126,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.md,
     backgroundColor: colors.superficie,
-    borderColor: "rgba(29,45,61,0.16)",
+    borderColor: colors.bordeCampo,
     alignItems: "center",
     justifyContent: "center",
   },

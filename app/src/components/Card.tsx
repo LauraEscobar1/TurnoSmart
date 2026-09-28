@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius, sombra } from "@/theme/spacing";
 
 interface CardProps {
@@ -31,6 +32,7 @@ export function Card({
   accessibilityRole,
   accessibilityLabel,
 }: CardProps) {
+  const styles = useEstilos(crearStyles);
   const cardStyle = [styles.base, styles[tono], style];
 
   if (onPress) {
@@ -51,7 +53,8 @@ export function Card({
   return <View style={cardStyle}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   base: {
     borderRadius: radius.lg,
     borderWidth: 1,

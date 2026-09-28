@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { StatusBar } from "expo-status-bar";
 import * as NativeSplash from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -44,7 +43,6 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
       <AjustesProvider>
         <AuthProvider>
           <Main />

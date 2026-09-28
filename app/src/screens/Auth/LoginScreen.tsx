@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as LocalAuthentication from "expo-local-authentication";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -18,6 +19,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 /** Acceso — Iniciar sesión: marca centrada, correo, contraseña y Face ID. */
 export function LoginScreen({ navigation, route }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const { iniciarSesion, iniciarSesionBiometrica } = useAuth();
   const [email, setEmail] = useState("");
@@ -87,7 +90,7 @@ export function LoginScreen({ navigation, route }: Props) {
     >
       <View style={styles.marca}>
         <Logo size={52} wordmark />
-        <Text style={[heading(24), styles.center, styles.titulo]}>{t("login.titulo")}</Text>
+        <Text style={[heading(24, colors.text), styles.center, styles.titulo]}>{t("login.titulo")}</Text>
         <Text style={[body(13, colors.neutral700), styles.center]}>{t("login.bajada")}</Text>
       </View>
 
@@ -129,7 +132,8 @@ export function LoginScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   marca: {
     alignItems: "center",
     paddingTop: 12,

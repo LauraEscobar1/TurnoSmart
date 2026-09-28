@@ -5,7 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
@@ -45,6 +46,8 @@ const PASOS: Clave[] = ["ofertas.pasos.uno", "ofertas.pasos.dos", "ofertas.pasos
  *   3. «¿Cómo funcionan las ofertas?», colapsable, para quien recién empieza.
  */
 export function OffersListScreen() {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const navigation = useNavigation<Nav>();
   const [pendientes, setPendientes] = useState<OfertaCupo[]>([]);
@@ -179,6 +182,8 @@ export function OffersListScreen() {
 
 /** Una línea por oferta resuelta: ya no requieren acción, así que ocupan poco. */
 function FilaHistorial({ oferta, divisor }: { oferta: OfertaCupo; divisor: boolean }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { fechaCorta } = useFormato();
@@ -186,7 +191,7 @@ function FilaHistorial({ oferta, divisor }: { oferta: OfertaCupo; divisor: boole
   return (
     <View style={[styles.fila, divisor && styles.filaDivisor]}>
       <View style={[styles.filaIcono, oferta.estado === "aceptada" && styles.filaIconoAceptada]}>
-        <Ionicons name={e.icono} size={14} color={oferta.estado === "aceptada" ? "#ffffff" : colors.neutral600} />
+        <Ionicons name={e.icono} size={14} color={oferta.estado === "aceptada" ? colors.sobreCampo : colors.neutral600} />
       </View>
       <View style={styles.flex}>
         <Text style={heading(16, colors.accent900)} numberOfLines={1}>
@@ -201,7 +206,8 @@ function FilaHistorial({ oferta, divisor }: { oferta: OfertaCupo; divisor: boole
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,
@@ -236,7 +242,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: radius.lg,
-    backgroundColor: colors.accent900,
+    backgroundColor: colors.campo,
   },
   avisoIcono: {
     width: 32,
@@ -250,7 +256,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: "#ffffff",
+    color: colors.sobreCampo,
   },
   // Vacío
   vacio: {
@@ -278,8 +284,8 @@ const styles = StyleSheet.create({
     borderColor: colors.borde,
   },
   filtroActivo: {
-    backgroundColor: colors.accent900,
-    borderColor: colors.accent900,
+    backgroundColor: colors.campo,
+    borderColor: colors.campo,
   },
   filtroTexto: {
     fontFamily: fonts.bodyMedium,
@@ -287,7 +293,7 @@ const styles = StyleSheet.create({
     color: colors.neutral700,
   },
   filtroTextoActivo: {
-    color: "#ffffff",
+    color: colors.sobreCampo,
   },
   lista: {
     paddingHorizontal: 14,
@@ -315,7 +321,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   filaIconoAceptada: {
-    backgroundColor: colors.accent900,
+    backgroundColor: colors.campo,
   },
   // Ayuda
   ayuda: {

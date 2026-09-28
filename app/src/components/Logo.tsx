@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import { colors } from "@/theme/colors";
+import { useTema } from "@/theme/Tema";
 import { heading } from "@/theme/typography";
 
 interface LogoProps {
@@ -39,12 +39,15 @@ export const LOGO_TRAZOS = {
 
 export function Logo({
   size = 56,
-  color = colors.accent900,
-  acento = colors.accent,
+  color,
+  acento,
   wordmark = false,
   disposicion = "vertical",
   tagline,
 }: LogoProps) {
+  const { colors } = useTema();
+  color ??= colors.accent900;
+  acento ??= colors.accent;
   const { x, y, w, h } = LOGO_VIEWBOX;
   const t = LOGO_TRAZOS;
   const horizontal = disposicion === "horizontal";

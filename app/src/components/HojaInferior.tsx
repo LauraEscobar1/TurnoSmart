@@ -1,7 +1,8 @@
 import React from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -19,6 +20,8 @@ interface HojaInferiorProps {
  * (confirmar una cancelación, elegir un horario). Tocar el fondo la cierra.
  */
 export function HojaInferior({ visible, onCerrar, titulo, descripcion, children }: HojaInferiorProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const insets = useSafeAreaInsets();
   const t = useT();
   return (
@@ -36,14 +39,15 @@ export function HojaInferior({ visible, onCerrar, titulo, descripcion, children 
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   contenedor: {
     flex: 1,
     justifyContent: "flex-end",
   },
   fondo: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(29,45,61,0.45)",
+    backgroundColor: colors.velo,
   },
   hoja: {
     paddingTop: 10,

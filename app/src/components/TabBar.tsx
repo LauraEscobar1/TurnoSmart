@@ -3,7 +3,8 @@ import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { RootTabParamList } from "@/navigation/types";
@@ -43,6 +44,8 @@ export function TabBar({
   position,
   badges = {},
 }: MaterialTopTabBarProps & { badges?: TabBadges }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const insets = useSafeAreaInsets();
   const [width, setWidth] = useState(0);
   const count = state.routes.length;
@@ -135,7 +138,8 @@ export function TabBar({
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   bar: {
     borderTopWidth: 1,
     borderTopColor: colors.borde,
@@ -158,7 +162,7 @@ const styles = StyleSheet.create({
     left: 6,
     right: 6,
     borderRadius: radius.md + 2,
-    backgroundColor: colors.accent900,
+    backgroundColor: colors.campo,
   },
   cell: {
     flex: 1,
