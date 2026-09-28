@@ -3,9 +3,10 @@ import { CUENTA_DEMO, pacienteDemo } from "@/data/mockData";
 /**
  * Supabase falso, en memoria, para las pruebas (reemplaza a
  * src/services/supabaseClient.ts en jest.setup.js). Imita solo lo que usa
- * authService: Auth (correo + contraseña, códigos de recuperación, sesión,
- * confirmación de correo opcional) y el trigger de la base que crea la
- * fila de `pacientes` al registrarse. No toca la red.
+ * la app: Auth (correo + contraseña, códigos de recuperación, sesión,
+ * confirmación de correo opcional), el trigger de la base que crea la fila
+ * de `pacientes` al registrarse, y la lectura/actualización de esa fila con
+ * las mismas reglas que RLS (cada paciente, solo la suya). No toca la red.
  */
 interface UsuarioFalso {
   id: string;
@@ -31,6 +32,10 @@ let pedirConfirmacion = false;
 export let pacientesCreados: Record<string, unknown>[] = [];
 /** Tablas que la app intentó usar directamente con `from(...)`. */
 export let tablasConsultadas: string[] = [];
+/** Tablas en las que la app intentó un INSERT (en `pacientes` lo hace solo el trigger). */
+export let insertsIntentados: string[] = [];
+/** Simula que Supabase no responde (p. ej. sin red) al leer o escribir `pacientes`. */
+let pacientesCaido = false;
 
 function emitir(evento: Evento) {
   oyentes.forEach((o) => o(evento, sesion));
@@ -83,10 +88,35 @@ export function reiniciarSupabaseFalso() {
   pedirConfirmacion = false;
   pacientesCreados = [];
   tablasConsultadas = [];
+  insertsIntentados = [];
+  pacientesCaido = false;
   const { id: _id, email: _email, registradoEnISO, ...perfil } = pacienteDemo;
-  crearUsuario(CUENTA_DEMO.email, CUENTA_DEMO.password, perfil, { creado: registradoEnISO });
+  const demo = crearUsuario(CUENTA_DEMO.email, CUENTA_DEMO.password, perfil, { creado: registradoEnISO });
+  // La cuenta demo ya completó ciudad y EPS en su perfil de la base.
+  const fila = demo && filaPacienteFalsa(demo.id);
+  if (fila) Object.assign(fila, { registrado_en: registradoEnISO, ciudad: pacienteDemo.ciudad, eps: pacienteDemo.eps });
 }
 reiniciarSupabaseFalso();
+
+/** La fila de `pacientes` de un usuario, tal como está en la base falsa (para preparar o revisar datos). */
+export function filaPacienteFalsa(id: string): Record<string, unknown> | undefined {
+  return pacientesCreados.find((p) => p.id === id);
+}
+
+/** Id del usuario de Auth con ese correo. */
+export function idUsuarioFalso(email: string): string | undefined {
+  return usuarios.find((u) => u.email === email)?.id;
+}
+
+/** Crea un usuario confirmado (y su fila de `pacientes`, como el trigger), sin abrir sesión. */
+export function registrarUsuarioFalso(email: string, password: string, metadata: Record<string, unknown>) {
+  return crearUsuario(email, password, metadata)?.id;
+}
+
+/** Hace que las lecturas y escrituras de `pacientes` fallen como sin conexión. */
+export function simularPacientesCaido(activo: boolean) {
+  pacientesCaido = activo;
+}
 
 /** Activa o desactiva «Confirm email» en el proyecto falso. */
 export function pedirConfirmacionDeCorreo(activo: boolean) {
@@ -175,16 +205,49 @@ const auth = {
   stopAutoRefresh() {},
 };
 
+const errorRed = { code: "", message: "TypeError: Network request failed", details: null };
+
 /**
- * La app todavía no lee ni escribe tablas: solo se registra el intento. En
- * `pacientes` el cliente no tiene INSERT (RLS), igual que en el proyecto real.
+ * `pacientes` con las reglas de RLS del proyecto real: SELECT y UPDATE solo
+ * de la fila propia (`id = auth.uid()`); sin INSERT desde el cliente (lo
+ * hace el trigger). Con RLS, una fila ajena no da error: simplemente no
+ * aparece (SELECT) o no cambia (UPDATE).
  */
 function from(tabla: string) {
   tablasConsultadas.push(tabla);
-  const rechazo = { data: null, error: { code: "42501", message: "permission denied", details: null } };
+  const propia = (columna: string, valor: unknown) =>
+    tabla === "pacientes" && columna === "id" && sesion !== null && valor === sesion.user.id
+      ? filaPacienteFalsa(sesion.user.id)
+      : undefined;
   return {
     async insert(_fila: Record<string, unknown>) {
-      return rechazo;
+      insertsIntentados.push(tabla);
+      return { data: null, error: { code: "42501", message: "permission denied", details: null } };
+    },
+    select(columnas: string) {
+      return {
+        eq(columna: string, valor: unknown) {
+          return {
+            async maybeSingle() {
+              if (pacientesCaido) return { data: null, error: errorRed };
+              const fila = propia(columna, valor);
+              if (!fila) return { data: null, error: null };
+              const lista = columnas.split(",").map((c) => c.trim());
+              return { data: Object.fromEntries(lista.map((c) => [c, fila[c] ?? null])), error: null };
+            },
+          };
+        },
+      };
+    },
+    update(cambios: Record<string, unknown>) {
+      return {
+        async eq(columna: string, valor: unknown) {
+          if (pacientesCaido) return { data: null, error: errorRed };
+          const fila = propia(columna, valor);
+          if (fila) Object.assign(fila, cambios);
+          return { data: null, error: null };
+        },
+      };
     },
   };
 }
