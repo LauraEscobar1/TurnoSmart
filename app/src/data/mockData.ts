@@ -59,7 +59,6 @@ export const ofertasMock: OfertaCupo[] = [
     fechaHoraISO: ofertaActivaISO,
     estado: "pendiente",
     expiraEnISO: new Date(Date.now() + 8 * MIN).toISOString(),
-    scorePrioridad: 0.87,
     factores: [
       { etiqueta: "Tiempo en espera", valor: "34 días", peso: 0.92 },
       { etiqueta: "Tu especialidad", valor: "Cardiología", peso: 1 },
@@ -76,7 +75,6 @@ export const ofertasMock: OfertaCupo[] = [
     fechaHoraISO: new Date(Date.now() + DIA + 3 * 60 * MIN).toISOString(),
     estado: "pendiente",
     expiraEnISO: new Date(Date.now() + 25 * MIN).toISOString(),
-    scorePrioridad: 0.79,
     factores: [
       { etiqueta: "Tu especialidad", valor: "Dermatología", peso: 1 },
       { etiqueta: "Tiempo en espera", valor: "34 días", peso: 0.92 },
@@ -92,7 +90,6 @@ export const ofertasMock: OfertaCupo[] = [
     fechaHoraISO: new Date(Date.now() - 5 * DIA).toISOString(),
     estado: "expirada",
     expiraEnISO: new Date(Date.now() - 6 * DIA).toISOString(),
-    scorePrioridad: 0.71,
     factores: [],
   },
   {
@@ -104,7 +101,6 @@ export const ofertasMock: OfertaCupo[] = [
     fechaHoraISO: new Date(Date.now() - 11 * DIA).toISOString(),
     estado: "aceptada",
     expiraEnISO: new Date(Date.now() - 12 * DIA).toISOString(),
-    scorePrioridad: 0.9,
     factores: [],
   },
   {
@@ -116,7 +112,6 @@ export const ofertasMock: OfertaCupo[] = [
     fechaHoraISO: new Date(Date.now() - 18 * DIA).toISOString(),
     estado: "rechazada",
     expiraEnISO: new Date(Date.now() - 19 * DIA).toISOString(),
-    scorePrioridad: 0.64,
     factores: [],
   },
 ];

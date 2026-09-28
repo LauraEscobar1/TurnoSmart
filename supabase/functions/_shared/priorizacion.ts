@@ -2,11 +2,15 @@
  * TurnoSmart · Priorización de candidatos para un cupo (lógica pura).
  *
  * La usan:
- *   · la Edge Function `priorizar-cupo` (estrategia determinista y respaldo
- *     cuando la IA no está configurada o falla),
+ *   · la Edge Function `priorizar-cupo`,
  *   · las pruebas de la app (el Supabase falso), para verificar exactamente
  *     la misma lógica que corre en el servidor.
- * Sin dependencias de Deno ni de Node: solo TypeScript.
+ * Sin dependencias de Deno ni de Node ni llamadas externas: solo TypeScript.
+ *
+ * Hoy la priorización es determinista. Una estrategia futura (por ejemplo,
+ * con un proveedor de IA) debe implementar `EstrategiaPriorizacion`: recibe
+ * los candidatos y devuelve el orden con su explicación, sin tocar cómo se
+ * obtienen los candidatos ni cómo se crea la oferta.
  */
 
 /** Fila de `candidatos_cupo(p_cupo_id)`. */
@@ -22,8 +26,8 @@ export interface Candidato {
   cupo_fecha_hora: string;
 }
 
+/** Claves que admite `ofertas_factores` (la base también acepta «compatibilidad» para estrategias futuras). */
 export type ClaveFactor = "tiempo-espera" | "especialidad" | "horario" | "distancia" | "disponibilidad" | "compatibilidad";
-export type NivelCompatibilidad = "alta" | "media" | "baja";
 
 /** Factor de la explicación, tal como se guarda en `ofertas_factores`. */
 export interface Factor {
@@ -74,15 +78,12 @@ export function scoreDeterminista(c: Candidato): number {
   return redondear(0.45 * s.tiempo + 0.2 * s.puesto + 0.2 * s.horario + 0.15 * s.disponibilidad);
 }
 
-const PESO_COMPATIBILIDAD: Record<NivelCompatibilidad, number> = { alta: 0.9, media: 0.6, baja: 0.3 };
-const VALOR_COMPATIBILIDAD: Record<NivelCompatibilidad, string> = { alta: "Alta", media: "Media", baja: "Baja" };
-
 /**
  * Explicación de la oferta con datos reales: máximo 4 factores, del más al
  * menos importante (siempre incluye la especialidad y el tiempo en espera). La distancia solo se explicaría con ubicaciones reales
  * (hoy no hay coordenadas del paciente), así que no se inventa.
  */
-export function factoresExplicacion(c: Candidato, compatibilidad?: NivelCompatibilidad): Factor[] {
+export function factoresExplicacion(c: Candidato): Factor[] {
   const s = senales(c);
   const factores: Factor[] = [
     { clave: "especialidad", etiqueta: "Tu especialidad", valor: c.especialidad, valor_numerico: null, peso: 1 },
@@ -110,15 +111,6 @@ export function factoresExplicacion(c: Candidato, compatibilidad?: NivelCompatib
       peso: redondear(s.disponibilidad * 0.8),
     });
   }
-  if (compatibilidad) {
-    factores.push({
-      clave: "compatibilidad",
-      etiqueta: "Compatibilidad",
-      valor: VALOR_COMPATIBILIDAD[compatibilidad],
-      valor_numerico: null,
-      peso: PESO_COMPATIBILIDAD[compatibilidad],
-    });
-  }
   // La especialidad y el tiempo en espera explican siempre la oferta; se
   // completan con los dos factores de más peso. Se muestran por peso.
   const fijos = factores.filter((f) => f.clave === "especialidad" || f.clave === "tiempo-espera");
@@ -133,46 +125,20 @@ export function priorizarDeterminista(candidatos: Candidato[]): CandidatoPrioriz
     .sort((a, b) => b.score - a.score || a.puesto - b.puesto);
 }
 
-/** Resultado de la IA: orden de los candidatos (por alias) y compatibilidad de cada uno. */
-export interface RespuestaIA {
-  orden: { alias: string; compatibilidad: NivelCompatibilidad }[];
-}
-
 /**
- * Aplica la respuesta de la IA sobre la priorización determinista. Solo
- * acepta alias conocidos (lo demás se ignora); los candidatos que la IA no
- * mencionó quedan después, en el orden determinista. El score combinado
- * mezcla la posición que eligió la IA con el score determinista.
+ * Estrategia de priorización: ordena a los candidatos de un cupo (el
+ * primero recibe la oferta) y explica cada elección con sus factores.
+ * La Edge Function solo depende de esta interfaz.
  */
-export function aplicarRespuestaIA(base: CandidatoPriorizado[], alias: string[], respuesta: RespuestaIA): CandidatoPriorizado[] {
-  const vistos = new Set<string>();
-  const elegidos: CandidatoPriorizado[] = [];
-  respuesta.orden.forEach((item, posicion) => {
-    const i = alias.indexOf(item.alias);
-    if (i < 0 || vistos.has(item.alias)) return;
-    vistos.add(item.alias);
-    const c = base[i];
-    const scoreIA = 1 - posicion / Math.max(1, respuesta.orden.length);
-    elegidos.push({
-      ...c,
-      score: redondear(0.5 * scoreIA + 0.5 * c.score),
-      factores: factoresExplicacion(c, item.compatibilidad),
-    });
-  });
-  const resto = base.filter((_, i) => !vistos.has(alias[i]));
-  return [...elegidos, ...resto];
+export interface EstrategiaPriorizacion {
+  nombre: string;
+  priorizar(candidatos: Candidato[]): Promise<CandidatoPriorizado[]>;
 }
 
-/** Datos que se envían a la IA: sin nombres, cédulas ni ids reales (solo alias y señales). */
-export function datosParaIA(base: CandidatoPriorizado[]) {
-  const alias = base.map((_, i) => `c${i + 1}`);
-  const filas = base.map((c, i) => ({
-    alias: alias[i],
-    dias_espera: c.dias_espera,
-    puesto_en_lista: c.puesto,
-    franja_preferida: c.franja_preferida,
-    alertas_activas: c.notificaciones_activas,
-    score_referencia: c.score,
-  }));
-  return { alias, filas };
-}
+/** La estrategia actual: determinista, sin servicios externos. */
+export const estrategiaDeterminista: EstrategiaPriorizacion = {
+  nombre: "determinista",
+  // Sin `async`: el módulo se comparte con las pruebas de la app y no debe
+  // requerir helpers de compilación.
+  priorizar: (candidatos) => Promise.resolve(priorizarDeterminista(candidatos)),
+};

@@ -31,11 +31,9 @@ export interface OfertaCupo {
   /** Momento en que la oferta expira y el cupo se ofrece a otro paciente. */
   expiraEnISO: string;
   /**
-   * Score de la IA (0-1) que estimó qué tan probable era que este paciente aceptara.
-   * Nunca se muestra al paciente: la interfaz muestra `factores`.
+   * Razones de la priorización, ordenadas por peso (máximo 4). El score
+   * interno con el que se priorizó nunca llega a la app.
    */
-  scorePrioridad: number;
-  /** Razones de la priorización, ordenadas por peso (máximo 4). */
   factores: FactorPrioridad[];
 }
 

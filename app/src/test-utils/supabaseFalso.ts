@@ -10,8 +10,11 @@ import { Candidato, Factor, priorizarDeterminista } from "../../../supabase/func
  *   · Las 11 tablas con las mismas reglas de RLS (cada paciente, solo lo suyo;
  *     catálogos para cualquier paciente autenticado; sin INSERT desde el cliente).
  *   · Las RPC de la app, con la misma semántica que el SQL.
- *   · La Edge Function `priorizar-cupo`, con la MISMA lógica de priorización
- *     del servidor (supabase/functions/_shared/priorizacion.ts).
+ *   · El trigger `cupos_solicitar_priorizacion` + la Edge Function
+ *     `priorizar-cupo`: cuando un cupo queda abierto, el «servidor» lo ofrece
+ *     con la MISMA lógica de priorización (supabase/functions/_shared).
+ *     Desde la app la función responde 401 (no tiene el secreto).
+ *   · `ofertas.score` no se puede leer desde la app (privilegio por columna).
  * La semilla reproduce los datos de ejemplo de la app (src/data/mockData.ts)
  * para la cuenta demo, más tres pacientes que esperan antes que ella.
  */
@@ -210,7 +213,7 @@ function sembrarDemo() {
       cupo_id: cupoId,
       paciente_id: demo.id,
       estado: o.estado,
-      score: o.scorePrioridad,
+      score: 0.8, // interno: nunca llega a la app
       expira_en: o.expiraEnISO,
       creada_en: o.expiraEnISO,
     });
@@ -254,6 +257,8 @@ export function reiniciarSupabaseFalso() {
   insertsIntentados = [];
   rpcLlamadas = [];
   cuposPriorizados = [];
+  cuposPorPriorizar = [];
+  invocacionesDesdeApp = [];
   pacientesCaido = false;
   solicitudesCaido = false;
   sinConexion = false;
@@ -537,6 +542,9 @@ function tablaCaida(tabla: string) {
   return solicitudesCaido && (tabla === "solicitudes_espera" || tabla === "especialidades");
 }
 
+/** Columnas sin privilegio SELECT para `authenticated` (migración 20260927140000). */
+const COLUMNAS_PRIVADAS: Record<string, string[]> = { ofertas: ["score"] };
+
 /** SELECT encadenable: `.eq()`, `.in()`, `.order()`, `.maybeSingle()` o `await` directo. */
 function consulta(tabla: string, columnas: string) {
   const filtros: ((f: Fila) => boolean)[] = [];
@@ -544,6 +552,10 @@ function consulta(tabla: string, columnas: string) {
   const lista = columnas.split(",").map((c) => c.trim());
   const resultado = (): Resultado<Fila[]> => {
     if (tablaCaida(tabla)) return { data: null, error: errorRed };
+    const privadas = COLUMNAS_PRIVADAS[tabla] ?? [];
+    if (lista.some((c) => c === "*" || privadas.includes(c))) {
+      return { data: null, error: errorPg("42501", `permission denied for table ${tabla}`) };
+    }
     const filas = filasVisibles(tabla).filter((f) => filtros.every((p) => p(f)));
     for (const { columna, ascendente } of [...ordenes].reverse()) {
       filas.sort((a, b) => (String(a[columna]) < String(b[columna]) ? -1 : String(a[columna]) > String(b[columna]) ? 1 : 0) * (ascendente ? 1 : -1));
@@ -646,12 +658,20 @@ function resolverAvisoCupo(ofertaId: unknown) {
     .forEach((n) => (n.leida = true));
 }
 
+/** Cupos que quedaron abiertos en la transacción: el trigger los manda a priorizar tras el commit. */
+let cuposPorPriorizar: string[] = [];
+
+function abrirCupo(cupo: Fila) {
+  cupo.estado = "abierto";
+  cuposPorPriorizar.push(String(cupo.id)); // trigger AFTER UPDATE OF estado
+}
+
 function expirarOferta(oferta: Fila) {
   if (oferta.estado !== "pendiente") return;
   oferta.estado = "expirada";
   oferta.respondida_en = new Date().toISOString();
   const cupo = cupos.find((c) => c.id === oferta.cupo_id);
-  if (cupo && cupo.estado === "ofrecido") cupo.estado = "abierto";
+  if (cupo && cupo.estado === "ofrecido") abrirCupo(cupo);
   evento(oferta.id, "expirada");
   resolverAvisoCupo(oferta.id);
   if (cupo) notificar(oferta.paciente_id, "expiracion", datosCupo(cupo), oferta.id);
@@ -783,6 +803,7 @@ const rpcs: Record<string, Rpc> = {
       motivo: "cancelacion",
       estado: "abierto",
     });
+    cuposPorPriorizar.push(id); // trigger AFTER INSERT
     return id;
   },
   reprogramar_cita(uid, { p_cita_id, p_fecha_hora }) {
@@ -848,7 +869,7 @@ const rpcs: Record<string, Rpc> = {
     oferta.estado = "rechazada";
     oferta.respondida_en = new Date().toISOString();
     const cupo = cupos.find((c) => c.id === oferta.cupo_id);
-    if (cupo && cupo.estado === "ofrecido") cupo.estado = "abierto";
+    if (cupo && cupo.estado === "ofrecido") abrirCupo(cupo);
     evento(oferta.id, "rechazada");
     resolverAvisoCupo(oferta.id);
     return oferta.cupo_id;
@@ -876,7 +897,13 @@ async function rpc(nombre: string, args: Fila = {}): Promise<Resultado<unknown>>
   if (!uid) return { data: null, error: errorPg("42501", "no_autenticado") };
   if (!filaPacienteFalsa(uid)) return { data: null, error: errorPg("P0002", "paciente_inexistente") };
   try {
-    return { data: fn(uid, args), error: null };
+    cuposPorPriorizar = [];
+    const data = fn(uid, args);
+    // «Commit»: pg_net llama a priorizar-cupo por cada cupo que quedó abierto.
+    const abiertos = cuposPorPriorizar;
+    cuposPorPriorizar = [];
+    abiertos.forEach((id) => priorizarCupo(id));
+    return { data, error: null };
   } catch (e) {
     if (e instanceof ErrorRpc) return { data: null, error: errorPg(e.codigo, e.message) };
     throw e;
@@ -890,10 +917,7 @@ async function rpc(nombre: string, args: Fila = {}): Promise<Resultado<unknown>>
 /** Llamadas a `priorizar-cupo` (por cupo), para revisar en las pruebas. */
 export let cuposPriorizados: string[] = [];
 
-/**
- * `priorizar-cupo` con la estrategia determinista del servidor (en las
- * pruebas no hay ANTHROPIC_API_KEY: la función real usa el mismo respaldo).
- */
+/** `priorizar-cupo` del servidor: la misma estrategia determinista que la función real. */
 function priorizarCupo(cupoId: string) {
   cuposPriorizados.push(cupoId);
   const candidatos = candidatosCupo(cupoId);
@@ -909,16 +933,17 @@ function priorizarCupo(cupoId: string) {
   };
 }
 
+/**
+ * Llamadas desde la app: `priorizar-cupo` exige el secreto del servidor
+ * (x-priorizar-secreto), que la app no tiene → 401, sin crear nada.
+ */
+export let invocacionesDesdeApp: string[] = [];
 const functions = {
-  async invoke(nombre: string, { body }: { body?: Fila } = {}) {
+  async invoke(nombre: string, _opciones: { body?: Fila } = {}) {
+    invocacionesDesdeApp.push(nombre);
     if (sinConexion) return { data: null, error: new Error("FunctionsFetchError: Failed to send a request to the Edge Function") };
-    if (!sesion) return { data: null, error: new Error("FunctionsHttpError: 401") };
     if (nombre !== "priorizar-cupo") return { data: null, error: new Error(`FunctionsHttpError: 404 ${nombre}`) };
-    try {
-      return { data: priorizarCupo(String(body?.cupo_id)), error: null };
-    } catch (e) {
-      return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
-    }
+    return { data: null, error: new Error("FunctionsHttpError: 401 no_autorizado") };
   },
 };
 
