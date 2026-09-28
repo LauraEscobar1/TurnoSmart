@@ -290,8 +290,8 @@ describe("Acceso en pantalla", () => {
 
     expect(await screen.findByText("Laura Escobar")).toBeTruthy();
     expect(Notifications.requestPermissionsAsync).toHaveBeenCalled();
-    // Lista de espera del paciente nuevo: puesto 12, recién sumado.
-    expect(screen.getByText("11 personas antes que vos. Te avisamos cuando se libere un cupo.")).toBeTruthy();
+    // Lista de espera real: en Nutrición no espera nadie, así que es el primero.
+    expect(screen.getByText("Sos el primero: el próximo cupo que te sirva es tuyo.")).toBeTruthy();
 
     // Lo elegido en el paso 2 aparece en Perfil.
     await fireEvent.press(screen.getByRole("tab", { name: "Perfil" }));
@@ -300,9 +300,10 @@ describe("Acceso en pantalla", () => {
     expect(screen.getByText("Tarde")).toBeTruthy();
     expect(screen.getByText("Activadas")).toBeTruthy();
 
-    // Las notificaciones saludan a la cuenta nueva, no a la cuenta demo.
+    // Cada paciente ve solo sus notificaciones: la cuenta nueva empieza sin
+    // ninguna y nunca ve las de la cuenta demo.
     await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
-    expect(await screen.findByText(/^Hola, Laura\. Tenemos un cupo disponible/)).toBeTruthy();
+    expect(await screen.findByText("No tenés notificaciones")).toBeTruthy();
     expect(screen.queryByText(/Martín/)).toBeNull();
   });
 
