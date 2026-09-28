@@ -2,135 +2,109 @@
  * TurnoSmart · Edge Function `priorizar-cupo`
  *
  * Ofrece un cupo abierto al mejor candidato de la lista de espera:
- *   1. `candidatos_cupo` (RPC, solo service_role) → pacientes con solicitud
- *      activa en esa especialidad y sus señales reales.
- *   2. Priorización determinista (tiempo en espera, orden de llegada,
- *      horario, disponibilidad) — siempre, como base y como respaldo.
- *   3. Si hay ANTHROPIC_API_KEY en los secrets de la función, Claude
- *      reordena los mejores candidatos y califica su compatibilidad. Solo
- *      recibe alias y señales (nunca nombres, cédulas ni ids).
- *   4. `ofrecer_cupo` (RPC, solo service_role) crea en una transacción la
- *      oferta, sus factores (máx. 4), el evento «enviada» y la notificación.
+ *   1. obtenerCandidatos: `candidatos_cupo` (RPC, solo service_role) →
+ *      pacientes con solicitud activa en esa especialidad y sus señales.
+ *   2. priorizar: la estrategia de priorización (hoy, determinista: tiempo
+ *      en espera, puesto en la lista, franja horaria y alertas activas).
+ *   3. crearOferta: `ofrecer_cupo` (RPC, solo service_role) crea en una
+ *      transacción la oferta, sus factores (máx. 4), el evento «enviada» y
+ *      la notificación.
  *
- * La app la invoca con la sesión del paciente (JWT verificado por Supabase)
- * después de cancelar una cita o de rechazar/expirar una oferta. La app
- * nunca ve candidatos ni elige a quién se ofrece: eso pasa acá, con la
- * service_role que Supabase inyecta en el entorno de la función.
+ * Quién la llama: SOLO la base de datos. El trigger
+ * `cupos_solicitar_priorizacion` (migración 20260927140000) la invoca con
+ * pg_net cuando un cupo queda «abierto», con el secreto compartido en el
+ * encabezado `x-priorizar-secreto`. La app nunca la invoca: un paciente no
+ * puede forzar ofertas para un cupo ni provocar llamadas repetidas.
  *
- * Secrets:
- *   ANTHROPIC_API_KEY   (opcional) activa la priorización con IA.
- *   MINUTOS_OFERTA      (opcional) duración de cada oferta; 10 por defecto.
+ * Secrets de la función:
+ *   PRIORIZAR_CUPO_SECRETO  (obligatorio) el mismo valor guardado en Vault.
+ *   MINUTOS_OFERTA          (opcional) duración de cada oferta; 10 por defecto.
+ * SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY los inyecta Supabase.
+ * Desplegar con --no-verify-jwt: la autenticación es el secreto compartido.
  */
-import { createClient } from "npm:@supabase/supabase-js@2";
-import Anthropic from "npm:@anthropic-ai/sdk";
-import { zodOutputFormat } from "npm:@anthropic-ai/sdk/helpers/zod";
-import { z } from "npm:zod";
-import {
-  aplicarRespuestaIA,
-  Candidato,
-  CandidatoPriorizado,
-  datosParaIA,
-  priorizarDeterminista,
-  RespuestaIA,
-} from "../_shared/priorizacion.ts";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { Candidato, CandidatoPriorizado, EstrategiaPriorizacion, estrategiaDeterminista } from "../_shared/priorizacion.ts";
 
-/** Cuántos candidatos (los mejores según la estrategia determinista) evalúa la IA. */
-const MAXIMO_CANDIDATOS_IA = 10;
+/**
+ * Estrategia activa. Para incorporar otra (por ejemplo, con un proveedor de
+ * IA elegido más adelante) basta con otra implementación de
+ * EstrategiaPriorizacion; obtener candidatos y crear la oferta no cambian.
+ */
+const estrategia: EstrategiaPriorizacion = estrategiaDeterminista;
 
-const RespuestaIASchema = z.object({
-  orden: z.array(
-    z.object({
-      alias: z.string(),
-      compatibilidad: z.enum(["alta", "media", "baja"]),
-    })
-  ),
-});
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const SISTEMA = `Eres el motor de priorización de TurnoSmart, una app que reasigna citas médicas canceladas a pacientes en lista de espera.
-Recibes un cupo liberado y candidatos anónimos (alias) que esperan esa especialidad. Ordénalos del más al menos adecuado para recibir la oferta, con criterios justos y explicables:
-- Prioriza a quien lleva más tiempo esperando y a quien llegó antes a la lista.
-- Favorece a quien prefiere la franja horaria del cupo (Mañana/Tarde; "Indistinto" encaja con ambas).
-- La oferta dura pocos minutos: tener las alertas activas hace más probable que responda a tiempo.
-- score_referencia es una puntuación determinista de referencia; puedes apartarte de ella si los criterios lo justifican.
-No inventes datos. Usa solo los alias recibidos. Califica la compatibilidad de cada candidato con el cupo como "alta", "media" o "baja".`;
-
-async function priorizarConIA(base: CandidatoPriorizado[], cupoFechaHora: string): Promise<CandidatoPriorizado[] | null> {
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!apiKey || base.length < 2) return null;
-  const evaluados = base.slice(0, MAXIMO_CANDIDATOS_IA);
-  const { alias, filas } = datosParaIA(evaluados);
-  const cliente = new Anthropic({ apiKey, timeout: 20_000, maxRetries: 1 });
-  try {
-    const respuesta = await cliente.messages.parse({
-      model: "claude-opus-5",
-      max_tokens: 4000,
-      output_config: { effort: "low", format: zodOutputFormat(RespuestaIASchema) },
-      system: SISTEMA,
-      messages: [
-        {
-          role: "user",
-          content: JSON.stringify({ cupo: { fecha_hora: cupoFechaHora, zona_horaria: "America/Bogota" }, candidatos: filas }),
-        },
-      ],
-    });
-    if (respuesta.stop_reason === "refusal" || !respuesta.parsed_output) {
-      console.warn(`[priorizar-cupo] Sin respuesta utilizable de la IA (${respuesta.stop_reason}); se usa la estrategia determinista.`);
-      return null;
-    }
-    const ordenados = aplicarRespuestaIA(evaluados, alias, respuesta.parsed_output as RespuestaIA);
-    return [...ordenados, ...base.slice(MAXIMO_CANDIDATOS_IA)];
-  } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) {
-      console.warn("[priorizar-cupo] IA con límite de uso; se usa la estrategia determinista.");
-    } else if (error instanceof Anthropic.APIError) {
-      console.warn(`[priorizar-cupo] Error de la IA (${error.status}); se usa la estrategia determinista.`);
-    } else {
-      console.warn(`[priorizar-cupo] IA no disponible (${String(error)}); se usa la estrategia determinista.`);
-    }
-    return null;
-  }
-}
-
-function json(cuerpo: unknown, status = 200) {
+/** Respuestas controladas: nunca incluyen detalles internos de Postgres. */
+function responder(cuerpo: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(cuerpo), { status, headers: { "Content-Type": "application/json" } });
 }
 
-Deno.serve(async (req) => {
-  if (req.method !== "POST") return json({ error: "metodo_no_permitido" }, 405);
+/** Compara el secreto sin cortar en la primera diferencia (tiempo constante). */
+function mismoSecreto(recibido: string | null, esperado: string): boolean {
+  if (!recibido) return false;
+  const a = new TextEncoder().encode(recibido);
+  const b = new TextEncoder().encode(esperado);
+  let diferencia = a.length ^ b.length;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) diferencia |= (a[i] ?? 0) ^ (b[i] ?? 0);
+  return diferencia === 0;
+}
 
-  let cupoId: unknown;
-  try {
-    cupoId = (await req.json())?.cupo_id;
-  } catch {
-    return json({ error: "cuerpo_invalido" }, 400);
-  }
-  if (typeof cupoId !== "string" || !/^[0-9a-f-]{36}$/i.test(cupoId)) return json({ error: "cupo_id_invalido" }, 400);
+async function obtenerCandidatos(supabase: SupabaseClient, cupoId: string): Promise<Candidato[]> {
+  const { data, error } = await supabase.rpc("candidatos_cupo", { p_cupo_id: cupoId });
+  if (error) throw new Error(`candidatos_cupo: ${error.code} ${error.message}`);
+  return (data ?? []) as Candidato[];
+}
 
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
-    auth: { persistSession: false },
-  });
-
-  const { data: candidatos, error } = await supabase.rpc("candidatos_cupo", { p_cupo_id: cupoId });
-  if (error) return json({ error: "candidatos", detalle: error.message }, 500);
-  if (!candidatos || candidatos.length === 0) {
-    await supabase.rpc("cerrar_cupo", { p_cupo_id: cupoId });
-    return json({ oferta_id: null, motivo: "sin_candidatos" });
-  }
-
-  const base = priorizarDeterminista(candidatos as Candidato[]);
-  const conIA = await priorizarConIA(base, base[0].cupo_fecha_hora);
-  const priorizados = conIA ?? base;
-  const elegido = priorizados[0];
-
+async function crearOferta(supabase: SupabaseClient, cupoId: string, elegido: CandidatoPriorizado): Promise<string> {
   const minutos = Number(Deno.env.get("MINUTOS_OFERTA") ?? "10");
-  const { data: ofertaId, error: errorOferta } = await supabase.rpc("ofrecer_cupo", {
+  const { data, error } = await supabase.rpc("ofrecer_cupo", {
     p_cupo_id: cupoId,
     p_paciente_id: elegido.paciente_id,
     p_score: elegido.score,
     p_factores: elegido.factores,
     p_minutos: Number.isFinite(minutos) ? minutos : 10,
   });
-  if (errorOferta) return json({ error: "ofrecer_cupo", detalle: errorOferta.message }, 409);
+  if (error) throw new Error(`ofrecer_cupo: ${error.code} ${error.message}`);
+  return data as string;
+}
 
-  return json({ oferta_id: ofertaId, estrategia: conIA ? "ia" : "determinista" });
+Deno.serve(async (req) => {
+  if (req.method !== "POST") return responder({ error: "metodo_no_permitido" }, 405);
+
+  const secreto = Deno.env.get("PRIORIZAR_CUPO_SECRETO");
+  if (!secreto) {
+    console.error("[priorizar-cupo] Falta el secret PRIORIZAR_CUPO_SECRETO.");
+    return responder({ error: "no_disponible" }, 503);
+  }
+  if (!mismoSecreto(req.headers.get("x-priorizar-secreto"), secreto)) {
+    return responder({ error: "no_autorizado" }, 401);
+  }
+
+  let cupoId: unknown;
+  try {
+    cupoId = (await req.json())?.cupo_id;
+  } catch {
+    return responder({ error: "solicitud_invalida" }, 400);
+  }
+  if (typeof cupoId !== "string" || !UUID.test(cupoId)) return responder({ error: "solicitud_invalida" }, 400);
+
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+    auth: { persistSession: false },
+  });
+
+  try {
+    const candidatos = await obtenerCandidatos(supabase, cupoId);
+    if (candidatos.length === 0) {
+      const { error } = await supabase.rpc("cerrar_cupo", { p_cupo_id: cupoId });
+      if (error) throw new Error(`cerrar_cupo: ${error.code} ${error.message}`);
+      return responder({ oferta_id: null, motivo: "sin_candidatos" });
+    }
+    const [elegido] = await estrategia.priorizar(candidatos);
+    const ofertaId = await crearOferta(supabase, cupoId, elegido);
+    return responder({ oferta_id: ofertaId, estrategia: estrategia.nombre });
+  } catch (error) {
+    // El detalle técnico queda solo en los logs del servidor.
+    console.error(`[priorizar-cupo] cupo ${cupoId}: ${String(error)}`);
+    return responder({ error: "no_se_pudo_priorizar" }, 500);
+  }
 });

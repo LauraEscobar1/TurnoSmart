@@ -2,14 +2,13 @@ import { Cita, EstadoCita } from "@/types/domain";
 import { getSupabase } from "@/services/supabaseClient";
 import { DatosError, getNombresPorId } from "@/services/catalogoService";
 import { getPacienteActualId } from "@/services/sesionService";
-import { ofrecerCupo } from "@/services/cuposService";
 
 /**
  * Citas del paciente (`public.citas`). RLS: cada paciente lee solo las
  * suyas. Cancelar y reprogramar pasan por RPC (`cancelar_cita`,
  * `reprogramar_cita`) que validan que la cita sea propia, confirmada y
- * futura. Cancelar libera un cupo (uno solo por cita) que se ofrece a la
- * lista de espera.
+ * futura. Cancelar libera un cupo (uno solo por cita); la base lo ofrece
+ * sola a la lista de espera (trigger → Edge Function priorizar-cupo).
  *
  * Las firmas son las mismas que usaban las pantallas con los datos de
  * ejemplo. Si Supabase no responde, las listas vuelven vacías (con aviso
@@ -104,16 +103,15 @@ export async function getCitaPorId(id: string): Promise<Cita | null> {
 }
 
 /**
- * Cancela una cita propia, confirmada y futura. El cupo liberado se ofrece
- * a la lista de espera. Devuelve la cita actualizada, o null si no se pudo.
+ * Cancela una cita propia, confirmada y futura. El cupo liberado lo ofrece
+ * el servidor a la lista de espera. Devuelve la cita actualizada, o null si no se pudo.
  */
 export async function cancelarCita(id: string): Promise<Cita | null> {
   const { data: cupoId, error } = await getSupabase().rpc("cancelar_cita", { p_cita_id: id });
-  if (error) {
-    console.warn(`[citas] No se pudo cancelar la cita: ${error.message}`);
+  if (error || typeof cupoId !== "string") {
+    console.warn(`[citas] No se pudo cancelar la cita: ${error?.message ?? "sin cupo"}`);
     return null;
   }
-  await ofrecerCupo(typeof cupoId === "string" ? cupoId : null);
   return getCitaPorId(id);
 }
 

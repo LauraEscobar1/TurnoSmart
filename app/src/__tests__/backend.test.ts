@@ -12,6 +12,7 @@ import {
   crearCitaFalsa,
   cuposPriorizados,
   idEspecialidadFalsa,
+  invocacionesDesdeApp,
   idUsuarioFalso,
   insertsIntentados,
   simularSinConexion,
@@ -19,9 +20,8 @@ import {
   vencerOfertaFalsa,
 } from "@/test-utils/supabaseFalso";
 import {
-  aplicarRespuestaIA,
   Candidato,
-  datosParaIA,
+  estrategiaDeterminista,
   factoresExplicacion,
   franjaDelCupo,
   priorizarDeterminista,
@@ -240,6 +240,34 @@ describe("Seguridad de la priorización", () => {
     const oferta = await getSupabase().rpc("ofrecer_cupo", { p_cupo_id: "cupo-of-001" });
     expect(oferta.error?.code).toBe("42501");
   });
+
+  it("un paciente no puede invocar priorizar-cupo: solo el servidor (trigger + secreto)", async () => {
+    entrarComoDemo();
+    await offers.rechazarOferta("of-001"); // deja el cupo abierto
+    const ofertasAntes = tablaFalsa("ofertas").length;
+    const { error } = await getSupabase().functions.invoke("priorizar-cupo", { body: { cupo_id: "cupo-of-001" } });
+    expect(String(error)).toContain("401");
+    expect(tablaFalsa("ofertas")).toHaveLength(ofertasAntes);
+    // La app nunca la invoca por su cuenta: fue el servidor quien reofreció el cupo.
+    expect(invocacionesDesdeApp).toEqual(["priorizar-cupo"]);
+    expect(cuposPriorizados).toEqual(["cupo-of-001"]);
+  });
+
+  it("el score interno nunca llega a la app: ni en las ofertas ni consultando la columna", async () => {
+    entrarComoDemo();
+    const pendientes = await offers.getOfertasPendientes();
+    expect(pendientes.length).toBeGreaterThan(0);
+    for (const o of [...pendientes, ...(await offers.getHistorialOfertas())]) {
+      expect(o).not.toHaveProperty("scorePrioridad");
+      expect(o).not.toHaveProperty("score");
+    }
+    // La explicación sí llega.
+    expect(pendientes.every((o) => o.factores.length > 0)).toBe(true);
+    const conScore = await getSupabase().from("ofertas").select("id, score");
+    expect(conScore.error?.code).toBe("42501");
+    const todo = await getSupabase().from("ofertas").select("*");
+    expect(todo.error?.code).toBe("42501");
+  });
 });
 
 describe("Sin conexión", () => {
@@ -263,7 +291,7 @@ describe("Sin conexión", () => {
   });
 });
 
-describe("Priorización con IA (lógica compartida con la Edge Function)", () => {
+describe("Priorización determinista (lógica compartida con la Edge Function)", () => {
   const cupoTarde = "2026-10-08T21:30:00Z"; // 16:30 en Colombia
   const candidato = (paciente_id: string, dias: number, puesto: number, franja: string, alertas = true): Candidato => ({
     paciente_id,
@@ -293,8 +321,9 @@ describe("Priorización con IA (lógica compartida con la Edge Function)", () =>
   });
 
   it("la explicación usa datos reales, máximo 4 factores y sin distancia inventada", () => {
-    const f = factoresExplicacion(candidato("a", 34, 1, "Tarde"), "alta");
+    const f = factoresExplicacion(candidato("a", 34, 1, "Tarde"));
     expect(f.length).toBeLessThanOrEqual(4);
+    expect(f.map((x) => x.clave)).not.toContain("compatibilidad"); // sin estrategia de IA
     expect(f.map((x) => x.clave)).not.toContain("distancia");
     expect(f.map((x) => x.clave)).toEqual(expect.arrayContaining(["especialidad", "tiempo-espera"]));
     expect(f.find((x) => x.clave === "tiempo-espera")).toMatchObject({ valor: "34 días", valor_numerico: 34 });
@@ -303,23 +332,16 @@ describe("Priorización con IA (lógica compartida con la Edge Function)", () =>
   });
 
   it("los factores que genera el servidor se muestran traducidos en inglés", () => {
-    const f = factoresExplicacion(candidato("a", 34, 1, "Tarde"), "alta");
+    const f = factoresExplicacion(candidato("a", 34, 1, "Tarde"));
     const enIngles = f.map((x) => `${traducirFactor("en", x.etiqueta)}: ${traducirFactor("en", x.valor)}`);
-    expect(enIngles).toEqual(expect.arrayContaining(["Time waiting: 34 days", "Compatibility: High", "Your specialty: Dermatology"]));
+    expect(enIngles).toEqual(
+      expect.arrayContaining(["Time waiting: 34 days", "Your specialty: Dermatology", "Preferred time: Afternoon", "Availability: Alerts on"])
+    );
   });
 
-  it("la IA solo recibe alias y señales, y su orden se aplica ignorando alias desconocidos", () => {
-    const base = priorizarDeterminista([candidato("id-real-1", 50, 1, "Tarde"), candidato("id-real-2", 10, 2, "Mañana")]);
-    const { alias, filas: datos } = datosParaIA(base);
-    expect(JSON.stringify(datos)).not.toContain("id-real");
-    const ordenados = aplicarRespuestaIA(base, alias, {
-      orden: [
-        { alias: "desconocido", compatibilidad: "alta" },
-        { alias: alias[1], compatibilidad: "alta" },
-        { alias: alias[0], compatibilidad: "media" },
-      ],
-    });
-    expect(ordenados.map((c) => c.paciente_id)).toEqual(["id-real-2", "id-real-1"]);
-    expect(ordenados[0].factores.some((x) => x.clave === "compatibilidad" && x.valor === "Alta")).toBe(true);
+  it("la Edge Function prioriza a través de la interfaz de estrategia (hoy, la determinista)", async () => {
+    const candidatos = [candidato("b", 10, 2, "Mañana"), candidato("a", 50, 1, "Tarde")];
+    expect(estrategiaDeterminista.nombre).toBe("determinista");
+    expect(await estrategiaDeterminista.priorizar(candidatos)).toEqual(priorizarDeterminista(candidatos));
   });
 });

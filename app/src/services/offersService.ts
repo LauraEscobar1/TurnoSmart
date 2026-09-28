@@ -2,7 +2,6 @@ import { EstadoOferta, FactorPrioridad, OfertaCupo } from "@/types/domain";
 import { getSupabase } from "@/services/supabaseClient";
 import { DatosError, getNombresPorId } from "@/services/catalogoService";
 import { getPacienteActualId } from "@/services/sesionService";
-import { ofrecerCupo, ofrecerCupos } from "@/services/cuposService";
 
 /**
  * Ofertas de cupo del paciente (`public.ofertas` + `cupos` +
@@ -11,9 +10,12 @@ import { ofrecerCupo, ofrecerCupos } from "@/services/cuposService";
  *   · `aceptar_oferta`: en una transacción acepta, toma el cupo, crea la
  *     cita, marca atendida la solicitud de espera, registra el evento y
  *     notifica.
- *   · `rechazar_oferta`: rechaza y devuelve el cupo, que se vuelve a
- *     ofrecer al siguiente candidato.
+ *   · `rechazar_oferta`: rechaza y devuelve el cupo.
  *   · `expirar_mis_ofertas`: vence las pendientes cuyo plazo terminó.
+ * Un cupo que vuelve a quedar abierto lo ofrece el servidor al siguiente
+ * candidato (trigger → Edge Function priorizar-cupo); la app no interviene.
+ * El score interno de la priorización nunca llega a la app: solo los
+ * factores que la explican.
  *
  * Las firmas son las mismas que usaban las pantallas con datos de ejemplo.
  */
@@ -25,11 +27,13 @@ export class OfertaNoDisponibleError extends Error {
   }
 }
 
+/** Columnas de `ofertas` que puede leer el paciente (sin `score`). */
+const COLUMNAS_OFERTA = "id, cupo_id, estado, expira_en";
+
 interface FilaOferta {
   id: string;
   cupo_id: string;
   estado: EstadoOferta;
-  score: number | null;
   expira_en: string;
 }
 
@@ -96,22 +100,16 @@ async function aOfertas(filas: FilaOferta[]): Promise<OfertaCupo[]> {
         fechaHoraISO: new Date(cupo.fecha_hora).toISOString(),
         estado: f.estado,
         expiraEnISO: new Date(f.expira_en).toISOString(),
-        scorePrioridad: Number(f.score ?? 0),
         factores: explicacion,
       },
     ];
   });
 }
 
-/** Vence las ofertas propias cuyo plazo terminó y vuelve a ofrecer esos cupos. */
+/** Vence las ofertas propias cuyo plazo terminó (el servidor reofrece esos cupos). */
 async function expirarVencidas() {
-  const { data, error } = await getSupabase().rpc("expirar_mis_ofertas");
-  if (error) {
-    console.warn(`[ofertas] No se pudieron expirar las ofertas vencidas: ${error.message}`);
-    return;
-  }
-  const cupos: string[] = Array.isArray(data) ? data.filter((id): id is string => typeof id === "string") : [];
-  await ofrecerCupos(cupos);
+  const { error } = await getSupabase().rpc("expirar_mis_ofertas");
+  if (error) console.warn(`[ofertas] No se pudieron expirar las ofertas vencidas: ${error.message}`);
 }
 
 /** Todas las ofertas del paciente con sesión. Si Supabase falla, lista vacía (con aviso). */
@@ -122,7 +120,7 @@ async function misOfertas(): Promise<OfertaCupo[]> {
     await expirarVencidas();
     const { data, error } = await getSupabase()
       .from("ofertas")
-      .select("id, cupo_id, estado, score, expira_en")
+      .select(COLUMNAS_OFERTA)
       .eq("paciente_id", pacienteId)
       .returns<FilaOferta[]>();
     if (error) throw new DatosError(error.message, error.code);
@@ -151,7 +149,7 @@ export async function getOfertaPorId(ofertaId: string): Promise<OfertaCupo | nul
   try {
     const { data, error } = await getSupabase()
       .from("ofertas")
-      .select("id, cupo_id, estado, score, expira_en")
+      .select(COLUMNAS_OFERTA)
       .eq("id", ofertaId)
       .maybeSingle<FilaOferta>();
     if (error) throw new DatosError(error.message, error.code);
@@ -184,14 +182,10 @@ export async function aceptarOferta(ofertaId: string): Promise<void> {
   if (error || !citaId) throw new OfertaNoDisponibleError(ofertaId);
 }
 
-/** Rechaza la oferta; el cupo se ofrece al siguiente candidato de la lista. */
+/** Rechaza la oferta; el servidor ofrece el cupo al siguiente candidato de la lista. */
 export async function rechazarOferta(ofertaId: string): Promise<void> {
-  const { data: cupoId, error } = await getSupabase().rpc("rechazar_oferta", { p_oferta_id: ofertaId });
-  if (error) {
-    console.warn(`[ofertas] No se pudo rechazar la oferta: ${error.message}`);
-    return;
-  }
-  await ofrecerCupo(typeof cupoId === "string" ? cupoId : null);
+  const { error } = await getSupabase().rpc("rechazar_oferta", { p_oferta_id: ofertaId });
+  if (error) console.warn(`[ofertas] No se pudo rechazar la oferta: ${error.message}`);
 }
 
 /** Ofertas pendientes de respuesta y aún vigentes — alimenta el badge de Ofertas. */
