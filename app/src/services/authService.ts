@@ -324,21 +324,6 @@ export async function crearCuenta(
       },
     },
   });
-  // TEMPORAL (diagnóstico del registro): respuesta de signUp sin contraseñas ni tokens.
-  if (error) {
-    console.error("[registro] signUp error:", error);
-    console.error("[registro] error.message:", error.message);
-    console.error("[registro] error.name:", error.name);
-    console.error("[registro] error.status:", error.status);
-    console.error("[registro] error.code:", error.code);
-  } else {
-    console.error("[registro] signUp ok:", {
-      hayUser: Boolean(data.user),
-      userId: data.user?.id,
-      haySession: Boolean(data.session),
-      email: data.user?.email,
-    });
-  }
   if (error) {
     if (error.code === "user_already_exists" || error.code === "email_exists") {
       throw new AuthError(tr("errores.correoExiste"), "email");
