@@ -5,6 +5,13 @@ import * as auth from "@/services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CUENTA_DEMO, pacienteDemo } from "@/data/mockData";
 import { irALogin, montarApp, reiniciarDatos } from "@/test-utils/app";
+import {
+  confirmarCorreoFalso,
+  getSupabase,
+  pacientesCreados,
+  pedirConfirmacionDeCorreo,
+  tablasConsultadas,
+} from "@/test-utils/supabaseFalso";
 
 beforeEach(async () => {
   await reiniciarDatos();
@@ -36,12 +43,19 @@ describe("authService", () => {
     await expect(auth.iniciarSesion("", "x")).rejects.toMatchObject({ campo: "email" });
   });
 
-  it("cerrar sesión borra la sesión pero recuerda el usuario para Face ID", async () => {
+  it("cerrar sesión borra la sesión de Supabase pero recuerda el usuario; Face ID solo retoma una sesión guardada", async () => {
     await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
+    // Con la sesión de Supabase guardada, Face ID la retoma.
+    expect((await auth.iniciarSesionBiometrica()).email).toBe(CUENTA_DEMO.email);
     await auth.cerrarSesion();
     expect(await auth.getSesion()).toBeNull();
     expect(await auth.getUltimoUsuario()).toBe(CUENTA_DEMO.email);
-    expect((await auth.iniciarSesionBiometrica()).email).toBe(CUENTA_DEMO.email);
+    // Sin sesión no hay forma de reingresar sin contraseña: la app no la guarda.
+    await expect(auth.iniciarSesionBiometrica()).rejects.toMatchObject({
+      message: "Ingresá una vez con tu correo para activar Face ID.",
+    });
+    const guardado = JSON.stringify(await AsyncStorage.multiGet(await AsyncStorage.getAllKeys()));
+    expect(guardado).not.toContain(CUENTA_DEMO.password);
   });
 
   it("valida los datos del paso 1", () => {
@@ -52,17 +66,36 @@ describe("authService", () => {
   });
 
   it("no permite repetir correo ni cédula", async () => {
-    await expect(auth.verificarDisponibilidad({ email: CUENTA_DEMO.email, cedula: "1" })).rejects.toMatchObject({ campo: "email" });
-    await expect(auth.verificarDisponibilidad({ email: "nuevo@correo.com", cedula: "1.023.456.789" })).rejects.toMatchObject({
-      campo: "cedula",
-    });
+    // Correo: lo rechaza Supabase Auth al crear la cuenta.
+    let codigo = await auth.enviarCodigo(datosValidos.telefono);
+    await expect(
+      auth.crearCuenta({ ...datosValidos, email: CUENTA_DEMO.email }, preferencias, { codigo, notificacionesActivas: true })
+    ).rejects.toMatchObject({ campo: "email", message: "Ya existe una cuenta con este correo." });
+
+    // Cédula: la rechaza la restricción única de `pacientes` dentro del trigger,
+    // y Supabase responde con un error genérico de base de datos.
+    codigo = await auth.enviarCodigo(datosValidos.telefono);
+    await auth.crearCuenta(datosValidos, preferencias, { codigo, notificacionesActivas: true });
+    await auth.cerrarSesion();
+    codigo = await auth.enviarCodigo(datosValidos.telefono);
+    await expect(
+      auth.crearCuenta({ ...datosValidos, email: "otra@correo.com" }, preferencias, { codigo, notificacionesActivas: true })
+    ).rejects.toMatchObject({ campo: "cedula", message: "Ya existe una cuenta con esta cédula." });
+    // El registro rechazado no deja un usuario de Auth sin paciente.
+    await expect(auth.iniciarSesion("otra@correo.com", datosValidos.password)).rejects.toMatchObject({ campo: "password" });
+    expect(pacientesCreados.filter((p) => p.cedula === "1020304050")).toHaveLength(1);
   });
 
   it("migra las cuentas guardadas con DNI y obra social a cédula y EPS", async () => {
     const vieja = { ...pacienteDemo, cedula: undefined, eps: undefined, dni: "35482910", obraSocial: " Sanitas " };
     await AsyncStorage.setItem("ts.cuentas", JSON.stringify([{ paciente: vieja, password: "x1234567" }]));
     await AsyncStorage.setItem("ts.sesion", pacienteDemo.email);
-    const p = await auth.getSesion();
+    // Al abrir la app se borran las cuentas locales con contraseña…
+    expect(await auth.getSesion()).toBeNull();
+    expect(await AsyncStorage.getItem("ts.cuentas")).toBeNull();
+    expect(JSON.stringify(await AsyncStorage.multiGet(await AsyncStorage.getAllKeys()))).not.toContain("x1234567");
+    // …y el perfil se rescata en el primer ingreso con Supabase.
+    const p = await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
     expect(p).toMatchObject({ cedula: "35482910", eps: "Sanitas" });
     expect(p).not.toHaveProperty("dni");
     expect(p).not.toHaveProperty("obraSocial");
@@ -86,9 +119,58 @@ describe("authService", () => {
       distanciaMaxKm: null,
     });
     expect((await auth.getSesion())?.email).toBe("laura@correo.com");
+    // La fila de `pacientes` la crea el trigger, con el mismo id que el usuario
+    // de Supabase Auth; la app no inserta nada por su cuenta.
+    expect(pacientesCreados.find((f) => f.id === p.id)).toMatchObject({
+      cedula: "1020304050",
+      email: "laura@correo.com",
+      franja_preferida: "Mañana",
+      distancia_max_km: null,
+      notificaciones_activas: true,
+    });
+    expect(tablasConsultadas).toEqual([]);
+    expect(JSON.stringify(pacientesCreados)).not.toContain(datosValidos.password);
     // Y puede volver a entrar con su contraseña.
     await auth.cerrarSesion();
     await expect(auth.iniciarSesion("laura@correo.com", "segura123")).resolves.toMatchObject({ nombre: "Laura" });
+  });
+
+  it("con confirmación de correo: la cuenta queda creada sin sesión y entra después de confirmar", async () => {
+    pedirConfirmacionDeCorreo(true);
+    const codigo = await auth.enviarCodigo(datosValidos.telefono);
+    const intento = auth.crearCuenta(datosValidos, preferencias, { codigo, notificacionesActivas: false });
+
+    // No es un fallo: avisa que falta confirmar el correo, con el mensaje de siempre.
+    await expect(intento).rejects.toBeInstanceOf(auth.ConfirmacionCorreoPendiente);
+    await expect(intento).rejects.toMatchObject({
+      cuentaCreada: true,
+      message: "Te enviamos un correo para confirmar tu cuenta. Confirmalo y después iniciá sesión.",
+    });
+    expect(await auth.getSesion()).toBeNull();
+
+    // El paciente ya existe (trigger) y la app no intentó crearlo desde el cliente.
+    expect(pacientesCreados.filter((f) => f.email === "laura@correo.com")).toHaveLength(1);
+    expect(tablasConsultadas).toEqual([]);
+
+    // Antes de confirmar no puede ingresar; después, sí, con sus datos del registro.
+    await expect(auth.iniciarSesion("laura@correo.com", "segura123")).rejects.toMatchObject({
+      campo: "email",
+      message: "Confirmá tu correo antes de iniciar sesión.",
+    });
+    confirmarCorreoFalso("laura@correo.com");
+    await expect(auth.iniciarSesion("laura@correo.com", "segura123")).resolves.toMatchObject({
+      nombre: "Laura",
+      cedula: "1020304050",
+      notificacionesActivas: false,
+    });
+  });
+
+  it("con confirmación de correo, un correo ya registrado se informa como tal", async () => {
+    pedirConfirmacionDeCorreo(true);
+    const codigo = await auth.enviarCodigo(datosValidos.telefono);
+    await expect(
+      auth.crearCuenta({ ...datosValidos, email: CUENTA_DEMO.email }, preferencias, { codigo, notificacionesActivas: true })
+    ).rejects.toMatchObject({ campo: "email", message: "Ya existe una cuenta con este correo." });
   });
 });
 
@@ -116,15 +198,16 @@ describe("Acceso en pantalla", () => {
     expect(LocalAuthentication.authenticateAsync).not.toHaveBeenCalled();
   });
 
-  it("Face ID: con usuario recordado y biometría válida entra a Home", async () => {
+  it("Face ID: con usuario recordado pero sin sesión guardada, pide ingresar con correo", async () => {
     await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
     await auth.cerrarSesion();
     await montarApp({ sesion: false });
     await irALogin();
 
     await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
-    expect(await screen.findByText("Martín Ávila")).toBeTruthy();
     expect(LocalAuthentication.authenticateAsync).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText("Ingresá una vez con tu correo para activar Face ID.")).toBeTruthy();
+    expect(screen.queryByText("Martín Ávila")).toBeNull();
   });
 
   it("Face ID cancelado no inicia sesión", async () => {
@@ -161,10 +244,9 @@ describe("Acceso en pantalla", () => {
     await fireEvent.press(screen.getByText("Continuar"));
     expect(await screen.findByText("Las contraseñas no coinciden.")).toBeTruthy();
 
+    // El correo repetido ya no se puede detectar en este paso (sin RPC): lo
+    // rechaza Supabase al crear la cuenta (ver «no permite repetir correo ni cédula»).
     await fireEvent.changeText(screen.getByLabelText("Confirmar contraseña"), "segura123");
-    await fireEvent.press(screen.getByText("Continuar"));
-    expect(await screen.findByText("Ya existe una cuenta con este correo.")).toBeTruthy();
-
     await fireEvent.changeText(screen.getByLabelText("Correo electrónico"), "laura@correo.com");
     await fireEvent.press(screen.getByText("Continuar"));
 
@@ -217,6 +299,81 @@ describe("Acceso en pantalla", () => {
     await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
     expect(await screen.findByText(/^Hola, Laura\. Tenemos un cupo disponible/)).toBeTruthy();
     expect(screen.queryByText(/Martín/)).toBeNull();
+  });
+
+  it("registro con confirmación de correo: lleva al inicio de sesión con el aviso, sin ingresar", async () => {
+    pedirConfirmacionDeCorreo(true);
+    const enviar = jest.spyOn(auth, "enviarCodigo");
+    const ingresar = jest.spyOn(getSupabase().auth, "signInWithPassword");
+    await montarApp({ sesion: false });
+    await fireEvent.press(await screen.findByRole("button", { name: "Empezar" }));
+
+    await fireEvent.changeText(await screen.findByLabelText("Nombre"), "Laura");
+    await fireEvent.changeText(screen.getByLabelText("Apellido"), "Escobar");
+    await fireEvent.changeText(screen.getByLabelText("Cédula"), "1.020.304.050");
+    await fireEvent.changeText(screen.getByLabelText("Correo electrónico"), "laura@correo.com");
+    await fireEvent.changeText(screen.getByLabelText("Teléfono"), "+54 11 4444 1234");
+    await fireEvent.changeText(screen.getByLabelText("Contraseña"), "segura123");
+    await fireEvent.changeText(screen.getByLabelText("Confirmar contraseña"), "segura123");
+    await fireEvent.press(screen.getByText("Continuar"));
+    await fireEvent.press(await screen.findByRole("checkbox", { name: "Cardiología" }));
+    await fireEvent.press(screen.getByText("Continuar"));
+
+    expect(await screen.findByText("Verificá tu teléfono")).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("codigo-input"), await enviar.mock.results[0].value);
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Acepto términos y política de privacidad" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Crear cuenta" }));
+
+    // Inicio de sesión con el aviso de confirmación; no es un error ni entra a la app.
+    expect(await screen.findByText("Te enviamos un correo para confirmar tu cuenta. Confirmalo y después iniciá sesión.")).toBeTruthy();
+    expect(screen.getByText("Ingresá a tu cuenta")).toBeTruthy();
+    expect(screen.queryByText("No pudimos crear la cuenta.")).toBeNull();
+    expect(screen.queryByText("Laura Escobar")).toBeNull();
+    expect(ingresar).not.toHaveBeenCalled();
+    expect(await auth.getSesion()).toBeNull();
+    expect(pacientesCreados.filter((f) => f.email === "laura@correo.com")).toHaveLength(1);
+
+    // «Atrás» vuelve a la Bienvenida, no al paso 3 del registro.
+    await fireEvent.press(screen.getByLabelText("Volver"));
+    expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
+    expect(screen.queryByText("Verificá tu teléfono")).toBeNull();
+  });
+
+  it("en inglés, entrando al registro desde «Log in»: Login recibe el aviso de confirmación y lo muestra", async () => {
+    await AsyncStorage.setItem("ts.ajustes", JSON.stringify({ modoOscuro: false, idioma: "en" }));
+    pedirConfirmacionDeCorreo(true);
+    const enviar = jest.spyOn(auth, "enviarCodigo");
+    await montarApp({ sesion: false });
+
+    // Bienvenida → Log in → «Create account» (el camino de quien ya pasó por el login).
+    await fireEvent.press(await screen.findByLabelText("Log in"));
+    expect(await screen.findByText("Log in to your account")).toBeTruthy();
+    expect(screen.queryByText(/We sent you an email/)).toBeNull();
+    await fireEvent.press(screen.getByText("Create account"));
+
+    await fireEvent.changeText(await screen.findByLabelText("Name"), "Laura");
+    await fireEvent.changeText(screen.getByLabelText("Last name"), "Escobar");
+    await fireEvent.changeText(screen.getByLabelText("ID number"), "1020304050");
+    await fireEvent.changeText(screen.getByLabelText("Email"), "laura@correo.com");
+    await fireEvent.changeText(screen.getByLabelText("Phone"), "+54 11 4444 1234");
+    await fireEvent.changeText(screen.getByLabelText("Password"), "segura123");
+    await fireEvent.changeText(screen.getByLabelText("Confirm password"), "segura123");
+    await fireEvent.press(screen.getByText("Continue"));
+    await fireEvent.press(await screen.findByRole("checkbox", { name: "Cardiology" }));
+    await fireEvent.press(screen.getByText("Continue"));
+
+    expect(await screen.findByText("Verify your phone")).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("codigo-input"), await enviar.mock.results[0].value);
+    await fireEvent.press(screen.getByRole("checkbox", { name: "I accept the terms and privacy policy" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Create account" }));
+
+    // La pantalla de Login que queda enfocada recibió el aviso y lo muestra.
+    expect(
+      await screen.findByText("We sent you an email to confirm your account. Confirm it and then log in.")
+    ).toBeTruthy();
+    expect(screen.getByText("Log in to your account")).toBeTruthy();
+    expect(screen.queryByText("Verify your phone")).toBeNull();
+    expect(await auth.getSesion()).toBeNull();
   });
 
   it("la flecha del registro vuelve a la pantalla anterior", async () => {

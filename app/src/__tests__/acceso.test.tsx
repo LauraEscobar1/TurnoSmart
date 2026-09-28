@@ -4,6 +4,7 @@ import * as auth from "@/services/authService";
 import { CUENTA_DEMO } from "@/data/mockData";
 import { SplashScreen } from "@/screens/Auth/SplashScreen";
 import { irALogin, montarApp, reiniciarDatos } from "@/test-utils/app";
+import { codigoRecuperacionFalso } from "@/test-utils/supabaseFalso";
 
 beforeEach(async () => {
   await reiniciarDatos();
@@ -45,7 +46,9 @@ describe("Restablecer contraseña — servicio", () => {
   it("cambia la contraseña solo con el código correcto y una contraseña válida", async () => {
     await expect(auth.solicitarRestablecimiento("no-es-correo")).rejects.toMatchObject({ campo: "email" });
 
-    const codigo = await auth.solicitarRestablecimiento(CUENTA_DEMO.email);
+    await auth.solicitarRestablecimiento(CUENTA_DEMO.email);
+    // El código lo envía Supabase por correo; la app no lo conoce.
+    const codigo = codigoRecuperacionFalso(CUENTA_DEMO.email);
     const incorrecto = codigo === "000000" ? "111111" : "000000";
     await expect(auth.restablecerPassword(CUENTA_DEMO.email, codigo, "corta")).rejects.toMatchObject({ campo: "password" });
     await expect(auth.restablecerPassword(CUENTA_DEMO.email, incorrecto, "nueva1234")).rejects.toMatchObject({ campo: "codigo" });
@@ -63,7 +66,6 @@ describe("Restablecer contraseña — servicio", () => {
 
 describe("Restablecer contraseña — pantalla", () => {
   it("login → ¿Olvidaste tu contraseña? → código → contraseña nueva → vuelve al login con aviso", async () => {
-    const enviar = jest.spyOn(auth, "solicitarRestablecimiento");
     await montarApp({ sesion: false });
     await irALogin();
     await fireEvent.changeText(screen.getByLabelText("Correo electrónico"), CUENTA_DEMO.email);
@@ -76,7 +78,7 @@ describe("Restablecer contraseña — pantalla", () => {
 
     expect(await screen.findByText(`Enviamos un código de 6 dígitos a ${CUENTA_DEMO.email}.`)).toBeTruthy();
     expect(screen.getByText("Reenviar código en 1:00")).toBeTruthy();
-    const codigo = await enviar.mock.results[0].value;
+    const codigo = codigoRecuperacionFalso(CUENTA_DEMO.email);
 
     const cambiar = () => screen.getByRole("button", { name: "Cambiar contraseña" });
     expect(cambiar()).toBeDisabled();
