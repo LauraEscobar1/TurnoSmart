@@ -51,8 +51,6 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
         });
         return;
       }
-      // TEMPORAL (diagnóstico del registro): el error original, antes de mostrar el mensaje.
-      console.error("[registro] error al crear la cuenta:", e);
       setError(e instanceof AuthError ? e.message : t("registro.error"));
       setEnviando(false);
     }
