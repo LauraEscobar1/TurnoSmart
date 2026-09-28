@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { User } from "@supabase/supabase-js";
 import { DistanciaMaxima, FranjaHoraria, Paciente } from "@/types/domain";
 import { getSupabase } from "@/services/supabaseClient";
+import { actualizarPacienteRemoto, getPacienteRemoto, PacienteRemoto } from "@/services/pacientesService";
 import { tr } from "@/i18n";
 
 /**
@@ -9,9 +10,11 @@ import { tr } from "@/i18n";
  *
  * - Las credenciales y la sesión las maneja solo Supabase Auth (la sesión
  *   la guarda el cliente de Supabase en AsyncStorage; nunca la contraseña).
- * - El perfil del paciente todavía vive en el teléfono (`ts.perfiles`, por
- *   id de usuario, sin contraseña) y en `user_metadata`, hasta migrar la
- *   lectura y edición de `public.pacientes` en el próximo paso.
+ * - El perfil del paciente se arma en capas: `user_metadata` → perfil local
+ *   (`ts.perfiles`, por id de usuario, sin contraseña) → fila de
+ *   `public.pacientes` (pacientesService), que gana en las columnas que
+ *   tiene. Lo que aún no está en la base (foto, especialidades en espera,
+ *   puesto en la lista) sigue solo en el perfil local.
  * - La fila de `public.pacientes` la crea la base al registrarse (trigger
  *   sobre `auth.users`, supabase/migrations), con el mismo id del usuario
  *   de Auth y a partir de `options.data`. La app nunca inserta en `pacientes`.
@@ -106,13 +109,27 @@ function distancia(m: Metadatos): DistanciaMaxima {
   return v === 3 || v === 10 ? v : null;
 }
 
-/** Paciente de la app a partir del usuario de Auth y su perfil local. */
+/** Fila de `pacientes` del usuario; si falla la lectura (p. ej. sin red), sigue sin ella. */
+async function leerPacienteRemoto(id: string): Promise<PacienteRemoto | null> {
+  try {
+    return await getPacienteRemoto(id);
+  } catch (e) {
+    console.warn(`[pacientes] No se pudo leer el perfil de Supabase; se usa el perfil local. ${String(e)}`);
+    return null;
+  }
+}
+
+/**
+ * Paciente de la app a partir del usuario de Auth: `user_metadata`, luego el
+ * perfil local y, encima, la fila de `public.pacientes` si existe.
+ */
 async function pacienteDeUsuario(user: User): Promise<Paciente> {
   const m: Metadatos = user.user_metadata ?? {};
   const email = user.email ?? "";
   const perfiles = await leerMapa(KEY_PERFILES);
   // Primer ingreso con Supabase: se rescata el perfil de la versión local, si había.
   const local: Partial<Paciente> = perfiles[user.id] ?? (await leerMapa(KEY_PERFILES_LEGADO))[email] ?? {};
+  const remoto = await leerPacienteRemoto(user.id);
   const especialidades = m.especialidadesInteres;
   const paciente: Paciente = {
     nombre: texto(m, "nombre") ?? "",
@@ -131,6 +148,8 @@ async function pacienteDeUsuario(user: User): Promise<Paciente> {
     ciudad: texto(m, "ciudad"),
     eps: texto(m, "eps"),
     ...local,
+    // La base gana en las columnas que tiene (un NULL borra el valor local).
+    ...remoto,
     id: user.id,
     email,
   };
@@ -352,14 +371,20 @@ export async function crearCuenta(
 }
 
 /**
- * Actualiza preferencias u otros datos del paciente con sesión abierta.
- * Por ahora en el perfil local del teléfono; escribir en `public.pacientes`
- * es el próximo paso de la migración.
+ * Actualiza preferencias u otros datos del paciente con sesión abierta. Las
+ * columnas de `public.pacientes` se guardan en Supabase; el perfil local se
+ * guarda siempre (tiene además la foto, las especialidades y el puesto). Si
+ * Supabase falla (p. ej. sin red), el cambio queda en el teléfono.
  */
 export async function actualizarPaciente(email: string, cambios: Partial<Paciente>): Promise<Paciente> {
   const perfiles = await leerMapa(KEY_PERFILES);
   const actual = Object.values(perfiles).find((p) => p.email === email);
   if (!actual) throw new AuthError(tr("errores.sinCuenta"));
+  try {
+    await actualizarPacienteRemoto(actual.id, cambios);
+  } catch (e) {
+    console.warn(`[pacientes] No se pudo guardar el perfil en Supabase; queda en el teléfono. ${String(e)}`);
+  }
   const paciente: Paciente = { ...actual, ...cambios, email: actual.email, id: actual.id };
   await guardarPerfil(paciente);
   return paciente;

@@ -10,7 +10,8 @@ import {
   getSupabase,
   pacientesCreados,
   pedirConfirmacionDeCorreo,
-  tablasConsultadas,
+  insertsIntentados,
+  simularPacientesCaido,
 } from "@/test-utils/supabaseFalso";
 
 beforeEach(async () => {
@@ -94,8 +95,12 @@ describe("authService", () => {
     expect(await auth.getSesion()).toBeNull();
     expect(await AsyncStorage.getItem("ts.cuentas")).toBeNull();
     expect(JSON.stringify(await AsyncStorage.multiGet(await AsyncStorage.getAllKeys()))).not.toContain("x1234567");
-    // …y el perfil se rescata en el primer ingreso con Supabase.
+    // …y el perfil se rescata en el primer ingreso con Supabase. (Sin la fila
+    // de `pacientes` disponible: con ella, la base gana en cédula y EPS.)
+    simularPacientesCaido(true);
+    const aviso = jest.spyOn(console, "warn").mockImplementation(() => {});
     const p = await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
+    aviso.mockRestore();
     expect(p).toMatchObject({ cedula: "35482910", eps: "Sanitas" });
     expect(p).not.toHaveProperty("dni");
     expect(p).not.toHaveProperty("obraSocial");
@@ -128,7 +133,7 @@ describe("authService", () => {
       distancia_max_km: null,
       notificaciones_activas: true,
     });
-    expect(tablasConsultadas).toEqual([]);
+    expect(insertsIntentados).toEqual([]);
     expect(JSON.stringify(pacientesCreados)).not.toContain(datosValidos.password);
     // Y puede volver a entrar con su contraseña.
     await auth.cerrarSesion();
@@ -150,7 +155,7 @@ describe("authService", () => {
 
     // El paciente ya existe (trigger) y la app no intentó crearlo desde el cliente.
     expect(pacientesCreados.filter((f) => f.email === "laura@correo.com")).toHaveLength(1);
-    expect(tablasConsultadas).toEqual([]);
+    expect(insertsIntentados).toEqual([]);
 
     // Antes de confirmar no puede ingresar; después, sí, con sus datos del registro.
     await expect(auth.iniciarSesion("laura@correo.com", "segura123")).rejects.toMatchObject({
