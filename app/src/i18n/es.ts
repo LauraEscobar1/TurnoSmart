@@ -200,6 +200,12 @@ export const es = {
       "Tu especialidad": "Tu especialidad",
       "Horario preferido": "Horario preferido",
       "Distancia al consultorio": "Distancia al consultorio",
+      Disponibilidad: "Disponibilidad",
+      Compatibilidad: "Compatibilidad",
+      "Alertas activas": "Alertas activas",
+      Alta: "Alta",
+      Media: "Media",
+      Baja: "Baja",
     },
     especialidades: {
       Cardiología: "Cardiología",
