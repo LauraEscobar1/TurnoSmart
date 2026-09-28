@@ -359,6 +359,8 @@ export const en: Diccionario = {
     cedulaExiste: "An account with this ID number already exists.",
     sinCuenta: "We couldn't find your account.",
     noCoinciden: "The passwords don't match.",
+    correoSinConfirmar: "Confirm your email before logging in.",
+    confirmaCorreo: "We sent you an email to confirm your account. Confirm it and then log in.",
   },
   login: {
     iniciarSesion: "Log in",
