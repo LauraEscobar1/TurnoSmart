@@ -198,6 +198,12 @@ export const en: Diccionario = {
       "Tu especialidad": "Your specialty",
       "Horario preferido": "Preferred time",
       "Distancia al consultorio": "Distance to the office",
+      Disponibilidad: "Availability",
+      Compatibilidad: "Compatibility",
+      "Alertas activas": "Alerts on",
+      Alta: "High",
+      Media: "Medium",
+      Baja: "Low",
     },
     especialidades: {
       Cardiología: "Cardiology",
@@ -359,6 +365,8 @@ export const en: Diccionario = {
     cedulaExiste: "An account with this ID number already exists.",
     sinCuenta: "We couldn't find your account.",
     noCoinciden: "The passwords don't match.",
+    correoSinConfirmar: "Confirm your email before logging in.",
+    confirmaCorreo: "We sent you an email to confirm your account. Confirm it and then log in.",
   },
   login: {
     iniciarSesion: "Log in",

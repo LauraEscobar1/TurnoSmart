@@ -6,11 +6,12 @@ import { AjustesProvider } from "@/ajustes/AjustesContext";
 import { setIdiomaActual } from "@/i18n";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { citasMock, CUENTA_DEMO, notificacionesMock, ofertasMock } from "@/data/mockData";
+import { abrirSesionFalsa, reiniciarSupabaseFalso } from "@/test-utils/supabaseFalso";
 
 /**
  * Utilidades de prueba: los datos mock son mutables (aceptar una oferta los
- * cambia) y la sesión vive en AsyncStorage, así que cada prueba arranca de
- * un estado limpio.
+ * cambia) y la sesión vive en Supabase (falso, en memoria) y AsyncStorage,
+ * así que cada prueba arranca de un estado limpio.
  */
 const inicial = JSON.stringify({ ofertasMock, citasMock, notificacionesMock });
 
@@ -20,6 +21,7 @@ export async function reiniciarDatos() {
   citasMock.splice(0, citasMock.length, ...copia.citasMock);
   notificacionesMock.splice(0, notificacionesMock.length, ...copia.notificacionesMock);
   await AsyncStorage.clear();
+  reiniciarSupabaseFalso();
   setIdiomaActual("es");
 }
 
@@ -28,7 +30,10 @@ export async function reiniciarDatos() {
  * Sin sesión arranca en Bienvenida; con `intro`, como la primera vez.
  */
 export async function montarApp({ sesion = true, intro = false } = {}) {
-  if (sesion) await AsyncStorage.multiSet([["ts.sesion", CUENTA_DEMO.email], ["ts.ultimoUsuario", CUENTA_DEMO.email]]);
+  if (sesion) {
+    abrirSesionFalsa(CUENTA_DEMO.email);
+    await AsyncStorage.setItem("ts.ultimoUsuario", CUENTA_DEMO.email);
+  }
   if (!intro) await AsyncStorage.setItem("ts.introVista", "1");
   return render(
     <AjustesProvider>

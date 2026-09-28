@@ -22,6 +22,7 @@
     "@react-navigation/material-top-tabs": "^6.6.14",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
+    "@supabase/supabase-js": "^2.117.2",
     "expo": "~57.0.24",
     "expo-asset": "~57.0.18",
     "expo-font": "~57.0.4",
