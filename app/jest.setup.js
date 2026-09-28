@@ -40,3 +40,6 @@ jest.mock("expo-notifications", () => ({
   getPermissionsAsync: jest.fn(async () => ({ granted: false, canAskAgain: true })),
   requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
 }));
+
+// Supabase: cliente falso en memoria (Auth + INSERT en pacientes), sin red.
+jest.mock("@/services/supabaseClient", () => require("@/test-utils/supabaseFalso"));

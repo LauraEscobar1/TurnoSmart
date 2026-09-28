@@ -118,7 +118,6 @@ describe("OfferCard", () => {
       fechaHoraISO: new Date(Date.now() + 3_600_000).toISOString(),
       estado: "pendiente",
       expiraEnISO: new Date(Date.now() + 459_000).toISOString(),
-      scorePrioridad: 0.87,
       factores: [],
     };
   });

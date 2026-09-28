@@ -200,6 +200,12 @@ export const es = {
       "Tu especialidad": "Tu especialidad",
       "Horario preferido": "Horario preferido",
       "Distancia al consultorio": "Distancia al consultorio",
+      Disponibilidad: "Disponibilidad",
+      Compatibilidad: "Compatibilidad",
+      "Alertas activas": "Alertas activas",
+      Alta: "Alta",
+      Media: "Media",
+      Baja: "Baja",
     },
     especialidades: {
       Cardiología: "Cardiología",
@@ -361,6 +367,8 @@ export const es = {
     cedulaExiste: "Ya existe una cuenta con esta cédula.",
     sinCuenta: "No encontramos tu cuenta.",
     noCoinciden: "Las contraseñas no coinciden.",
+    correoSinConfirmar: "Confirmá tu correo antes de iniciar sesión.",
+    confirmaCorreo: "Te enviamos un correo para confirmar tu cuenta. Confirmalo y después iniciá sesión.",
   },
   login: {
     iniciarSesion: "Iniciar sesión",

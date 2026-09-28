@@ -8,7 +8,7 @@ import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { useAuth } from "@/auth/AuthContext";
-import { AuthError, enviarCodigo } from "@/services/authService";
+import { AuthError, ConfirmacionCorreoPendiente, enviarCodigo } from "@/services/authService";
 import { pedirPermisoNotificaciones } from "@/services/permisosService";
 import { Card } from "@/components/Card";
 import { CodeInput, LARGO_CODIGO, ReenviarCodigo, useEnvioCodigo } from "@/components/CodeInput";
@@ -44,6 +44,16 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
       await crearCuenta(datos, preferencias, { codigo, notificacionesActivas });
       // La sesión queda abierta: el navegador raíz pasa solo a la app.
     } catch (e) {
+      // Cuenta creada, falta confirmar el correo: no es un error. Va al inicio
+      // de sesión con el aviso (como tras restablecer la contraseña), sin
+      // volver al registro con «atrás».
+      if (e instanceof ConfirmacionCorreoPendiente) {
+        navigation.reset({
+          index: 1,
+          routes: [{ name: "Bienvenida" }, { name: "Login", params: { aviso: t("errores.confirmaCorreo") } }],
+        });
+        return;
+      }
       setError(e instanceof AuthError ? e.message : t("registro.error"));
       setEnviando(false);
     }

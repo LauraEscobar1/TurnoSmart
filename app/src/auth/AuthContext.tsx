@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { AppState } from "react-native";
 import { Paciente } from "@/types/domain";
 import * as auth from "@/services/authService";
+import { getSupabase, supabaseConfigurado } from "@/services/supabaseClient";
 
 interface AuthValue {
   /** Paciente con sesión abierta; null si hay que mostrar el acceso. */
@@ -25,6 +27,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .getSesion()
       .then(setPaciente)
       .finally(() => setCargando(false));
+  }, []);
+
+  // Sesión de Supabase: si se cierra o vence (en este u otro lugar), se
+  // vuelve al acceso. Los ingresos los resuelve cada acción (login, registro)
+  // con el perfil ya armado; la sesión temporal de «restablecer contraseña»
+  // no debe abrir la app.
+  useEffect(() => {
+    if (!supabaseConfigurado) return;
+    const supabase = getSupabase();
+    const { data } = supabase.auth.onAuthStateChange((evento) => {
+      if (evento === "SIGNED_OUT") setPaciente(null);
+    });
+    // Renovación del token solo con la app en primer plano (recomendado en React Native).
+    const refresco = AppState.addEventListener("change", (estado) => {
+      if (estado === "active") supabase.auth.startAutoRefresh();
+      else supabase.auth.stopAutoRefresh();
+    });
+    return () => {
+      data.subscription.unsubscribe();
+      refresco.remove();
+    };
   }, []);
 
   const iniciarSesion = useCallback(async (email: string, password: string) => {

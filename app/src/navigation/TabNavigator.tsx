@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { getFocusedRouteNameFromRoute, RouteProp } from "@react-navigation/native";
 import { useTema } from "@/theme/Tema";
@@ -8,11 +8,10 @@ import { OffersNavigator } from "@/navigation/OffersNavigator";
 import { AppointmentsNavigator } from "@/navigation/AppointmentsNavigator";
 import { NotificationsScreen } from "@/screens/Notifications/NotificationsScreen";
 import { ProfileNavigator } from "@/navigation/ProfileNavigator";
-import { TabBar } from "@/components/TabBar";
+import { TabBadges, TabBar } from "@/components/TabBar";
 import { useT } from "@/i18n";
-import { contarNoLeidas } from "@/services/notificationsService";
-import { contarOfertasPendientes } from "@/services/offersService";
-import { notificacionesMock, ofertasMock } from "@/data/mockData";
+import { getConteoNoLeidas } from "@/services/notificationsService";
+import { getConteoOfertasPendientes } from "@/services/offersService";
 
 const Tab = createMaterialTopTabNavigator<RootTabParamList>();
 
@@ -33,13 +32,24 @@ const soloEnRaiz = (route: RouteProp<RootTabParamList>, raiz: string) => ({
 export function TabNavigator() {
   const { colors } = useTema();
   const t = useT();
-  // Los contadores se leen de los datos en cada cambio de sección,
-  // así el badge baja apenas se lee un aviso o se responde una oferta.
-  const [, refrescar] = useReducer((n: number) => n + 1, 0);
-  const badges = {
-    Ofertas: contarOfertasPendientes(ofertasMock),
-    Notificaciones: contarNoLeidas(notificacionesMock),
-  };
+  // Los contadores se piden a los servicios (Supabase) en cada cambio de
+  // sección, así el badge baja apenas se lee un aviso o se responde una oferta.
+  const [badges, setBadges] = useState<TabBadges>({});
+  const montado = useRef(true);
+  const refrescar = useCallback(() => {
+    Promise.all([getConteoOfertasPendientes(), getConteoNoLeidas()])
+      .then(([ofertas, notificaciones]) => {
+        if (montado.current) setBadges({ Ofertas: ofertas, Notificaciones: notificaciones });
+      })
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    montado.current = true;
+    refrescar();
+    return () => {
+      montado.current = false;
+    };
+  }, [refrescar]);
 
   return (
     <Tab.Navigator
