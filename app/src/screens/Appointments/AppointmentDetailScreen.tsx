@@ -3,7 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { AppointmentsStackParamList } from "@/navigation/types";
@@ -54,6 +55,8 @@ const iniciales = (nombre: string) =>
  * esté confirmada y por venir. Solo muestra datos que la app tiene.
  */
 export function AppointmentDetailScreen({ route, navigation }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { idioma, diaSemanaCorto, fechaCorta, fechaLarga } = useFormato();
@@ -244,6 +247,8 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 }
 
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   return (
     <View style={styles.seccion}>
       <Text style={label(10, colors.neutral600)}>{titulo}</Text>
@@ -265,6 +270,8 @@ function Dato({
   detalle?: string;
   divisor?: boolean;
 }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   return (
     <View style={[styles.dato, divisor && styles.divisor]}>
       <Ionicons name={icono} size={18} color={colors.accent700} />
@@ -277,7 +284,8 @@ function Dato({
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.fondo,
@@ -460,6 +468,6 @@ const styles = StyleSheet.create({
     color: colors.neutral700,
   },
   horarioTextoActivo: {
-    color: "#ffffff",
+    color: colors.sobreAcento,
   },
 });

@@ -1,7 +1,8 @@
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { sombra } from "@/theme/spacing";
 import { heading } from "@/theme/typography";
 import { Paciente } from "@/types/domain";
@@ -17,6 +18,8 @@ interface Props {
 
 /** Círculo del paciente: su foto si la subió; si no, sus iniciales. */
 export function AvatarPaciente({ paciente, size, onPress }: Props) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const circulo = { width: size, height: size, borderRadius: size / 2 };
   const insignia = Math.round(size * 0.28);
@@ -42,13 +45,14 @@ export function AvatarPaciente({ paciente, size, onPress }: Props) {
     >
       {contenido}
       <View style={[styles.insignia, { width: insignia, height: insignia, borderRadius: insignia / 2 }]}>
-        <Ionicons name="camera" size={Math.round(insignia * 0.5)} color="#ffffff" />
+        <Ionicons name="camera" size={Math.round(insignia * 0.5)} color={colors.sobreAcento} />
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   circulo: {
     backgroundColor: colors.accent200,
     alignItems: "center",

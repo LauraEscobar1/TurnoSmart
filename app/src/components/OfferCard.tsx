@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { OfertaCupo } from "@/types/domain";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, heading, label } from "@/theme/typography";
 import { Badge } from "@/components/Badge";
@@ -43,6 +44,8 @@ function abreviarProfesional(nombre: string) {
 }
 
 function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress">) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { diaRelativo } = useFormato();
@@ -75,6 +78,8 @@ function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress
 }
 
 function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "oferta" | "onAceptar" | "onRechazar">) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
   const { fechaConDia } = useFormato();
@@ -88,7 +93,7 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
         {!expirada && <Countdown segundos={segundos} size={26} caption={t("oferta.paraResponder")} />}
       </View>
       <View>
-        <Text style={heading(30)}>{dato("especialidades", oferta.especialidad)}</Text>
+        <Text style={heading(30, colors.text)}>{dato("especialidades", oferta.especialidad)}</Text>
         <Text style={body(14, colors.neutral700)}>
           {oferta.profesional} · {oferta.consultorio}
         </Text>
@@ -110,22 +115,25 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
 
 /** Franja FECHA | HORA entre reglas de un pelo. */
 export function DataRow({ fecha, hora: h, size }: { fecha: string; hora: string; size: number }) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   return (
     <View style={styles.dataRow}>
       <View style={styles.dataCell}>
-        <Text style={label(9)}>{t("comun.fecha")}</Text>
+        <Text style={label(9, colors.neutral600)}>{t("comun.fecha")}</Text>
         <Text style={heading(size)}>{fecha}</Text>
       </View>
       <View style={[styles.dataCell, styles.dataCellRight]}>
-        <Text style={label(9)}>{t("comun.hora")}</Text>
+        <Text style={label(9, colors.neutral600)}>{t("comun.hora")}</Text>
         <Text style={heading(size)}>{h}</Text>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   home: {
     padding: 16,
     gap: 12,

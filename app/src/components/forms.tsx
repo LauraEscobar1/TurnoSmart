@@ -1,7 +1,8 @@
 import React, { forwardRef, useState } from "react";
 import { Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -25,6 +26,8 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   { label, error, hint, style, onFocus, onBlur, revelable, secureTextEntry, ...input },
   ref
 ) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -96,6 +99,7 @@ export function Segmented<T>({
   variante = "relleno",
   style,
 }: SegmentedProps<T>) {
+  const styles = useEstilos(crearStyles);
   const pildora = variante === "pildora";
   return (
     <View style={style}>
@@ -155,6 +159,8 @@ interface ChipSelectProps {
  * sin elegir = contorno.
  */
 export function ChipSelect({ label, options, value, onChange, error, etiqueta = (o) => o }: ChipSelectProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const toggle = (o: string) => onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o]);
   return (
     <View>
@@ -189,6 +195,7 @@ interface CheckRowProps {
 
 /** Casilla con el punto del sistema (.radio + .dot). */
 export function CheckRow({ checked, onChange, children }: CheckRowProps) {
+  const styles = useEstilos(crearStyles);
   return (
     <Pressable
       onPress={() => onChange(!checked)}
@@ -204,12 +211,13 @@ export function CheckRow({ checked, onChange, children }: CheckRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   label: {
     fontFamily: fonts.body,
     fontSize: 12,
     marginBottom: 5,
-    color: "rgba(29,31,32,0.7)",
+    color: colors.etiquetaCampo,
   },
   input: {
     minHeight: 48,
@@ -220,7 +228,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.superficie,
     borderWidth: 1,
-    borderColor: "rgba(29,45,61,0.16)",
+    borderColor: colors.bordeCampo,
     borderRadius: radius.md,
     // Web: el anillo de foco del navegador va en acero, como pide el sistema
     // (:focus-visible con contorno en acento), no en el azul por defecto.
@@ -263,7 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.superficie,
     borderWidth: 1,
-    borderColor: "rgba(29,45,61,0.16)",
+    borderColor: colors.bordeCampo,
   },
   segInline: {
     alignSelf: "flex-start",
@@ -292,7 +300,7 @@ const styles = StyleSheet.create({
   },
   pildoraElegida: {
     backgroundColor: colors.superficie,
-    shadowColor: colors.accent900,
+    shadowColor: colors.colorSombra,
     shadowOpacity: 0.1,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
@@ -318,7 +326,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   segTextChecked: {
-    color: "#ffffff",
+    color: colors.sobreAcento,
     fontFamily: fonts.bodyMedium,
   },
   chips: {
@@ -333,8 +341,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   chipOn: {
-    backgroundColor: colors.accent900,
-    borderColor: colors.accent900,
+    backgroundColor: colors.campo,
+    borderColor: colors.campo,
   },
   chipOff: {
     backgroundColor: colors.superficie,

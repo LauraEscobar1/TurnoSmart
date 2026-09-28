@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
-import { colors } from "@/theme/colors";
+import { Paleta } from "@/theme/colors";
+import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 
@@ -25,6 +26,9 @@ interface BadgeProps {
 }
 
 export function Badge({ label, variant = "neutral", style }: BadgeProps) {
+  const styles = useEstilos(crearStyles);
+  const containerByVariant = useEstilos(crearContainerByVariant);
+  const textByVariant = useEstilos(crearTextByVariant);
   return (
     <View style={[styles.container, containerByVariant[variant], style]}>
       <Text style={[styles.text, textByVariant[variant]]}>{label}</Text>
@@ -32,7 +36,8 @@ export function Badge({ label, variant = "neutral", style }: BadgeProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const crearStyles = (colors: Paleta) =>
+  StyleSheet.create({
   container: {
     alignSelf: "flex-start",
     paddingHorizontal: 11,
@@ -48,17 +53,19 @@ const styles = StyleSheet.create({
   },
 });
 
-const containerByVariant = StyleSheet.create({
+const crearContainerByVariant = (colors: Paleta) =>
+  StyleSheet.create({
   outline: { borderColor: colors.accent },
   tint: { backgroundColor: colors.accent100 },
   accent: { backgroundColor: colors.accent },
-  solid: { backgroundColor: colors.accent900 },
+  solid: { backgroundColor: colors.campo },
   neutral: { backgroundColor: colors.neutral100 },
   lost: { backgroundColor: colors.neutral100 },
   risk: { borderColor: colors.accent, borderStyle: "dashed" },
 });
 
-const textByVariant = StyleSheet.create({
+const crearTextByVariant = (colors: Paleta) =>
+  StyleSheet.create({
   outline: { color: colors.accent700 },
   tint: { color: colors.accent800 },
   accent: { color: colors.bg },

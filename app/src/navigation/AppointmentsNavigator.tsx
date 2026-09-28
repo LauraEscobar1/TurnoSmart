@@ -1,5 +1,5 @@
 import React from "react";
-import { colors } from "@/theme/colors";
+import { useTema } from "@/theme/Tema";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useT } from "@/i18n";
 import { AppointmentsStackParamList } from "@/navigation/types";
@@ -9,6 +9,7 @@ import { AppointmentDetailScreen } from "@/screens/Appointments/AppointmentDetai
 const Stack = createNativeStackNavigator<AppointmentsStackParamList>();
 
 export function AppointmentsNavigator() {
+  const { colors } = useTema();
   const t = useT();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
