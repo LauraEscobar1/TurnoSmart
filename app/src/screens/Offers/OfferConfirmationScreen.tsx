@@ -20,7 +20,7 @@ const AUTO_NAV_MS = 2000;
 
 /**
  * Confirmación — Nivel 4 (estado terminal, 03 · Confirmación).
- * Aceptada: campo sólido Campo (accent 900); auto-navega a
+ * Aceptada: campo sólido de pantalla completa; auto-navega a
  * Mis citas › Próximas tras 2 s, el botón es para quien no quiera esperar.
  * Rechazada: mismo molde con el campo sólido reemplazado por contorno.
  */
@@ -52,16 +52,16 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
     // Solo al montar: el temporizador no debe reiniciarse.
   }, []);
 
-  const fg = esAceptada ? colors.bg : colors.text;
+  const fg = esAceptada ? colors.sobreCampoPantalla : colors.text;
   const rule = esAceptada ? colors.dividerOnField : colors.divider;
 
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
-      style={[styles.safe, { backgroundColor: esAceptada ? colors.campo : colors.fondo }]}
+      style={[styles.safe, { backgroundColor: esAceptada ? colors.campoPantalla : colors.fondo }]}
     >
-      {/* Sobre el campo sólido la barra va al revés que en el resto del modo. */}
-      <StatusBar style={esAceptada !== oscuro ? "light" : "dark"} />
+      {/* El campo sólido es oscuro en los dos modos: sobre él la barra va clara. */}
+      <StatusBar style={esAceptada || oscuro ? "light" : "dark"} />
       <View style={styles.body}>
         <View style={[styles.halo, { backgroundColor: esAceptada ? colors.haloCampo : colors.accent100 }]}>
           <View style={[styles.mark, { borderColor: fg }]}>
@@ -91,8 +91,9 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
       <View style={styles.footer}>
         {esAceptada ? (
           <>
-            <PrimaryButton label={t("confirmacion.verCita")} variant="inverse" onPress={irAMisCitas} />
-            <Text style={[label(10, colors.bg), styles.center, styles.hint]}>{t("confirmacion.volviendo")}</Text>
+            {/* En oscuro el campo ya es tenue: el botón vuelve al Acero de siempre. */}
+            <PrimaryButton label={t("confirmacion.verCita")} variant={oscuro ? "primary" : "inverse"} onPress={irAMisCitas} />
+            <Text style={[label(10, colors.sobreCampoPantalla), styles.center, styles.hint]}>{t("confirmacion.volviendo")}</Text>
           </>
         ) : (
           <PrimaryButton label={t("confirmacion.volverInicio")} variant="secondary" onPress={irAInicio} />
