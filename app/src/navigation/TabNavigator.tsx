@@ -12,6 +12,8 @@ import { TabBadges, TabBar } from "@/components/TabBar";
 import { useT } from "@/i18n";
 import { getConteoNoLeidas } from "@/services/notificationsService";
 import { getConteoOfertasPendientes } from "@/services/offersService";
+import { alCambiarDatos, escucharCambios } from "@/services/cambiosService";
+import { usePaciente } from "@/auth/AuthContext";
 
 const Tab = createMaterialTopTabNavigator<RootTabParamList>();
 
@@ -32,8 +34,10 @@ const soloEnRaiz = (route: RouteProp<RootTabParamList>, raiz: string) => ({
 export function TabNavigator() {
   const { colors } = useTema();
   const t = useT();
+  const paciente = usePaciente();
   // Los contadores se piden a los servicios (Supabase) en cada cambio de
-  // sección, así el badge baja apenas se lee un aviso o se responde una oferta.
+  // sección, así el badge baja apenas se lee un aviso o se responde una oferta,
+  // y cuando el servidor avisa un cambio (oferta nueva, vencimiento...).
   const [badges, setBadges] = useState<TabBadges>({});
   const montado = useRef(true);
   const refrescar = useCallback(() => {
@@ -46,10 +50,14 @@ export function TabNavigator() {
   useEffect(() => {
     montado.current = true;
     refrescar();
+    const dejarDeOir = alCambiarDatos(refrescar);
     return () => {
       montado.current = false;
+      dejarDeOir();
     };
   }, [refrescar]);
+  // Mientras haya sesión (las pestañas montadas), se escuchan los cambios del paciente.
+  useEffect(() => escucharCambios(paciente.id), [paciente.id]);
 
   return (
     <Tab.Navigator

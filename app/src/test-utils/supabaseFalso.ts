@@ -272,6 +272,7 @@ export function reiniciarSupabaseFalso() {
   ofertasFactores = [];
   ofertasEventos = [];
   notificaciones = [];
+  canalesRealtime = [];
   sembrarDemo();
 }
 reiniciarSupabaseFalso();
@@ -650,6 +651,7 @@ function notificar(pacienteId: unknown, tipo: string, datos: Fila, referencia: u
     leida,
     creada_en: new Date().toISOString(),
   });
+  emitirRealtime(pacienteId);
 }
 
 function resolverAvisoCupo(ofertaId: unknown) {
@@ -691,14 +693,22 @@ function puestoEn(solicitud: Fila): number {
 /** `candidatos_cupo`: solo service_role (la Edge Function). */
 function candidatosCupo(cupoId: string): Candidato[] {
   const cupo = cupos.find((c) => c.id === cupoId);
-  if (!cupo) return [];
+  // Migración 20261010220000: un cupo cuya hora ya pasó no tiene candidatos.
+  if (!cupo || new Date(String(cupo.fecha_hora)).getTime() <= Date.now()) return [];
   const origen = citas.find((c) => c.id === cupo.cita_origen_id)?.paciente_id;
+  const ocupadoALaHora = (pacienteId: unknown) =>
+    citas.some((c) => c.paciente_id === pacienteId && c.estado === "confirmada" && c.fecha_hora === cupo.fecha_hora);
   const cola = solicitudesEspera
     .filter((s) => s.especialidad_id === cupo.especialidad_id && s.estado === "activa")
     .sort((a, b) => (String(a.creada_en) < String(b.creada_en) ? -1 : 1));
   return cola
     .map((s, i) => ({ s, puesto: i + 1 }))
-    .filter(({ s }) => s.paciente_id !== origen && !ofertas.some((o) => o.cupo_id === cupoId && o.paciente_id === s.paciente_id))
+    .filter(
+      ({ s }) =>
+        s.paciente_id !== origen &&
+        !ofertas.some((o) => o.cupo_id === cupoId && o.paciente_id === s.paciente_id) &&
+        !ocupadoALaHora(s.paciente_id)
+    )
     .map(({ s, puesto }) => {
       const p = pacientesCreados.find((x) => x.id === s.paciente_id)!;
       return {
@@ -947,7 +957,71 @@ const functions = {
   },
 };
 
-const cliente = { auth, from, rpc, functions };
+// ---------------------------------------------------------------------------
+// Realtime: postgres_changes sobre `notificaciones` (migración 20261010220000)
+// ---------------------------------------------------------------------------
+
+interface CanalFalso {
+  nombre: string;
+  filtro: string | null;
+  callback: (() => void) | null;
+}
+/** Canales suscritos desde la app, para revisar en las pruebas. */
+export let canalesRealtime: CanalFalso[] = [];
+const canalDeApi = new WeakMap<object, CanalFalso>();
+
+/** Como Realtime: el evento llega después de la transacción y solo al canal de ese paciente (RLS). */
+function emitirRealtime(pacienteId: unknown) {
+  const destinos = canalesRealtime.filter((c) => c.filtro === `paciente_id=eq.${String(pacienteId)}`);
+  if (destinos.length) void Promise.resolve().then(() => destinos.forEach((c) => c.callback?.()));
+}
+
+function channel(nombre: string) {
+  const canal: CanalFalso = { nombre, filtro: null, callback: null };
+  const api = {
+    on(_tipo: string, opciones: { table?: string; filter?: string }, callback: () => void) {
+      if (opciones.table === "notificaciones") {
+        canal.filtro = opciones.filter ?? null;
+        canal.callback = callback;
+      }
+      return api;
+    },
+    subscribe() {
+      canalesRealtime.push(canal);
+      return api;
+    },
+  };
+  canalDeApi.set(api, canal);
+  return api;
+}
+
+async function removeChannel(api: object) {
+  const canal = canalDeApi.get(api);
+  canalesRealtime = canalesRealtime.filter((c) => c !== canal);
+  return "ok" as const;
+}
+
+/**
+ * La clínica libera un cupo (p. ej. una cancelación por teléfono): queda
+ * abierto y el «servidor» lo ofrece al mejor candidato, como el trigger.
+ * Devuelve el id de la oferta creada, o null sin candidatos.
+ */
+export function liberarCupoFalso(especialidad: string, fechaHoraISO: string): string | null {
+  const id = nuevoId("cupo");
+  cupos.push({
+    id,
+    cita_origen_id: null,
+    especialidad_id: idEspecialidadFalsa(especialidad),
+    profesional_id: idCatalogo(profesionales, "prof", "Dr. J. Peralta"),
+    consultorio_id: idCatalogo(consultorios, "cons", "Consultorio 1C"),
+    fecha_hora: fechaHoraISO,
+    motivo: "otro",
+    estado: "abierto",
+  });
+  return priorizarCupo(id).oferta_id;
+}
+
+const cliente = { auth, from, rpc, functions, channel, removeChannel };
 
 export const supabaseConfigurado = true;
 export function getSupabase() {
