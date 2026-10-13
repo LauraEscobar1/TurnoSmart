@@ -207,9 +207,7 @@ describe("Ofertas: aceptar, rechazar, expirar", () => {
     entrar("espera1@correo.com");
     await expect(offers.aceptarOferta("of-001")).rejects.toBeInstanceOf(offers.OfertaNoDisponibleError);
     expect(await offers.getOfertaPorId("of-001")).toBeNull();
-    const aviso = jest.spyOn(console, "warn").mockImplementation(() => {});
-    await offers.rechazarOferta("of-001");
-    aviso.mockRestore();
+    await expect(offers.rechazarOferta("of-001")).rejects.toBeInstanceOf(offers.OfertaNoDisponibleError);
     expect(filas("ofertas", (o) => o.id === "of-001")[0].estado).toBe("pendiente");
 
     entrarComoDemo();

@@ -99,6 +99,8 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
     if (nueva) {
       setCita({ ...nueva });
       setAviso(t("citas.reprogramada", { fecha: fechaCorta(elegido), hora: hora(elegido) }));
+    } else {
+      setAviso(t("citas.errorReprogramar"));
     }
     setHoja(null);
   }
@@ -108,6 +110,8 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
     if (cancelada) {
       setCita({ ...cancelada });
       setAviso(t("citas.canceladaAviso"));
+    } else {
+      setAviso(t("citas.errorCancelar"));
     }
     setHoja(null);
   }

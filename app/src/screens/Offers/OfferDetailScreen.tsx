@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -7,7 +7,7 @@ import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading } from "@/theme/typography";
 import { RootStackParamList } from "@/navigation/types";
 import { OfertaCupo } from "@/types/domain";
-import { aceptarOferta, getOfertaPorId, rechazarOferta } from "@/services/offersService";
+import { aceptarOferta, getOfertaPorId, OfertaNoDisponibleError, rechazarOferta } from "@/services/offersService";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Countdown, useCountdown } from "@/components/Countdown";
@@ -32,9 +32,11 @@ export function OfferDetailScreen({ route, navigation }: Props) {
   const { ofertaId } = route.params;
   const [oferta, setOferta] = useState<OfertaCupo | null | undefined>(undefined);
 
-  useEffect(() => {
+  const recargar = useCallback(() => {
     getOfertaPorId(ofertaId).then(setOferta);
   }, [ofertaId]);
+
+  useEffect(recargar, [recargar]);
 
   const insets = useSafeAreaInsets();
 
@@ -51,7 +53,7 @@ export function OfferDetailScreen({ route, navigation }: Props) {
     <View style={marco}>
       <ScreenHeader title={t("oferta.titulo")} onBack={volverAHome} />
       {oferta && oferta.estado === "pendiente" ? (
-        <OfertaVigente oferta={oferta} navigation={navigation} />
+        <OfertaVigente oferta={oferta} navigation={navigation} onYaNoDisponible={recargar} />
       ) : oferta?.estado === "aceptada" ? (
         <OfertaResuelta
           title={t("oferta.yaAceptaste")}
@@ -73,7 +75,16 @@ export function OfferDetailScreen({ route, navigation }: Props) {
   );
 }
 
-function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation: Props["navigation"] }) {
+function OfertaVigente({
+  oferta,
+  navigation,
+  onYaNoDisponible,
+}: {
+  oferta: OfertaCupo;
+  navigation: Props["navigation"];
+  /** La oferta se resolvió o venció en el servidor: se vuelve a leer para mostrar su estado real. */
+  onYaNoDisponible: () => void;
+}) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   const t = useT();
@@ -81,19 +92,29 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
   const { fechaConDia } = useFormato();
   const insets = useSafeAreaInsets();
   const segundos = useCountdown(oferta.expiraEnISO);
+  // Mientras se envía la respuesta los botones quedan inactivos (sin doble toque).
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (segundos === 0) {
     return <OfertaExpirada onVerHistorial={() => navigation.navigate("Tabs", { screen: "Ofertas" })} />;
   }
 
-  async function handleAceptar() {
-    await aceptarOferta(oferta.id);
-    navigation.replace("OfferConfirmation", { ofertaId: oferta.id, resultado: "aceptada" });
-  }
-
-  async function handleRechazar() {
-    await rechazarOferta(oferta.id);
-    navigation.replace("OfferConfirmation", { ofertaId: oferta.id, resultado: "rechazada" });
+  async function responder(accion: (id: string) => Promise<void>, resultado: "aceptada" | "rechazada") {
+    setEnviando(true);
+    setError(null);
+    try {
+      await accion(oferta.id);
+      navigation.replace("OfferConfirmation", { ofertaId: oferta.id, resultado });
+    } catch (e) {
+      setEnviando(false);
+      if (e instanceof OfertaNoDisponibleError) {
+        setError(t("oferta.errorNoDisponible"));
+        onYaNoDisponible();
+      } else {
+        setError(t("oferta.errorSinConexion"));
+      }
+    }
   }
 
   return (
@@ -114,9 +135,27 @@ function OfertaVigente({ oferta, navigation }: { oferta: OfertaCupo; navigation:
         </Card>
       </ScrollView>
       {/* La barra llega al borde inferior y absorbe el inset (indicador de inicio). */}
-      <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-        <PrimaryButton label={t("oferta.rechazar")} variant="secondary" onPress={handleRechazar} style={styles.reject} />
-        <PrimaryButton label={t("oferta.aceptar")} onPress={handleAceptar} style={styles.accept} />
+      <View style={[styles.barra, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+        {error && (
+          <Text style={[body(13, colors.text), styles.error]} accessibilityRole="alert">
+            {error}
+          </Text>
+        )}
+        <View style={styles.actions}>
+          <PrimaryButton
+            label={t("oferta.rechazar")}
+            variant="secondary"
+            onPress={() => responder(rechazarOferta, "rechazada")}
+            disabled={enviando}
+            style={styles.reject}
+          />
+          <PrimaryButton
+            label={t("oferta.aceptar")}
+            onPress={() => responder(aceptarOferta, "aceptada")}
+            disabled={enviando}
+            style={styles.accept}
+          />
+        </View>
       </View>
     </>
   );
@@ -164,14 +203,20 @@ const crearStyles = (colors: Paleta) =>
   panel: {
     padding: 18,
   },
-  actions: {
-    flexDirection: "row",
+  barra: {
     gap: 10,
-    paddingVertical: 14,
+    paddingTop: 14,
     paddingHorizontal: 18,
     backgroundColor: colors.superficie,
     borderTopWidth: 1,
     borderTopColor: colors.borde,
+  },
+  error: {
+    textAlign: "center",
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 10,
   },
   reject: {
     flex: 1,

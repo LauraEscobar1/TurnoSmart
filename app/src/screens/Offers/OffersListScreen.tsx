@@ -14,7 +14,7 @@ import { Card } from "@/components/Card";
 import { IlustracionSinOfertas } from "@/components/IlustracionSinOfertas";
 import { OfertaPendienteCard } from "@/components/OfertaPendienteCard";
 import { EstadoOferta, OfertaCupo } from "@/types/domain";
-import { aceptarOferta, getHistorialOfertas, getOfertasPendientes } from "@/services/offersService";
+import { aceptarOferta, getHistorialOfertas, getOfertasPendientes, OfertaNoDisponibleError } from "@/services/offersService";
 import { RootStackParamList } from "@/navigation/types";
 import { hora, useFormato } from "@/utils/format";
 import { Clave, useDato, useT } from "@/i18n";
@@ -54,13 +54,13 @@ export function OffersListScreen() {
   const [historial, setHistorial] = useState<OfertaCupo[]>([]);
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [ayudaAbierta, setAyudaAbierta] = useState(false);
+  const [errorRespuesta, setErrorRespuesta] = useState<string | null>(null);
 
-  useCargarDatos(
-    useCallback(() => {
-      getOfertasPendientes().then(setPendientes);
-      getHistorialOfertas().then(setHistorial);
-    }, [])
-  );
+  const cargar = useCallback(() => {
+    getOfertasPendientes().then(setPendientes);
+    getHistorialOfertas().then(setHistorial);
+  }, []);
+  useCargarDatos(cargar);
 
   const filtradas = useMemo(
     () => (filtro === "todas" ? historial : historial.filter((o) => o.estado === filtro)),
@@ -68,8 +68,19 @@ export function OffersListScreen() {
   );
 
   async function aceptar(oferta: OfertaCupo) {
-    await aceptarOferta(oferta.id);
-    navigation.navigate("OfferConfirmation", { ofertaId: oferta.id, resultado: "aceptada" });
+    setErrorRespuesta(null);
+    try {
+      await aceptarOferta(oferta.id);
+      navigation.navigate("OfferConfirmation", { ofertaId: oferta.id, resultado: "aceptada" });
+    } catch (e) {
+      // Ya no disponible: se recarga para que pase al historial con su estado real.
+      if (e instanceof OfertaNoDisponibleError) {
+        setErrorRespuesta(t("oferta.errorNoDisponible"));
+        cargar();
+      } else {
+        setErrorRespuesta(t("oferta.errorSinConexion"));
+      }
+    }
   }
 
   const n = pendientes.length;
@@ -84,6 +95,12 @@ export function OffersListScreen() {
           </Text>
           <Text style={[body(14, colors.neutral700), styles.bajada]}>{t("ofertas.bajada")}</Text>
         </View>
+
+        {errorRespuesta && (
+          <Text style={body(13, colors.text)} accessibilityRole="alert">
+            {errorRespuesta}
+          </Text>
+        )}
 
         {/* 1. Lo que requiere respuesta */}
         {n > 0 ? (

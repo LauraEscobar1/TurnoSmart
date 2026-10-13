@@ -123,6 +123,8 @@ export const en: Diccionario = {
     verHistorial: "View history",
     tiempoParaResponder: "Time left to reply",
     expiradaTexto: "This slot was already offered to another patient.",
+    errorNoDisponible: "This offer is no longer available: it expired or was already resolved.",
+    errorSinConexion: "We couldn't send your answer. Check your connection and try again.",
   },
   citas: {
     cupoRecuperado: "Freed-up slot",
@@ -158,6 +160,8 @@ export const en: Diccionario = {
     elegirHorario: "Choose a new time",
     horariosCon: "Available times with {profesional}.",
     confirmarHorario: "Confirm new time",
+    errorCancelar: "We couldn't cancel the appointment. Check your connection and try again.",
+    errorReprogramar: "We couldn't change the time. Check your connection and try again.",
   },
   datos: {
     estadosCita: {
@@ -206,11 +210,15 @@ export const en: Diccionario = {
       Baja: "Low",
     },
     especialidades: {
+      "Medicina general": "General medicine",
+      "Medicina interna": "Internal medicine",
+      Odontología: "Dentistry",
+      Psicología: "Psychology",
       Cardiología: "Cardiology",
       Dermatología: "Dermatology",
       Traumatología: "Orthopedics",
       Nutrición: "Nutrition",
-      "Clínica médica": "Internal medicine",
+      "Clínica médica": "Clinical medicine",
       Pediatría: "Pediatrics",
       Ginecología: "Gynecology",
       Oftalmología: "Ophthalmology",

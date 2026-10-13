@@ -27,6 +27,29 @@ export class OfertaNoDisponibleError extends Error {
   }
 }
 
+/**
+ * La respuesta no llegó al servidor (sin red, servidor caído): la oferta
+ * puede seguir vigente y el paciente puede reintentar. Reintentar es seguro:
+ * `aceptar_oferta` y `rechazar_oferta` son idempotentes.
+ */
+export class RespuestaNoEnviadaError extends Error {
+  constructor(public ofertaId: string, detalle: string) {
+    super(`No se pudo enviar la respuesta a la oferta ${ofertaId}: ${detalle}`);
+  }
+}
+
+/**
+ * Errores con los que las RPC dicen que la oferta no está disponible:
+ * P0002 (no existe o es ajena) y 22023 (ya resuelta, o el cupo ya no está).
+ */
+const CODIGOS_NO_DISPONIBLE = new Set(["P0002", "22023"]);
+
+function errorDeRespuesta(ofertaId: string, error: { code?: string; message: string }): Error {
+  return CODIGOS_NO_DISPONIBLE.has(error.code ?? "")
+    ? new OfertaNoDisponibleError(ofertaId)
+    : new RespuestaNoEnviadaError(ofertaId, error.message);
+}
+
 /** Columnas de `ofertas` que puede leer el paciente (sin `score`). */
 const COLUMNAS_OFERTA = "id, cupo_id, estado, expira_en";
 
@@ -175,17 +198,23 @@ export async function getHistorialOfertas(): Promise<OfertaCupo[]> {
 /**
  * Acepta la oferta: todo el cambio (cita, cupo, lista de espera, evento y
  * notificación) lo hace la RPC en una transacción. Si la oferta venció o ya
- * no está disponible, lanza OfertaNoDisponibleError.
+ * no está disponible, lanza OfertaNoDisponibleError; si la respuesta no llegó
+ * al servidor, RespuestaNoEnviadaError.
  */
 export async function aceptarOferta(ofertaId: string): Promise<void> {
   const { data: citaId, error } = await getSupabase().rpc("aceptar_oferta", { p_oferta_id: ofertaId });
-  if (error || !citaId) throw new OfertaNoDisponibleError(ofertaId);
+  if (error) throw errorDeRespuesta(ofertaId, error);
+  // NULL: la oferta había vencido y la RPC la marcó expirada.
+  if (!citaId) throw new OfertaNoDisponibleError(ofertaId);
 }
 
-/** Rechaza la oferta; el servidor ofrece el cupo al siguiente candidato de la lista. */
+/**
+ * Rechaza la oferta; el servidor ofrece el cupo al siguiente candidato de la
+ * lista. Lanza los mismos errores que aceptarOferta.
+ */
 export async function rechazarOferta(ofertaId: string): Promise<void> {
   const { error } = await getSupabase().rpc("rechazar_oferta", { p_oferta_id: ofertaId });
-  if (error) console.warn(`[ofertas] No se pudo rechazar la oferta: ${error.message}`);
+  if (error) throw errorDeRespuesta(ofertaId, error);
 }
 
 /** Ofertas pendientes de respuesta y aún vigentes — alimenta el badge de Ofertas. */
