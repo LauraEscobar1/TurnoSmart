@@ -497,7 +497,7 @@ describe("Detalle de cita", () => {
     expect(screen.getByText("Información de la reserva")).toBeTruthy();
     expect(screen.getByText("Reserva directa")).toBeTruthy();
     expect(screen.getByText("Confirmada")).toBeTruthy();
-    expect(screen.getByText(/^[A-Z][a-zé]+, \d{1,2} de [a-z]+$/)).toBeTruthy(); // «Domingo, 11 de octubre»
+    expect(screen.getByText(/^[A-ZÁÉ][a-záéí]+, \d{1,2} de [a-z]+$/)).toBeTruthy(); // «Domingo, 11 de octubre», «Sábado, 24 de octubre»
     expect(screen.getByRole("button", { name: "Reprogramar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Cancelar cita" })).toBeTruthy();
   });

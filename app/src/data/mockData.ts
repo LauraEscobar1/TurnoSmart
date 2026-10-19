@@ -9,12 +9,19 @@ import { Cita, Notificacion, OfertaCupo, Paciente } from "@/types/domain";
 const MIN = 1000 * 60;
 const DIA = MIN * 60 * 24;
 
-/** Especialidades que se ofrecen en el registro (paso 2) y en Preferencias. */
-export const ESPECIALIDADES = ["Cardiología", "Dermatología", "Traumatología", "Nutrición", "Clínica médica"];
+/**
+ * Especialidades que se ofrecen en el registro (paso 2) y en Preferencias.
+ * Los nombres deben ser idénticos a `public.especialidades.nombre`: la base
+ * une por nombre (trigger de registro y `sincronizar_lista_espera`).
+ */
+export const ESPECIALIDADES = ["Medicina general", "Cardiología", "Dermatología", "Traumatología", "Nutrición", "Clínica médica"];
 
-/** Todas las especialidades con lista de espera (pantalla «Buscar especialista»). */
+/** Todas las especialidades con lista de espera (pantalla «Buscar especialista»), las mismas 19 de la base. */
 export const CATALOGO_ESPECIALIDADES = [
   ...ESPECIALIDADES,
+  "Medicina interna",
+  "Odontología",
+  "Psicología",
   "Pediatría",
   "Ginecología",
   "Oftalmología",

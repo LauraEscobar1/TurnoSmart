@@ -1,5 +1,18 @@
-import { Linking } from "react-native";
-import * as Notifications from "expo-notifications";
+import { Linking, Platform } from "react-native";
+import { isRunningInExpoGo } from "expo";
+
+type ModuloNotificaciones = typeof import("expo-notifications");
+
+/**
+ * expo-notifications se carga recién al usarlo: en Android, dentro de Expo
+ * Go (SDK 53+), el módulo lanza un error apenas se importa porque Expo Go
+ * ya no soporta push remotas. Ahí no se carga y el permiso queda en «no».
+ * En un development build o en la app publicada funciona normal.
+ */
+function cargarNotificaciones(): ModuloNotificaciones | null {
+  if (Platform.OS === "android" && isRunningInExpoGo()) return null;
+  return require("expo-notifications") as ModuloNotificaciones;
+}
 
 /**
  * Permiso de notificaciones push. Sin push no existe la ruta crítica de
@@ -7,6 +20,8 @@ import * as Notifications from "expo-notifications";
  */
 export async function pedirPermisoNotificaciones(): Promise<boolean> {
   try {
+    const Notifications = cargarNotificaciones();
+    if (!Notifications) return false;
     const actual = await Notifications.getPermissionsAsync();
     if (actual.granted) return true;
     if (!actual.canAskAgain) return false;

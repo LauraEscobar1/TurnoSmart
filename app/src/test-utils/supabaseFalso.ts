@@ -1,5 +1,12 @@
 import { CATALOGO_ESPECIALIDADES, citasMock, CUENTA_DEMO, notificacionesMock, ofertasMock, pacienteDemo } from "@/data/mockData";
-import { Candidato, Factor, priorizarDeterminista } from "../../../supabase/functions/_shared/priorizacion";
+import {
+  aplicarRespuestaIA,
+  Candidato,
+  CandidatoPriorizado,
+  Factor,
+  motivoDeError,
+  priorizarDeterminista,
+} from "../../../supabase/functions/_shared/priorizacion";
 
 /**
  * Supabase falso, en memoria, para las pruebas (reemplaza a
@@ -257,6 +264,8 @@ export function reiniciarSupabaseFalso() {
   insertsIntentados = [];
   rpcLlamadas = [];
   cuposPriorizados = [];
+  respuestaIAFalsa = null;
+  ultimaPriorizacion = null;
   cuposPorPriorizar = [];
   invocacionesDesdeApp = [];
   pacientesCaido = false;
@@ -272,6 +281,7 @@ export function reiniciarSupabaseFalso() {
   ofertasFactores = [];
   ofertasEventos = [];
   notificaciones = [];
+  canalesRealtime = [];
   sembrarDemo();
 }
 reiniciarSupabaseFalso();
@@ -640,16 +650,37 @@ function datosCupo(cupo: Fila) {
   };
 }
 
+/**
+ * Como el trigger `notificaciones_completar_referencia` (migración
+ * 20261019120000) y el CHECK `chk_notificacion_referencia` del proyecto real:
+ * un recordatorio apunta a una cita y los demás tipos, a una oferta.
+ */
+function completarReferencia(fila: Fila): Fila {
+  const recordatorio = fila.tipo === "recordatorio";
+  const conReferencia = {
+    ...fila,
+    oferta_id: recordatorio ? null : (fila.referencia_id ?? null),
+    cita_id: recordatorio ? (fila.referencia_id ?? null) : null,
+  };
+  if (recordatorio ? !conReferencia.cita_id : !conReferencia.oferta_id) {
+    throw new Error(`chk_notificacion_referencia: ${String(fila.tipo)} sin referencia`);
+  }
+  return conReferencia;
+}
+
 function notificar(pacienteId: unknown, tipo: string, datos: Fila, referencia: unknown, leida = false) {
-  notificaciones.push({
-    id: nuevoId("not"),
-    paciente_id: pacienteId,
-    tipo,
-    datos,
-    referencia_id: referencia,
-    leida,
-    creada_en: new Date().toISOString(),
-  });
+  notificaciones.push(
+    completarReferencia({
+      id: nuevoId("not"),
+      paciente_id: pacienteId,
+      tipo,
+      datos,
+      referencia_id: referencia,
+      leida,
+      creada_en: new Date().toISOString(),
+    })
+  );
+  emitirRealtime(pacienteId);
 }
 
 function resolverAvisoCupo(ofertaId: unknown) {
@@ -691,14 +722,22 @@ function puestoEn(solicitud: Fila): number {
 /** `candidatos_cupo`: solo service_role (la Edge Function). */
 function candidatosCupo(cupoId: string): Candidato[] {
   const cupo = cupos.find((c) => c.id === cupoId);
-  if (!cupo) return [];
+  // Migración 20261010220000: un cupo cuya hora ya pasó no tiene candidatos.
+  if (!cupo || new Date(String(cupo.fecha_hora)).getTime() <= Date.now()) return [];
   const origen = citas.find((c) => c.id === cupo.cita_origen_id)?.paciente_id;
+  const ocupadoALaHora = (pacienteId: unknown) =>
+    citas.some((c) => c.paciente_id === pacienteId && c.estado === "confirmada" && c.fecha_hora === cupo.fecha_hora);
   const cola = solicitudesEspera
     .filter((s) => s.especialidad_id === cupo.especialidad_id && s.estado === "activa")
     .sort((a, b) => (String(a.creada_en) < String(b.creada_en) ? -1 : 1));
   return cola
     .map((s, i) => ({ s, puesto: i + 1 }))
-    .filter(({ s }) => s.paciente_id !== origen && !ofertas.some((o) => o.cupo_id === cupoId && o.paciente_id === s.paciente_id))
+    .filter(
+      ({ s }) =>
+        s.paciente_id !== origen &&
+        !ofertas.some((o) => o.cupo_id === cupoId && o.paciente_id === s.paciente_id) &&
+        !ocupadoALaHora(s.paciente_id)
+    )
     .map(({ s, puesto }) => {
       const p = pacientesCreados.find((x) => x.id === s.paciente_id)!;
       return {
@@ -731,7 +770,7 @@ function ofrecerCupo(cupoId: string, pacienteId: string, score: number, factores
     creada_en: new Date().toISOString(),
   });
   factores.slice(0, 4).forEach((f, i) =>
-    ofertasFactores.push({ id: nuevoId("fac"), oferta_id: id, ...f, orden: i + 1 })
+    ofertasFactores.push({ id: nuevoId("fac"), oferta_id: id, tipo: f.clave, ...f, orden: i + 1 })
   );
   cupo.estado = "ofrecido";
   evento(id, "enviada");
@@ -917,7 +956,35 @@ async function rpc(nombre: string, args: Fila = {}): Promise<Resultado<unknown>>
 /** Llamadas a `priorizar-cupo` (por cupo), para revisar en las pruebas. */
 export let cuposPriorizados: string[] = [];
 
-/** `priorizar-cupo` del servidor: la misma estrategia determinista que la función real. */
+/**
+ * Respuesta de DeepSeek en el «servidor» falso: el contenido que devolvería
+ * la IA, o null = sin DEEPSEEK_API_KEY. La red y el timeout se prueban sobre
+ * crearEstrategiaDeepSeek; acá se usa la misma validación (aplicarRespuestaIA).
+ */
+let respuestaIAFalsa: string | null = null;
+/** Cómo se priorizó el último cupo («ai» o «fallback» y el motivo), como el log de la función. */
+export let ultimaPriorizacion: { estrategia: "ai" | "fallback"; motivo: string | null } | null = null;
+
+export function configurarIAFalsa(contenido: string | null) {
+  respuestaIAFalsa = contenido;
+}
+
+function priorizarConIAFalsa(candidatos: Candidato[]): CandidatoPriorizado[] {
+  if (respuestaIAFalsa !== null) {
+    try {
+      const priorizados = aplicarRespuestaIA(candidatos, respuestaIAFalsa);
+      ultimaPriorizacion = { estrategia: "ai", motivo: null };
+      return priorizados;
+    } catch (e) {
+      ultimaPriorizacion = { estrategia: "fallback", motivo: motivoDeError(e) };
+      return priorizarDeterminista(candidatos);
+    }
+  }
+  ultimaPriorizacion = { estrategia: "fallback", motivo: "ia_no_configurada" };
+  return priorizarDeterminista(candidatos);
+}
+
+/** `priorizar-cupo` del servidor: la IA (falsa) con el respaldo determinista, como la función real. */
 function priorizarCupo(cupoId: string) {
   cuposPriorizados.push(cupoId);
   const candidatos = candidatosCupo(cupoId);
@@ -926,10 +993,10 @@ function priorizarCupo(cupoId: string) {
     if (cupo && cupo.estado === "abierto") cupo.estado = "expirado";
     return { oferta_id: null, motivo: "sin_candidatos" };
   }
-  const [elegido] = priorizarDeterminista(candidatos);
+  const [elegido] = priorizarConIAFalsa(candidatos);
   return {
     oferta_id: ofrecerCupo(cupoId, elegido.paciente_id, elegido.score, elegido.factores),
-    estrategia: "determinista",
+    estrategia: ultimaPriorizacion?.estrategia,
   };
 }
 
@@ -947,7 +1014,71 @@ const functions = {
   },
 };
 
-const cliente = { auth, from, rpc, functions };
+// ---------------------------------------------------------------------------
+// Realtime: postgres_changes sobre `notificaciones` (migración 20261010220000)
+// ---------------------------------------------------------------------------
+
+interface CanalFalso {
+  nombre: string;
+  filtro: string | null;
+  callback: (() => void) | null;
+}
+/** Canales suscritos desde la app, para revisar en las pruebas. */
+export let canalesRealtime: CanalFalso[] = [];
+const canalDeApi = new WeakMap<object, CanalFalso>();
+
+/** Como Realtime: el evento llega después de la transacción y solo al canal de ese paciente (RLS). */
+function emitirRealtime(pacienteId: unknown) {
+  const destinos = canalesRealtime.filter((c) => c.filtro === `paciente_id=eq.${String(pacienteId)}`);
+  if (destinos.length) void Promise.resolve().then(() => destinos.forEach((c) => c.callback?.()));
+}
+
+function channel(nombre: string) {
+  const canal: CanalFalso = { nombre, filtro: null, callback: null };
+  const api = {
+    on(_tipo: string, opciones: { table?: string; filter?: string }, callback: () => void) {
+      if (opciones.table === "notificaciones") {
+        canal.filtro = opciones.filter ?? null;
+        canal.callback = callback;
+      }
+      return api;
+    },
+    subscribe() {
+      canalesRealtime.push(canal);
+      return api;
+    },
+  };
+  canalDeApi.set(api, canal);
+  return api;
+}
+
+async function removeChannel(api: object) {
+  const canal = canalDeApi.get(api);
+  canalesRealtime = canalesRealtime.filter((c) => c !== canal);
+  return "ok" as const;
+}
+
+/**
+ * La clínica libera un cupo (p. ej. una cancelación por teléfono): queda
+ * abierto y el «servidor» lo ofrece al mejor candidato, como el trigger.
+ * Devuelve el id de la oferta creada, o null sin candidatos.
+ */
+export function liberarCupoFalso(especialidad: string, fechaHoraISO: string): string | null {
+  const id = nuevoId("cupo");
+  cupos.push({
+    id,
+    cita_origen_id: null,
+    especialidad_id: idEspecialidadFalsa(especialidad),
+    profesional_id: idCatalogo(profesionales, "prof", "Dr. J. Peralta"),
+    consultorio_id: idCatalogo(consultorios, "cons", "Consultorio 1C"),
+    fecha_hora: fechaHoraISO,
+    motivo: "otro",
+    estado: "abierto",
+  });
+  return priorizarCupo(id).oferta_id;
+}
+
+const cliente = { auth, from, rpc, functions, channel, removeChannel };
 
 export const supabaseConfigurado = true;
 export function getSupabase() {

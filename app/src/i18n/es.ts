@@ -125,6 +125,8 @@ export const es = {
     verHistorial: "Ver historial",
     tiempoParaResponder: "Tiempo para responder",
     expiradaTexto: "Este cupo ya se ofreció a otro paciente.",
+    errorNoDisponible: "Esta oferta ya no está disponible: venció o ya se resolvió.",
+    errorSinConexion: "No pudimos enviar tu respuesta. Comprueba tu conexión e inténtalo de nuevo.",
   },
   citas: {
     cupoRecuperado: "Cupo recuperado",
@@ -160,6 +162,8 @@ export const es = {
     elegirHorario: "Elegí un nuevo horario",
     horariosCon: "Horarios disponibles con {profesional}.",
     confirmarHorario: "Confirmar nuevo horario",
+    errorCancelar: "No pudimos cancelar la cita. Comprueba tu conexión e inténtalo de nuevo.",
+    errorReprogramar: "No pudimos cambiar el horario. Comprueba tu conexión e inténtalo de nuevo.",
   },
   datos: {
     estadosCita: {
@@ -208,6 +212,10 @@ export const es = {
       Baja: "Baja",
     },
     especialidades: {
+      "Medicina general": "Medicina general",
+      "Medicina interna": "Medicina interna",
+      Odontología: "Odontología",
+      Psicología: "Psicología",
       Cardiología: "Cardiología",
       Dermatología: "Dermatología",
       Traumatología: "Traumatología",
