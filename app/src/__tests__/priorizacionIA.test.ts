@@ -245,8 +245,11 @@ describe("DeepSeek con el backend (Supabase falso)", () => {
     expect(porClave["tiempo-espera"]).toMatchObject({ tipo: "tiempo-espera", peso: 0.3, valor: "2 días" });
     expect(porClave.disponibilidad).toMatchObject({ tipo: "disponibilidad", peso: 0.95, valor: "Alertas activas" });
     expect(porClave.especialidad).toMatchObject({ tipo: "especialidad", peso: 1, valor: "Medicina general" });
-    // Se avisa solo a la elegida.
-    expect(filas("notificaciones", (n) => n.referencia_id === oferta.id).map((n) => n.paciente_id)).toEqual([espera1]);
+    // Se avisa solo a la elegida, con oferta_id (chk_notificacion_referencia del proyecto real).
+    const avisos = filas("notificaciones", (n) => n.referencia_id === oferta.id);
+    expect(avisos.map((n) => [n.paciente_id, n.tipo, n.oferta_id, n.cita_id])).toEqual([
+      [espera1, "cupo-ultimo-minuto", oferta.id, null],
+    ]);
   });
 
   it("9-10. la paciente ve la oferta con su explicación, acepta y se crea la cita como siempre", async () => {
@@ -265,6 +268,8 @@ describe("DeepSeek con el backend (Supabase falso)", () => {
     const [cita] = filas("citas", (c) => c.oferta_id === oferta.id);
     expect(cita).toMatchObject({ paciente_id: espera1, estado: "confirmada", origen: "cupo-recuperado" });
     expect((await citas.getCitasProximas()).map((c) => c.id)).toContain(cita.id);
+    // La confirmación también queda ligada a la oferta.
+    expect(filas("notificaciones", (n) => n.tipo === "confirmacion" && n.oferta_id === oferta.id)).toHaveLength(1);
   });
 
   it("si la IA falla, el cupo se ofrece igual con la estrategia determinista", async () => {
