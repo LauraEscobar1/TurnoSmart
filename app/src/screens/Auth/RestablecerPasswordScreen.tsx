@@ -83,7 +83,7 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
       }
     >
       <View style={styles.marca}>
-        <Logo size={44} wordmark />
+        <Logo size={44} wordmark color={colors.logoSobreFondo} acento={colors.logoAcentoSobreFondo} />
         <Text style={[heading(24, colors.textoSobreFondo), styles.center, styles.titulo]}>{t("restablecer.titulo")}</Text>
         <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>
           {enviado

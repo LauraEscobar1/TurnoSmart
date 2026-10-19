@@ -89,7 +89,7 @@ export function LoginScreen({ navigation, route }: Props) {
       }
     >
       <View style={styles.marca}>
-        <Logo size={52} wordmark />
+        <Logo size={52} wordmark color={colors.logoSobreFondo} acento={colors.logoAcentoSobreFondo} />
         <Text style={[heading(24, colors.textoSobreFondo), styles.center, styles.titulo]}>{t("login.titulo")}</Text>
         <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>{t("login.bajada")}</Text>
       </View>
