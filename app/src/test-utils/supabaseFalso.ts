@@ -1,5 +1,12 @@
 import { CATALOGO_ESPECIALIDADES, citasMock, CUENTA_DEMO, notificacionesMock, ofertasMock, pacienteDemo } from "@/data/mockData";
-import { Candidato, Factor, priorizarDeterminista } from "../../../supabase/functions/_shared/priorizacion";
+import {
+  aplicarRespuestaIA,
+  Candidato,
+  CandidatoPriorizado,
+  Factor,
+  motivoDeError,
+  priorizarDeterminista,
+} from "../../../supabase/functions/_shared/priorizacion";
 
 /**
  * Supabase falso, en memoria, para las pruebas (reemplaza a
@@ -257,6 +264,8 @@ export function reiniciarSupabaseFalso() {
   insertsIntentados = [];
   rpcLlamadas = [];
   cuposPriorizados = [];
+  respuestaIAFalsa = null;
+  ultimaPriorizacion = null;
   cuposPorPriorizar = [];
   invocacionesDesdeApp = [];
   pacientesCaido = false;
@@ -741,7 +750,7 @@ function ofrecerCupo(cupoId: string, pacienteId: string, score: number, factores
     creada_en: new Date().toISOString(),
   });
   factores.slice(0, 4).forEach((f, i) =>
-    ofertasFactores.push({ id: nuevoId("fac"), oferta_id: id, ...f, orden: i + 1 })
+    ofertasFactores.push({ id: nuevoId("fac"), oferta_id: id, tipo: f.clave, ...f, orden: i + 1 })
   );
   cupo.estado = "ofrecido";
   evento(id, "enviada");
@@ -927,7 +936,35 @@ async function rpc(nombre: string, args: Fila = {}): Promise<Resultado<unknown>>
 /** Llamadas a `priorizar-cupo` (por cupo), para revisar en las pruebas. */
 export let cuposPriorizados: string[] = [];
 
-/** `priorizar-cupo` del servidor: la misma estrategia determinista que la función real. */
+/**
+ * Respuesta de DeepSeek en el «servidor» falso: el contenido que devolvería
+ * la IA, o null = sin DEEPSEEK_API_KEY. La red y el timeout se prueban sobre
+ * crearEstrategiaDeepSeek; acá se usa la misma validación (aplicarRespuestaIA).
+ */
+let respuestaIAFalsa: string | null = null;
+/** Cómo se priorizó el último cupo («ai» o «fallback» y el motivo), como el log de la función. */
+export let ultimaPriorizacion: { estrategia: "ai" | "fallback"; motivo: string | null } | null = null;
+
+export function configurarIAFalsa(contenido: string | null) {
+  respuestaIAFalsa = contenido;
+}
+
+function priorizarConIAFalsa(candidatos: Candidato[]): CandidatoPriorizado[] {
+  if (respuestaIAFalsa !== null) {
+    try {
+      const priorizados = aplicarRespuestaIA(candidatos, respuestaIAFalsa);
+      ultimaPriorizacion = { estrategia: "ai", motivo: null };
+      return priorizados;
+    } catch (e) {
+      ultimaPriorizacion = { estrategia: "fallback", motivo: motivoDeError(e) };
+      return priorizarDeterminista(candidatos);
+    }
+  }
+  ultimaPriorizacion = { estrategia: "fallback", motivo: "ia_no_configurada" };
+  return priorizarDeterminista(candidatos);
+}
+
+/** `priorizar-cupo` del servidor: la IA (falsa) con el respaldo determinista, como la función real. */
 function priorizarCupo(cupoId: string) {
   cuposPriorizados.push(cupoId);
   const candidatos = candidatosCupo(cupoId);
@@ -936,10 +973,10 @@ function priorizarCupo(cupoId: string) {
     if (cupo && cupo.estado === "abierto") cupo.estado = "expirado";
     return { oferta_id: null, motivo: "sin_candidatos" };
   }
-  const [elegido] = priorizarDeterminista(candidatos);
+  const [elegido] = priorizarConIAFalsa(candidatos);
   return {
     oferta_id: ofrecerCupo(cupoId, elegido.paciente_id, elegido.score, elegido.factores),
-    estrategia: "determinista",
+    estrategia: ultimaPriorizacion?.estrategia,
   };
 }
 
