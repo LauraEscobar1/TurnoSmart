@@ -152,7 +152,7 @@ const crearStyles = (colors: Paleta) =>
   boton: {
     height: 54,
     borderRadius: 16,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.botonBienvenida,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.colorSombra,
@@ -168,7 +168,7 @@ const crearStyles = (colors: Paleta) =>
     fontFamily: fonts.heading,
     fontSize: 19,
     letterSpacing: 0.3,
-    color: colors.sobreAcento,
+    color: colors.textoBotonBienvenida,
   },
   ingresar: {
     flexDirection: "row",

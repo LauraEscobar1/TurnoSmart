@@ -31,6 +31,9 @@ export const paletaClara = {
   /** Bienvenida: zona inferior y trazos (líneas de pulso, logo) sobre la zona azul. */
   fondoBienvenida: "#F2F2F2",
   trazoSobreFondo: "#FFFFFF",
+  /** Botón «Empezar» de Bienvenida (solo esa pantalla). */
+  botonBienvenida: "#2C5A94",
+  textoBotonBienvenida: "#FFFFFF",
 
   // Roles
   bg: "#f2f2f3", // Papel (texto e íconos sobre campos oscuros)
@@ -109,6 +112,9 @@ export const paletaOscura: Paleta = {
   // La Bienvenida oscura no cambia: mismo fondo (accent100); los trazos no se usan en oscuro.
   fondoBienvenida: "#1a2a3a",
   trazoSobreFondo: "#e8ecf0",
+  // Botón «Empezar» oscuro: los mismos colores de siempre (accent y sobreAcento).
+  botonBienvenida: "#749dc4",
+  textoBotonBienvenida: "#111820",
 
   bg: "#111820",
   surface: "#1c2733",
