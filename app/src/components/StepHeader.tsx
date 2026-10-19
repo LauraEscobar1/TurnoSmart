@@ -24,8 +24,8 @@ export function StepHeader({ title, step, total, onBack }: StepHeaderProps) {
       <Pressable onPress={onBack} hitSlop={12} accessibilityLabel={t("comun.volver")} style={styles.back}>
         <Ionicons name="arrow-back" size={18} color={colors.text} />
       </Pressable>
-      <Text style={label(11, colors.text)}>{title}</Text>
-      <Text style={[label(10, colors.neutral600), styles.count]}>
+      <Text style={label(11, colors.textoSobreFondo)}>{title}</Text>
+      <Text style={[label(10, colors.textoTenueSobreFondo), styles.count]}>
         {step} / {total}
       </Text>
     </View>

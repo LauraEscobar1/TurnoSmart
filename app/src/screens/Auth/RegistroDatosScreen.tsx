@@ -61,18 +61,18 @@ export function RegistroDatosScreen({ navigation }: Props) {
     >
       <View style={styles.marca}>
         <Logo size={40} />
-        <Text style={[heading(26, colors.text), styles.center, styles.titulo]}>{t("registro.tusDatos")}</Text>
-        <Text style={[body(13, colors.neutral700), styles.center]}>
+        <Text style={[heading(26, colors.textoSobreFondo), styles.center, styles.titulo]}>{t("registro.tusDatos")}</Text>
+        <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>
           {t("registro.tusDatosBajada")}
         </Text>
       </View>
       <StepProgress step={1} total={3} />
       <View style={styles.row}>
-        <TextField label={t("datos.nombre")} autoComplete="given-name" textContentType="givenName" style={styles.half} {...campo("nombre")} />
-        <TextField label={t("registro.apellido")} autoComplete="family-name" textContentType="familyName" style={styles.half} {...campo("apellido")} />
+        <TextField sobreFondo label={t("datos.nombre")} autoComplete="given-name" textContentType="givenName" style={styles.half} {...campo("nombre")} />
+        <TextField sobreFondo label={t("registro.apellido")} autoComplete="family-name" textContentType="familyName" style={styles.half} {...campo("apellido")} />
       </View>
-      <TextField label={t("datos.cedula")} keyboardType="number-pad" {...campo("cedula")} />
-      <TextField
+      <TextField sobreFondo label={t("datos.cedula")} keyboardType="number-pad" {...campo("cedula")} />
+      <TextField sobreFondo
         label={t("comun.correo")}
         keyboardType="email-address"
         autoCapitalize="none"
@@ -81,8 +81,8 @@ export function RegistroDatosScreen({ navigation }: Props) {
         textContentType="emailAddress"
         {...campo("email")}
       />
-      <TextField label={t("datos.telefono")} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" {...campo("telefono")} />
-      <TextField
+      <TextField sobreFondo label={t("datos.telefono")} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" {...campo("telefono")} />
+      <TextField sobreFondo
         label={t("comun.password")}
         revelable
         autoComplete="new-password"
@@ -90,7 +90,7 @@ export function RegistroDatosScreen({ navigation }: Props) {
         hint={t("errores.passwordMinimo")}
         {...campo("password")}
       />
-      <TextField
+      <TextField sobreFondo
         label={t("comun.confirmarPassword")}
         revelable
         autoComplete="new-password"

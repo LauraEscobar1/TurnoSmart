@@ -48,10 +48,10 @@ export function PreferencesScreen() {
       <ScreenHeader title={t("preferencias.titulo")} onBack={navigation.goBack} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={body(13, colors.neutral700)}>
+          <Text style={body(13, colors.textoSuaveSobreFondo)}>
             {t("preferencias.bajada")}
           </Text>
-          <PreferenciasForm
+          <PreferenciasForm sobreFondo
             value={form}
             onChange={(v) => {
               setForm(v);
@@ -72,7 +72,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     padding: 18,

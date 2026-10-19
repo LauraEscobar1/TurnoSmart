@@ -122,7 +122,7 @@ export function NotificationsScreen() {
         ) : (
           grupos.map(([grupo, avisos]) => (
             <View key={grupo} style={styles.grupo}>
-              <Text style={label(10, colors.neutral600)}>{grupo}</Text>
+              <Text style={label(10, colors.textoTenueSobreFondo)}>{grupo}</Text>
               <View style={styles.bandeja}>
                 {avisos.map((n, i) => (
                   <FilaAviso
@@ -215,7 +215,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,
@@ -229,7 +229,7 @@ const crearStyles = (colors: Paleta) =>
   marcarTodas: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: colors.accent700,
+    color: colors.acentoSobreFondo,
   },
   // Filtro (misma pastilla que el historial de Ofertas)
   filtros: {
@@ -262,7 +262,7 @@ const crearStyles = (colors: Paleta) =>
   },
   bandeja: {
     borderRadius: radius.lg,
-    backgroundColor: colors.superficie,
+    backgroundColor: colors.fondoCard,
     overflow: "hidden",
     ...sombra.sm,
   },

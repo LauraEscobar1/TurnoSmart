@@ -80,8 +80,8 @@ export function IntroScreen({ navigation }: Props) {
             <View style={styles.figura}>
               <Figura />
             </View>
-            <Text style={[heading(28, colors.text), styles.center]}>{t(titulo)}</Text>
-            <Text style={[body(14, colors.neutral700), styles.center, styles.texto]}>{t(texto)}</Text>
+            <Text style={[heading(28, colors.textoSobreFondo), styles.center]}>{t(titulo)}</Text>
+            <Text style={[body(14, colors.textoSuaveSobreFondo), styles.center, styles.texto]}>{t(texto)}</Text>
           </View>
         ))}
       </ScrollView>
@@ -157,7 +157,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   flex: {
     flex: 1,

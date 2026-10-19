@@ -255,7 +255,7 @@ function Seccion({ titulo, children }: { titulo: string; children: React.ReactNo
   const styles = useEstilos(crearStyles);
   return (
     <View style={styles.seccion}>
-      <Text style={label(10, colors.neutral600)}>{titulo}</Text>
+      <Text style={label(10, colors.textoTenueSobreFondo)}>{titulo}</Text>
       {children}
     </View>
   );
@@ -292,7 +292,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,

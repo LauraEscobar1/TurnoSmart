@@ -32,7 +32,7 @@ export function AuthNavigator() {
     <RegistroProvider>
       <Stack.Navigator
         initialRouteName={inicial}
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}
       >
         <Stack.Screen name="Intro" component={IntroScreen} />
         <Stack.Screen name="Bienvenida" component={BienvenidaScreen} />

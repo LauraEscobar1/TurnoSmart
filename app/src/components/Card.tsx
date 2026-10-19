@@ -60,13 +60,13 @@ const crearStyles = (colors: Paleta) =>
     borderWidth: 1,
   },
   superficie: {
-    backgroundColor: colors.superficie,
+    backgroundColor: colors.fondoCard,
     borderColor: colors.borde,
     ...sombra.sm,
   },
   acento: {
-    backgroundColor: colors.accent100,
-    borderColor: colors.accent200,
+    backgroundColor: colors.fondoCardAcento,
+    borderColor: colors.bordeCardAcento,
   },
   plana: {
     backgroundColor: "transparent",

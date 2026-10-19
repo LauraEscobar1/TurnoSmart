@@ -84,8 +84,8 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
     >
       <View style={styles.marca}>
         <Logo size={44} wordmark />
-        <Text style={[heading(24, colors.text), styles.center, styles.titulo]}>{t("restablecer.titulo")}</Text>
-        <Text style={[body(13, colors.neutral700), styles.center]}>
+        <Text style={[heading(24, colors.textoSobreFondo), styles.center, styles.titulo]}>{t("restablecer.titulo")}</Text>
+        <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>
           {enviado
             ? t("restablecer.enviamos", { email: email.trim() })
             : t("restablecer.bajada")}
@@ -100,7 +100,7 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
           <CodeInput value={codigo} onChange={setCodigo} autoFocus />
           {errores.codigo ? <Text style={styles.error}>{errores.codigo}</Text> : null}
           <ReenviarCodigo restante={envio.restante} codigoPrueba={envio.codigoPrueba} onReenviar={envio.reenviar} />
-          <TextField
+          <TextField sobreFondo
             label={t("restablecer.nueva")}
             value={password}
             onChangeText={setPassword}
@@ -110,7 +110,7 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
             hint={t("errores.passwordMinimo")}
             error={errores.password}
           />
-          <TextField
+          <TextField sobreFondo
             label={t("comun.confirmarPassword")}
             value={confirmar}
             onChangeText={setConfirmar}
@@ -121,7 +121,7 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
           />
         </>
       ) : (
-        <TextField
+        <TextField sobreFondo
           label={t("comun.correo")}
           placeholder={t("comun.correoEj")}
           value={email}

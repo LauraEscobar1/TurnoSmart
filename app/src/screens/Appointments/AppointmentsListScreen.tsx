@@ -111,10 +111,10 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
               ]}
             />
             <View style={styles.titulo}>
-              <Text style={heading(17, colors.accent900)}>
+              <Text style={heading(17, colors.textoSobreFondo)}>
                 {fechaLarga(dia).replace(/^./, (c) => c.toUpperCase())}
               </Text>
-              <Text style={body(13, colors.neutral600)}>
+              <Text style={body(13, colors.textoTenueSobreFondo)}>
                 {delDia.length ? t("citas.nCitas", { count: delDia.length }) : t("citas.sinCitas")}
               </Text>
             </View>
@@ -153,7 +153,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     padding: 18,
