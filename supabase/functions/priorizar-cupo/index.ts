@@ -4,11 +4,14 @@
  * Ofrece un cupo abierto al mejor candidato de la lista de espera:
  *   1. obtenerCandidatos: `candidatos_cupo` (RPC, solo service_role) →
  *      pacientes con solicitud activa en esa especialidad y sus señales.
- *   2. priorizar: la estrategia de priorización (hoy, determinista: tiempo
- *      en espera, puesto en la lista, franja horaria y alertas activas).
+ *   2. priorizar: DeepSeek pondera disponibilidad, especialidad, horario y
+ *      tiempo de espera con datos anónimos (una sola solicitud por cupo);
+ *      la respuesta se valida y, si falta la clave o la IA falla, se usa la
+ *      estrategia determinista. Cada priorización queda en los logs como
+ *      "ai" o "fallback".
  *   3. crearOferta: `ofrecer_cupo` (RPC, solo service_role) crea en una
  *      transacción la oferta, sus factores (máx. 4), el evento «enviada» y
- *      la notificación.
+ *      la notificación, y vuelve a validar al candidato y el cupo.
  *
  * Quién la llama: SOLO la base de datos. El trigger
  * `cupos_solicitar_priorizacion` (migración 20260927140000) la invoca con
@@ -19,18 +22,35 @@
  * Secrets de la función:
  *   PRIORIZAR_CUPO_SECRETO  (obligatorio) el mismo valor guardado en Vault.
  *   MINUTOS_OFERTA          (opcional) duración de cada oferta; 10 por defecto.
+ *   DEEPSEEK_API_KEY        (opcional) activa la priorización con IA.
+ *   DEEPSEEK_MODEL          (opcional) modelo; "deepseek-flash" por defecto.
+ *   DEEPSEEK_TIMEOUT_MS     (opcional) espera máxima de la IA; 8000 por defecto.
  * SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY los inyecta Supabase.
  * Desplegar con --no-verify-jwt: la autenticación es el secreto compartido.
  */
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
-import { Candidato, CandidatoPriorizado, EstrategiaPriorizacion, estrategiaDeterminista } from "../_shared/priorizacion.ts";
+import {
+  Candidato,
+  CandidatoPriorizado,
+  crearEstrategiaDeepSeek,
+  EstrategiaPriorizacion,
+  priorizarConRespaldo,
+} from "../_shared/priorizacion.ts";
 
 /**
- * Estrategia activa. Para incorporar otra (por ejemplo, con un proveedor de
- * IA elegido más adelante) basta con otra implementación de
- * EstrategiaPriorizacion; obtener candidatos y crear la oferta no cambian.
+ * Estrategia con IA (DeepSeek) si está el secret DEEPSEEK_API_KEY; sin él, o
+ * si la IA falla, `priorizarConRespaldo` usa la determinista. La clave solo
+ * vive en los secrets de la función: nunca llega a la app ni a las respuestas.
  */
-const estrategia: EstrategiaPriorizacion = estrategiaDeterminista;
+function estrategiaIA(): EstrategiaPriorizacion | null {
+  const apiKey = Deno.env.get("DEEPSEEK_API_KEY");
+  if (!apiKey) return null;
+  return crearEstrategiaDeepSeek({
+    apiKey,
+    modelo: Deno.env.get("DEEPSEEK_MODEL") || undefined,
+    timeoutMs: Number(Deno.env.get("DEEPSEEK_TIMEOUT_MS")) || undefined,
+  });
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -94,14 +114,28 @@ Deno.serve(async (req) => {
 
   try {
     const candidatos = await obtenerCandidatos(supabase, cupoId);
-    if (candidatos.length === 0) {
+    // Un cupo cuya hora ya pasó se cierra sin consultar a la IA (ofrecer_cupo también lo impide).
+    const vencido = candidatos.length > 0 && new Date(candidatos[0].cupo_fecha_hora).getTime() <= Date.now();
+    if (candidatos.length === 0 || vencido) {
       const { error } = await supabase.rpc("cerrar_cupo", { p_cupo_id: cupoId });
       if (error) throw new Error(`cerrar_cupo: ${error.code} ${error.message}`);
-      return responder({ oferta_id: null, motivo: "sin_candidatos" });
+      return responder({ oferta_id: null, motivo: vencido ? "cupo_vencido" : "sin_candidatos" });
     }
-    const [elegido] = await estrategia.priorizar(candidatos);
-    const ofertaId = await crearOferta(supabase, cupoId, elegido);
-    return responder({ oferta_id: ofertaId, estrategia: estrategia.nombre });
+    const inicio = Date.now();
+    const { priorizados, estrategia, motivo } = await priorizarConRespaldo(candidatos, estrategiaIA());
+    // Registro de cada priorización: "ai" o "fallback" y por qué (sin datos de pacientes).
+    console.log(
+      JSON.stringify({
+        evento: "priorizacion",
+        cupo_id: cupoId,
+        estrategia,
+        motivo,
+        candidatos: candidatos.length,
+        ms: Date.now() - inicio,
+      })
+    );
+    const ofertaId = await crearOferta(supabase, cupoId, priorizados[0]);
+    return responder({ oferta_id: ofertaId, estrategia });
   } catch (error) {
     // El detalle técnico queda solo en los logs del servidor.
     console.error(`[priorizar-cupo] cupo ${cupoId}: ${String(error)}`);
