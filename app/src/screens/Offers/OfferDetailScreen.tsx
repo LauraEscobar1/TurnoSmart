@@ -124,8 +124,8 @@ function OfertaVigente({
           <Countdown segundos={segundos} size={52} caption={t("oferta.tiempoParaResponder")} align="center" />
         </Card>
         <View>
-          <Text style={heading(32, colors.text)}>{dato("especialidades", oferta.especialidad)}</Text>
-          <Text style={body(14, colors.neutral700)}>
+          <Text style={heading(32, colors.textoSobreFondo)}>{dato("especialidades", oferta.especialidad)}</Text>
+          <Text style={body(14, colors.textoSuaveSobreFondo)}>
             {oferta.profesional} · {oferta.consultorio}
           </Text>
         </View>
@@ -188,7 +188,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   scroll: {
     flex: 1,

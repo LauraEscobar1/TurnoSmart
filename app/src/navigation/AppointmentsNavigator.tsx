@@ -12,7 +12,7 @@ export function AppointmentsNavigator() {
   const { colors } = useTema();
   const t = useT();
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}>
       <Stack.Screen
         name="AppointmentsList"
         component={AppointmentsListScreen}

@@ -90,14 +90,14 @@ export function OffersListScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Encabezado */}
         <View>
-          <Text style={heading(30, colors.accent900)} accessibilityRole="header">
+          <Text style={heading(30, colors.textoSobreFondo)} accessibilityRole="header">
             {t("ofertas.titulo")}
           </Text>
-          <Text style={[body(14, colors.neutral700), styles.bajada]}>{t("ofertas.bajada")}</Text>
+          <Text style={[body(14, colors.textoSuaveSobreFondo), styles.bajada]}>{t("ofertas.bajada")}</Text>
         </View>
 
         {errorRespuesta && (
-          <Text style={body(13, colors.text)} accessibilityRole="alert">
+          <Text style={body(13, colors.textoSobreFondo)} accessibilityRole="alert">
             {errorRespuesta}
           </Text>
         )}
@@ -123,8 +123,8 @@ export function OffersListScreen() {
         ) : (
           <View style={styles.vacio}>
             <IlustracionSinOfertas />
-            <Text style={[heading(22, colors.accent900), styles.centro]}>{t("ofertas.sinNuevas")}</Text>
-            <Text style={[body(14, colors.neutral700), styles.centro, styles.vacioTexto]}>
+            <Text style={[heading(22, colors.textoSobreFondo), styles.centro]}>{t("ofertas.sinNuevas")}</Text>
+            <Text style={[body(14, colors.textoSuaveSobreFondo), styles.centro, styles.vacioTexto]}>
               {t("ofertas.sinNuevasTexto")}
             </Text>
           </View>
@@ -133,7 +133,7 @@ export function OffersListScreen() {
         {/* 2. Historial compacto */}
         {historial.length > 0 && (
           <View style={styles.bloque}>
-            <Text style={heading(18, colors.accent900)}>{t("ofertas.historial")}</Text>
+            <Text style={heading(18, colors.textoSobreFondo)}>{t("ofertas.historial")}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -227,7 +227,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,

@@ -11,7 +11,7 @@ export function OffersNavigator() {
   const { colors } = useTema();
   const t = useT();
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}>
       <Stack.Screen name="OffersList" component={OffersListScreen} options={{ title: t("nav.ofertas") }} />
     </Stack.Navigator>
   );

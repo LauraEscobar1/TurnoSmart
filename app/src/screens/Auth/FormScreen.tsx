@@ -39,7 +39,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   flex: {
     flex: 1,

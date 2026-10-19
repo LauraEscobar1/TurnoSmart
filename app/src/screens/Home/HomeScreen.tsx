@@ -84,11 +84,11 @@ export function HomeScreen() {
         {/* 1. Saludo */}
         <View style={styles.saludo}>
           <View style={styles.flex}>
-            <Text style={label(10, colors.neutral600)}>{saludo(t)}</Text>
-            <Text style={heading(28, colors.accent900)} numberOfLines={1}>
+            <Text style={label(10, colors.textoTenueSobreFondo)}>{saludo(t)}</Text>
+            <Text style={heading(28, colors.textoSobreFondo)} numberOfLines={1}>
               {paciente.nombre} {paciente.apellido}
             </Text>
-            <Text style={[body(14, colors.neutral700), styles.bajada]}>{bajada}</Text>
+            <Text style={[body(14, colors.textoSuaveSobreFondo), styles.bajada]}>{bajada}</Text>
           </View>
           <Pressable
             onPress={() => setAjustesAbiertos(true)}
@@ -228,7 +228,7 @@ function Seccion({
   return (
     <View style={styles.seccion}>
       <View style={styles.seccionCabecera}>
-        <Text style={heading(18, colors.accent900)}>{titulo}</Text>
+        <Text style={heading(18, colors.textoSobreFondo)}>{titulo}</Text>
         {accion ? (
           <Pressable onPress={onAccion} hitSlop={8} accessibilityRole="button">
             <Text style={styles.link}>{accion}</Text>
@@ -288,7 +288,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: MARGEN,
@@ -334,7 +334,7 @@ const crearStyles = (colors: Paleta) =>
   link: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: colors.accent700,
+    color: colors.acentoSobreFondo,
   },
   // Sin oferta
   sinOferta: {

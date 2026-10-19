@@ -52,13 +52,13 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
     // Solo al montar: el temporizador no debe reiniciarse.
   }, []);
 
-  const fg = esAceptada ? colors.sobreCampoPantalla : colors.text;
+  const fg = esAceptada ? colors.sobreCampoPantalla : colors.textoSobreFondo;
   const rule = esAceptada ? colors.dividerOnField : colors.divider;
 
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
-      style={[styles.safe, { backgroundColor: esAceptada ? colors.campoPantalla : colors.fondo }]}
+      style={[styles.safe, { backgroundColor: esAceptada ? colors.campoPantalla : colors.fondoPantalla }]}
     >
       {/* El campo sólido es oscuro en los dos modos: sobre él la barra va clara. */}
       <StatusBar style={esAceptada || oscuro ? "light" : "dark"} />

@@ -53,7 +53,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
   return (
     <View>
       <View style={styles.cabecera}>
-        <Text style={heading(18, colors.accent900)}>{mesYAnio(seleccionado)}</Text>
+        <Text style={heading(18, colors.textoSobreFondo)}>{mesYAnio(seleccionado)}</Text>
         <View style={styles.flechas}>
           <Pressable
             onPress={() => desplazar(-1)}

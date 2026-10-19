@@ -80,9 +80,9 @@ export function LoginScreen({ navigation, route }: Props) {
           <PrimaryButton label={t("login.iniciarSesion")} onPress={ingresar} disabled={enviando} />
           <PrimaryButton label={t("login.conFaceId")} variant="secondary" onPress={ingresarConFaceId} />
           <View style={styles.signup}>
-            <Text style={body(13, colors.neutral700)}>{t("login.noTenesCuenta")} </Text>
+            <Text style={body(13, colors.textoSuaveSobreFondo)}>{t("login.noTenesCuenta")} </Text>
             <Pressable onPress={() => navigation.navigate("RegistroDatos")} hitSlop={8}>
-              <Text style={[body(13, colors.accent700), styles.link]}>{t("login.crearCuenta")}</Text>
+              <Text style={[body(13, colors.acentoSobreFondo), styles.link]}>{t("login.crearCuenta")}</Text>
             </Pressable>
           </View>
         </>
@@ -90,11 +90,11 @@ export function LoginScreen({ navigation, route }: Props) {
     >
       <View style={styles.marca}>
         <Logo size={52} wordmark />
-        <Text style={[heading(24, colors.text), styles.center, styles.titulo]}>{t("login.titulo")}</Text>
-        <Text style={[body(13, colors.neutral700), styles.center]}>{t("login.bajada")}</Text>
+        <Text style={[heading(24, colors.textoSobreFondo), styles.center, styles.titulo]}>{t("login.titulo")}</Text>
+        <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>{t("login.bajada")}</Text>
       </View>
 
-      <TextField
+      <TextField sobreFondo
         label={t("comun.correo")}
         placeholder={t("comun.correoEj")}
         value={email}
@@ -108,7 +108,7 @@ export function LoginScreen({ navigation, route }: Props) {
         onSubmitEditing={() => passwordRef.current?.focus()}
         error={error?.campo === "email" ? error.mensaje : undefined}
       />
-      <TextField
+      <TextField sobreFondo
         ref={passwordRef}
         label={t("comun.password")}
         value={password}
@@ -125,9 +125,9 @@ export function LoginScreen({ navigation, route }: Props) {
         style={styles.forgot}
         hitSlop={8}
       >
-        <Text style={body(12, colors.accent700)}>{t("login.olvidaste")}</Text>
+        <Text style={body(12, colors.acentoSobreFondo)}>{t("login.olvidaste")}</Text>
       </Pressable>
-      {aviso ? <Text style={body(13, colors.neutral700)}>{aviso}</Text> : null}
+      {aviso ? <Text style={body(13, colors.textoSuaveSobreFondo)}>{aviso}</Text> : null}
     </FormScreen>
   );
 }
