@@ -60,7 +60,7 @@ export function RegistroDatosScreen({ navigation }: Props) {
       footer={<PrimaryButton label={t("registro.continuar")} onPress={continuar} disabled={enviando} />}
     >
       <View style={styles.marca}>
-        <Logo size={40} />
+        <Logo size={40} color={colors.logoSobreFondo} acento={colors.logoAcentoSobreFondo} />
         <Text style={[heading(26, colors.textoSobreFondo), styles.center, styles.titulo]}>{t("registro.tusDatos")}</Text>
         <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>
           {t("registro.tusDatosBajada")}
