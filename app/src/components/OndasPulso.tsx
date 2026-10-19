@@ -12,6 +12,12 @@ interface OndasPulsoProps {
 
 const LINEAS = 13;
 const PASO = 6;
+/**
+ * La zona clara se dibuja unos píxeles más allá del borde inferior: el
+ * contenedor la recorta, y así ninguna fila a medio pintar deja ver el azul
+ * de fondo entre la curva y el resto de la pantalla.
+ */
+const SOLAPE = 4;
 
 /** Línea ondulada con un pulso (trazo de electrocardiograma) en `xPulso`. */
 function linea(width: number, y0: number, fase: number, xPulso: number): string {
@@ -43,13 +49,14 @@ export function OndasPulso({ width, height, color, colorCurva }: OndasPulsoProps
     return linea(width, separacion * (i + 0.6), i * 0.9, xPulso);
   });
   // La zona clara sube desde abajo con una curva suave (más alta a la derecha).
+  const abajo = height + SOLAPE;
   const curva =
-    `M0,${height} L0,${(height * 0.86).toFixed(1)} ` +
+    `M0,${abajo} L0,${(height * 0.86).toFixed(1)} ` +
     `C${(width * 0.35).toFixed(1)},${(height * 0.8).toFixed(1)} ${(width * 0.55).toFixed(1)},${(height * 0.98).toFixed(1)} ` +
-    `${width},${(height * 0.72).toFixed(1)} L${width},${height} Z`;
+    `${width},${(height * 0.72).toFixed(1)} L${width},${abajo} Z`;
 
   return (
-    <Svg width={width} height={height} style={{ position: "absolute", top: 0, left: 0 }} pointerEvents="none">
+    <Svg width={width} height={abajo} style={{ position: "absolute", top: 0, left: 0 }} pointerEvents="none">
       {lineas.map((d, i) => (
         <Path key={i} d={d} stroke={color} strokeOpacity={0.7} strokeWidth={1.3} fill="none" strokeLinejoin="round" />
       ))}
