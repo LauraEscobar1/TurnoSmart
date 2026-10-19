@@ -650,16 +650,36 @@ function datosCupo(cupo: Fila) {
   };
 }
 
+/**
+ * Como el trigger `notificaciones_completar_referencia` (migración
+ * 20261019120000) y el CHECK `chk_notificacion_referencia` del proyecto real:
+ * un recordatorio apunta a una cita y los demás tipos, a una oferta.
+ */
+function completarReferencia(fila: Fila): Fila {
+  const recordatorio = fila.tipo === "recordatorio";
+  const conReferencia = {
+    ...fila,
+    oferta_id: recordatorio ? null : (fila.referencia_id ?? null),
+    cita_id: recordatorio ? (fila.referencia_id ?? null) : null,
+  };
+  if (recordatorio ? !conReferencia.cita_id : !conReferencia.oferta_id) {
+    throw new Error(`chk_notificacion_referencia: ${String(fila.tipo)} sin referencia`);
+  }
+  return conReferencia;
+}
+
 function notificar(pacienteId: unknown, tipo: string, datos: Fila, referencia: unknown, leida = false) {
-  notificaciones.push({
-    id: nuevoId("not"),
-    paciente_id: pacienteId,
-    tipo,
-    datos,
-    referencia_id: referencia,
-    leida,
-    creada_en: new Date().toISOString(),
-  });
+  notificaciones.push(
+    completarReferencia({
+      id: nuevoId("not"),
+      paciente_id: pacienteId,
+      tipo,
+      datos,
+      referencia_id: referencia,
+      leida,
+      creada_en: new Date().toISOString(),
+    })
+  );
   emitirRealtime(pacienteId);
 }
 
