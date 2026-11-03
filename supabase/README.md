@@ -100,6 +100,12 @@ notificación, en una transacción).
   - `supabase secrets set DEEPSEEK_API_KEY=<clave>`: sin ella, determinista.
   - Opcionales: `DEEPSEEK_MODEL` (por defecto `deepseek-flash`) y
     `DEEPSEEK_TIMEOUT_MS` (por defecto 8000).
+  - Modelo verificado el 2026-11-02 en la documentación oficial
+    (api-docs.deepseek.com, «Models & Pricing»): los nombres vigentes son
+    `deepseek-flash` (DeepSeek-V4.1-Flash) y `deepseek-v4-pro`. El nombre
+    antiguo `deepseek-v4-flash` todavía se acepta, pero ese modelo está
+    retirado: no usarlo en `DEEPSEEK_MODEL`. El razonamiento viene activo por
+    defecto; la función lo desactiva con `thinking: {"type": "disabled"}`.
 - **Probar una oferta real:** procedimiento controlado, con cuentas de
   prueba y limpieza, en [`pruebas/prueba_oferta_real.md`](pruebas/prueba_oferta_real.md).
 - **Desplegar:** `supabase db push` y luego
