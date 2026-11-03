@@ -31,6 +31,8 @@ interface UsuarioFalso {
   password: string;
   created_at: string;
   user_metadata: Record<string, unknown>;
+  /** Lo escribe solo el servidor (p. ej. rol = "staff"). */
+  app_metadata?: Record<string, unknown>;
   identities: { id: string }[];
   confirmado: boolean;
 }
@@ -308,6 +310,25 @@ export function filaPacienteFalsa(id: string): Fila | undefined {
 /** Id del usuario de Auth con ese correo. */
 export function idUsuarioFalso(email: string): string | undefined {
   return usuarios.find((u) => u.email === email)?.id;
+}
+
+/**
+ * Crea un usuario de staff (app_metadata.rol = "staff"): como en la base
+ * real (migración 20261102120000), el trigger de registro no crea paciente.
+ */
+export function registrarStaffFalso(email: string, password: string) {
+  const id = `00000000-0000-4000-8000-${String(usuarios.length + 1).padStart(12, "0")}`;
+  usuarios.push({
+    id,
+    email,
+    password,
+    created_at: new Date().toISOString(),
+    user_metadata: {},
+    app_metadata: { rol: "staff" },
+    identities: [{ id }],
+    confirmado: true,
+  });
+  return id;
 }
 
 /** Crea un usuario confirmado (y su fila de `pacientes`, como el trigger), sin abrir sesión. */
