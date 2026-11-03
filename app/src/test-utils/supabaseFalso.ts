@@ -107,13 +107,22 @@ const nombreDe = (tabla: Fila[], id: unknown) => tabla.find((f) => f.id === id)?
 // Registro (trigger sobre auth.users)
 // ---------------------------------------------------------------------------
 
+/** Cédulas que rechazó la base falsa por `pacientes_cedula_check`, para revisar en las pruebas. */
+export let cedulasRechazadas: string[] = [];
+
 /**
  * Imita `crear_paciente_desde_auth`: fila de `pacientes` + solicitudes de
- * espera de las especialidades elegidas. Null si la cédula ya existe
- * (uq_pacientes_cedula): entonces no se crea el usuario.
+ * espera de las especialidades elegidas. False (no se crea el usuario) si la
+ * cédula no cumple el CHECK `pacientes_cedula_check` del proyecto
+ * (`^[0-9]{6,10}$`, tras quitar lo que no es dígito, como el trigger) o si ya
+ * existe (uq_pacientes_cedula).
  */
 function trigger(id: string, email: string, m: Fila): boolean {
   const cedula = String(m.cedula ?? "").replace(/\D/g, "");
+  if (!/^[0-9]{6,10}$/.test(cedula)) {
+    cedulasRechazadas.push(cedula);
+    return false;
+  }
   if (pacientesCreados.some((p) => p.cedula === cedula)) return false;
   const ahora = new Date().toISOString();
   const franja = ["Mañana", "Tarde", "Indistinto"].includes(String(m.franjaPreferida)) ? m.franjaPreferida : "Indistinto";
@@ -260,6 +269,7 @@ export function reiniciarSupabaseFalso() {
   codigosRecuperacion = {};
   pedirConfirmacion = false;
   pacientesCreados = [];
+  cedulasRechazadas = [];
   tablasConsultadas = [];
   insertsIntentados = [];
   rpcLlamadas = [];
