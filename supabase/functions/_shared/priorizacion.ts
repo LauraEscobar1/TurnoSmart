@@ -172,7 +172,11 @@ export const MAXIMO_CANDIDATOS_IA = 20;
 
 /** API oficial de DeepSeek (formato OpenAI), api-docs.deepseek.com. */
 export const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
-/** El modelo más económico; se usa en modo sin razonamiento y con temperatura 0. */
+/**
+ * El modelo más económico; se usa en modo sin razonamiento y con temperatura 0.
+ * Nombre vigente según api-docs.deepseek.com (verificado el 2026-11-02);
+ * se puede cambiar sin tocar el código con el secret DEEPSEEK_MODEL.
+ */
 export const DEEPSEEK_MODELO = "deepseek-flash";
 export const DEEPSEEK_TIMEOUT_MS = 8000;
 
