@@ -29,14 +29,14 @@ export function ScreenHeader({ title, onBack, accion }: ScreenHeaderProps) {
         <Pressable onPress={onBack} hitSlop={12} style={styles.backButton} accessibilityLabel={t("comun.volver")}>
           <Ionicons name="arrow-back" size={18} color={colors.text} />
         </Pressable>
-        <Text style={label(11, colors.text)}>{title}</Text>
+        <Text style={label(11, colors.textoSobreFondo)}>{title}</Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.bar, styles.titleBar]}>
-      <Text style={heading(28, colors.text)}>{title}</Text>
+      <Text style={heading(28, colors.textoSobreFondo)}>{title}</Text>
       {accion}
     </View>
   );

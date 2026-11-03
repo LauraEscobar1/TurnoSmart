@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
@@ -9,18 +10,23 @@ import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { DoctoraIlustracion, PROPORCION_ILUSTRACION } from "@/components/DoctoraIlustracion";
 import { Logo } from "@/components/Logo";
+import { OndasPulso } from "@/components/OndasPulso";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Bienvenida">;
 
 const MARGEN = 28;
 
 /**
- * Bienvenida: composición editorial. Arriba el retrato de la doctora en su
- * arco, alineado al margen derecho del texto; abajo, titular, bajada y
- * acciones sobre el mismo margen izquierdo.
+ * Bienvenida. Modo claro: arriba la zona azul con líneas de pulso y el logo
+ * en blanco, que cierra en una curva; abajo, sobre la zona clara, titular,
+ * bajada y acciones. Modo oscuro: el retrato de la doctora en su arco,
+ * alineado al margen derecho del texto. Textos y botón, iguales en ambos.
  */
 export function BienvenidaScreen({ navigation }: Props) {
-  const { colors } = useTema();
+  const { colors, oscuro } = useTema();
+  const insets = useSafeAreaInsets();
+  // Tamaño de la zona azul (modo claro), para dibujar las ondas a su medida.
+  const [cabecera, setCabecera] = useState({ width: 0, height: 0 });
   const styles = useEstilos(crearStyles);
   const t = useT();
   const { width, height } = useWindowDimensions();
@@ -30,14 +36,35 @@ export function BienvenidaScreen({ navigation }: Props) {
   const anchoIlustracion = Math.min(anchoContenido, height * 0.47 * PROPORCION_ILUSTRACION);
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
-      <View style={styles.marca}>
-        <Logo size={20} wordmark disposicion="horizontal" />
-      </View>
+    // En claro la zona azul llega hasta arriba (bajo la barra de estado); en oscuro, igual que siempre.
+    <SafeAreaView edges={oscuro ? ["top", "bottom"] : ["bottom"]} style={styles.safe}>
+      {oscuro ? (
+        <>
+          <View style={styles.marca}>
+            <Logo size={20} wordmark disposicion="horizontal" />
+          </View>
 
-      <View style={styles.ilustracion}>
-        <DoctoraIlustracion width={anchoIlustracion} />
-      </View>
+          <View style={styles.ilustracion}>
+            <DoctoraIlustracion width={anchoIlustracion} />
+          </View>
+        </>
+      ) : (
+        <View
+          style={[styles.cabecera, { paddingTop: insets.top }]}
+          onLayout={(e) => setCabecera({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+        >
+          <StatusBar style="light" />
+          <OndasPulso
+            width={cabecera.width}
+            height={cabecera.height}
+            color={colors.trazoSobreFondo}
+            colorCurva={colors.fondoBienvenida}
+          />
+          <View style={styles.marca}>
+            <Logo size={20} wordmark disposicion="horizontal" color={colors.trazoSobreFondo} acento={colors.trazoSobreFondo} />
+          </View>
+        </View>
+      )}
 
       <View style={styles.texto}>
         <Text style={styles.titular} accessibilityRole="header">
@@ -78,7 +105,13 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.accent100,
+    backgroundColor: colors.fondoBienvenida,
+  },
+  // Modo claro: zona azul con las líneas de pulso; ocupa el lugar de la ilustración.
+  cabecera: {
+    flex: 1,
+    backgroundColor: colors.fondoPantalla,
+    overflow: "hidden",
   },
   marca: {
     flexDirection: "row",
@@ -119,7 +152,7 @@ const crearStyles = (colors: Paleta) =>
   boton: {
     height: 54,
     borderRadius: 16,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.botonBienvenida,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.colorSombra,
@@ -135,7 +168,7 @@ const crearStyles = (colors: Paleta) =>
     fontFamily: fonts.heading,
     fontSize: 19,
     letterSpacing: 0.3,
-    color: colors.sobreAcento,
+    color: colors.textoBotonBienvenida,
   },
   ingresar: {
     flexDirection: "row",

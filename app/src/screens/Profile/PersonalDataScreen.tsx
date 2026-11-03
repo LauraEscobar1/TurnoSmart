@@ -99,7 +99,7 @@ export function PersonalDataScreen() {
           </View>
 
           <View style={styles.seccion}>
-            <Text style={label(10, colors.neutral600)}>{t("datos.cuenta")}</Text>
+            <Text style={label(10, colors.textoTenueSobreFondo)}>{t("datos.cuenta")}</Text>
             <Card>
               {cuenta.map((c, i) => (
                 <View key={c.label} style={[styles.row, i > 0 && styles.rowDivider]}>
@@ -111,7 +111,7 @@ export function PersonalDataScreen() {
           </View>
 
           <View style={styles.seccion}>
-            <Text style={label(10, colors.neutral600)}>{t("datos.adicional")}</Text>
+            <Text style={label(10, colors.textoTenueSobreFondo)}>{t("datos.adicional")}</Text>
             <Card style={styles.formulario}>
               <TextField
                 label={t("datos.nacimiento")}
@@ -154,7 +154,7 @@ export function PersonalDataScreen() {
 
         <View style={styles.footer}>
           {guardado && !cambios ? (
-            <Text style={[body(13, colors.accent700), styles.centrado]} accessibilityLiveRegion="polite">
+            <Text style={[body(13, colors.acentoSobreFondo), styles.centrado]} accessibilityLiveRegion="polite">
               {t("datos.guardado")}
             </Text>
           ) : null}
@@ -169,7 +169,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   flex: {
     flex: 1,

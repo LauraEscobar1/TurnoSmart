@@ -83,10 +83,10 @@ export function ProfileHomeScreen() {
           <View style={styles.barra}>
             <BotonRedondo icono="settings-outline" etiqueta={t("preferencias.titulo")} onPress={irAPreferencias} />
             <View style={styles.identidad}>
-              <Text style={[heading(30, colors.accent900), styles.centrado]} numberOfLines={1}>
+              <Text style={[heading(30, colors.textoSobreFondo), styles.centrado]} numberOfLines={1}>
                 {paciente.nombre} {paciente.apellido}
               </Text>
-              <Text style={[body(14, colors.neutral600), styles.centrado]} numberOfLines={1}>
+              <Text style={[body(14, colors.textoTenueSobreFondo), styles.centrado]} numberOfLines={1}>
                 {paciente.email}
               </Text>
             </View>
@@ -256,12 +256,12 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   // Blanco debajo del arco; arriba, el arco (que se extiende hacia arriba)
   // cubre también el rebote del scroll.
   scroll: {
-    backgroundColor: colors.superficie,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     flexGrow: 1,
@@ -324,7 +324,7 @@ const crearStyles = (colors: Paleta) =>
   tarjeta: {
     padding: 18,
     borderRadius: radius.lg,
-    backgroundColor: colors.superficie,
+    backgroundColor: colors.fondoCard,
     borderWidth: 1,
     borderColor: colors.borde,
     ...sombra.md,
@@ -392,7 +392,7 @@ const crearStyles = (colors: Paleta) =>
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.borde,
-    backgroundColor: colors.superficie,
+    backgroundColor: colors.fondoCard,
   },
   indicadorIcono: {
     marginTop: 3,

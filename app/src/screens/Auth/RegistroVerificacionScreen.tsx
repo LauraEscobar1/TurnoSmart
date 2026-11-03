@@ -69,8 +69,8 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
     >
       <StepProgress step={3} total={3} />
       <View>
-        <Text style={heading(26, colors.text)}>{t("registro.verificaTelefono")}</Text>
-        <Text style={[body(13, colors.neutral700), { marginTop: 4 }]}>
+        <Text style={heading(26, colors.textoSobreFondo)}>{t("registro.verificaTelefono")}</Text>
+        <Text style={[body(13, colors.textoSuaveSobreFondo), { marginTop: 4 }]}>
           {t("registro.enviamosAl", { telefono: datos.telefono })}
         </Text>
       </View>

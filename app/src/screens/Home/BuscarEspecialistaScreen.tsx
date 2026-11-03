@@ -64,7 +64,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <View style={styles.cabecera}>
-            <TextField
+            <TextField sobreFondo
               label={t("buscar.especialidad")}
               placeholder={t("buscar.placeholder")}
               value={busqueda}
@@ -72,7 +72,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
               autoCorrect={false}
               returnKeyType="search"
             />
-            <Text style={body(13, colors.neutral700)}>
+            <Text style={body(13, colors.textoSuaveSobreFondo)}>
               {t("buscar.bajada")}
             </Text>
           </View>
@@ -111,7 +111,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
           );
         }}
         ListEmptyComponent={
-          <Text style={[body(14, colors.neutral700), styles.vacio]}>{t("buscar.sinResultados", { busqueda: busqueda.trim() })}</Text>
+          <Text style={[body(14, colors.textoSuaveSobreFondo), styles.vacio]}>{t("buscar.sinResultados", { busqueda: busqueda.trim() })}</Text>
         }
       />
     </SafeAreaView>
@@ -122,7 +122,7 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.fondoPantalla,
   },
   content: {
     padding: 20,

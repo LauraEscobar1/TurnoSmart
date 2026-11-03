@@ -17,13 +17,15 @@ interface TextFieldProps extends TextInputProps {
   label: string;
   error?: string;
   hint?: string;
+  /** El campo está sobre el fondo de pantalla: etiqueta y ayuda en sus colores «sobre fondo». */
+  sobreFondo?: boolean;
   style?: StyleProp<ViewStyle>;
   /** Contraseña con el ojo para mostrarla u ocultarla. */
   revelable?: boolean;
 }
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { label, error, hint, style, onFocus, onBlur, revelable, secureTextEntry, ...input },
+  { label, error, hint, style, onFocus, onBlur, revelable, secureTextEntry, sobreFondo, ...input },
   ref
 ) {
   const { colors } = useTema();
@@ -33,7 +35,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   const [visible, setVisible] = useState(false);
   return (
     <View style={style}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, sobreFondo && styles.labelSobreFondo]}>{label}</Text>
       <View>
         <TextInput
           ref={ref}
@@ -69,7 +71,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           </Pressable>
         ) : null}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={[styles.hint, sobreFondo && styles.hintSobreFondo]}>{hint}</Text> : null}
     </View>
   );
 });
@@ -87,6 +89,8 @@ interface SegmentedProps<T> {
    */
   variante?: "relleno" | "pildora";
   style?: StyleProp<ViewStyle>;
+  /** Está sobre el fondo de pantalla: la etiqueta usa su color «sobre fondo». */
+  sobreFondo?: boolean;
 }
 
 /** Control segmentado (.seg). */
@@ -98,12 +102,13 @@ export function Segmented<T>({
   fill = true,
   variante = "relleno",
   style,
+  sobreFondo,
 }: SegmentedProps<T>) {
   const styles = useEstilos(crearStyles);
   const pildora = variante === "pildora";
   return (
     <View style={style}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? <Text style={[styles.label, sobreFondo && styles.labelSobreFondo]}>{label}</Text> : null}
       <View
         style={[styles.seg, pildora && styles.pista, !fill && styles.segInline]}
         accessibilityRole="radiogroup"
@@ -152,19 +157,21 @@ interface ChipSelectProps {
   error?: string;
   /** Texto visible de cada opción (p. ej. la especialidad en el idioma elegido). */
   etiqueta?: (option: string) => string;
+  /** Está sobre el fondo de pantalla: la etiqueta usa su color «sobre fondo». */
+  sobreFondo?: boolean;
 }
 
 /**
  * Selección múltiple con tags: elegida = campo sólido (acero 900),
  * sin elegir = contorno.
  */
-export function ChipSelect({ label, options, value, onChange, error, etiqueta = (o) => o }: ChipSelectProps) {
+export function ChipSelect({ label, options, value, onChange, error, etiqueta = (o) => o, sobreFondo }: ChipSelectProps) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   const toggle = (o: string) => onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o]);
   return (
     <View>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, sobreFondo && styles.labelSobreFondo]}>{label}</Text>
       <View style={styles.chips}>
         {options.map((o) => {
           const on = value.includes(o);
@@ -219,6 +226,9 @@ const crearStyles = (colors: Paleta) =>
     marginBottom: 5,
     color: colors.etiquetaCampo,
   },
+  labelSobreFondo: {
+    color: colors.etiquetaCampoSobreFondo,
+  },
   input: {
     minHeight: 48,
     paddingHorizontal: 14,
@@ -263,6 +273,9 @@ const crearStyles = (colors: Paleta) =>
     fontSize: 12,
     color: colors.neutral600,
     marginTop: 4,
+  },
+  hintSobreFondo: {
+    color: colors.ayudaSobreFondo,
   },
   seg: {
     flexDirection: "row",

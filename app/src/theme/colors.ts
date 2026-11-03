@@ -9,6 +9,34 @@ export const paletaClara = {
   fondo: "#f3f7fc",
   superficie: "#ffffff",
   borde: "rgba(29,45,61,0.10)",
+  /** Fondo de las pantallas (solo el lienzo: los demás usos de `fondo` no cambian). */
+  fondoPantalla: "#2C5A94",
+  /** Fondo de las cards: efecto glass, translúcido sobre el fondo de pantalla. */
+  fondoCard: "rgba(232,238,245,0.85)",
+  /** Card de acento (Card tono="acento"): fondo y borde. */
+  fondoCardAcento: "#E8EEF5",
+  bordeCardAcento: "#CDD9E6",
+  /**
+   * Texto directamente sobre el fondo de pantalla (fuera de cards, botones e
+   * inputs). En claro todo es blanco; cada token conserva en oscuro el color
+   * que ese texto ya usaba (texto/accent900, neutral700, neutral600, accent700).
+   */
+  textoSobreFondo: "#FFFFFF",
+  textoSuaveSobreFondo: "#FFFFFF",
+  textoTenueSobreFondo: "#FFFFFF",
+  acentoSobreFondo: "#FFFFFF",
+  /** Etiqueta y texto de ayuda de un campo de formulario que está sobre el fondo de pantalla. */
+  etiquetaCampoSobreFondo: "#FFFFFF",
+  ayudaSobreFondo: "rgba(255,255,255,0.8)",
+  /** Bienvenida: zona inferior y trazos (líneas de pulso, logo) sobre la zona azul. */
+  fondoBienvenida: "#F2F2F2",
+  trazoSobreFondo: "#FFFFFF",
+  /** Logo sobre el fondo de pantalla: estetoscopio y texto, y su línea de pulso. */
+  logoSobreFondo: "#FFFFFF",
+  logoAcentoSobreFondo: "#FFFFFF",
+  /** Botón «Empezar» de Bienvenida (solo esa pantalla). */
+  botonBienvenida: "#2C5A94",
+  textoBotonBienvenida: "#FFFFFF",
 
   // Roles
   bg: "#f2f2f3", // Papel (texto e íconos sobre campos oscuros)
@@ -73,6 +101,26 @@ export const paletaOscura: Paleta = {
   fondo: "#111820",
   superficie: "#17202a",
   borde: "rgba(232,236,240,0.16)",
+  // Mismos valores que ya usaba el modo oscuro (fondo, superficie, accent100/200): no cambia.
+  fondoPantalla: "#111820",
+  fondoCard: "#17202a",
+  fondoCardAcento: "#1a2a3a",
+  bordeCardAcento: "#243a50",
+  textoSobreFondo: "#e8ecf0",
+  textoSuaveSobreFondo: "#bcc1c6",
+  textoTenueSobreFondo: "#9aa1a8",
+  acentoSobreFondo: "#94bce3",
+  etiquetaCampoSobreFondo: "rgba(232,236,240,0.7)",
+  ayudaSobreFondo: "#9aa1a8",
+  // La Bienvenida oscura no cambia: mismo fondo (accent100); los trazos no se usan en oscuro.
+  fondoBienvenida: "#1a2a3a",
+  trazoSobreFondo: "#e8ecf0",
+  // Logo oscuro: los mismos colores por defecto del componente (accent900 y accent).
+  logoSobreFondo: "#e8ecf0",
+  logoAcentoSobreFondo: "#749dc4",
+  // Botón «Empezar» oscuro: los mismos colores de siempre (accent y sobreAcento).
+  botonBienvenida: "#749dc4",
+  textoBotonBienvenida: "#111820",
 
   bg: "#111820",
   surface: "#1c2733",
