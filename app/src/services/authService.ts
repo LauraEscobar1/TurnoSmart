@@ -299,14 +299,29 @@ export function validarPassword(password: string): string | undefined {
   if (password.length < 8 || !/\d/.test(password)) return tr("errores.passwordMinimo");
 }
 
+/**
+ * Formato con que la base guarda la cédula: el CHECK `pacientes_cedula_check`
+ * del proyecto exige `^[0-9]{6,10}$`. Si la cédula no lo cumple, el trigger de
+ * registro falla y Supabase no crea la cuenta.
+ */
+export const FORMATO_CEDULA_BASE = /^[0-9]{6,10}$/;
+
+/** Solo los dígitos de la cédula (la misma normalización que hace el trigger de registro). */
+export function normalizarCedula(cedula: string): string {
+  return cedula.replace(/[^0-9]/g, "");
+}
+
+/** Cédula escrita con dígitos y, opcionalmente, puntos o espacios, que queda en 6 a 10 dígitos. */
+export function cedulaValida(cedula: string): boolean {
+  return !/[^0-9.\s]/.test(cedula) && FORMATO_CEDULA_BASE.test(normalizarCedula(cedula));
+}
+
 /** Validación del paso 1. Devuelve un mensaje por campo con error. */
 export function validarDatosCuenta(d: DatosCuenta): Partial<Record<keyof DatosCuenta, string>> {
   const errores: Partial<Record<keyof DatosCuenta, string>> = {};
   if (!d.nombre.trim()) errores.nombre = tr("errores.nombre");
   if (!d.apellido.trim()) errores.apellido = tr("errores.apellido");
-  if (!/^\d{6,10}$/.test(d.cedula.replace(/\D/g, "")) || /[^\d.\s]/.test(d.cedula)) {
-    errores.cedula = tr("errores.cedula");
-  }
+  if (!cedulaValida(d.cedula)) errores.cedula = tr("errores.cedula");
   if (!validarEmail(d.email)) errores.email = tr("errores.revisaCorreo");
   if (d.telefono.replace(/\D/g, "").length < 8) errores.telefono = tr("errores.telefono");
   const errorPassword = validarPassword(d.password);
@@ -344,9 +359,15 @@ export async function crearCuenta(
   if (!codigoPendiente || codigoPendiente.telefono !== datos.telefono || codigoPendiente.codigo !== opciones.codigo) {
     throw new AuthError(tr("errores.codigo"), "codigo");
   }
+  // Nunca se llama a signUp con datos sin validar: aunque el paso 1 ya los
+  // validó, un borrador incompleto o desactualizado mandaría al trigger una
+  // cédula que la base rechaza (pacientes_cedula_check) y la cuenta no se crea.
+  const errores = validarDatosCuenta(datos);
+  const campoConError = (Object.keys(errores) as (keyof DatosCuenta)[])[0];
+  if (campoConError) throw new AuthError(errores[campoConError]!, campoConError);
   const supabase = getSupabase();
   const ahora = new Date().toISOString();
-  const cedula = datos.cedula.replace(/\D/g, "");
+  const cedula = normalizarCedula(datos.cedula);
   const { data, error } = await supabase.auth.signUp({
     email: normalizarEmail(datos.email),
     password: datos.password,
