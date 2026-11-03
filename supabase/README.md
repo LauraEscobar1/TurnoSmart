@@ -20,6 +20,7 @@ orden por nombre) y la priorización de cupos vive en la Edge Function
 | `20261010220000_operacion_ofertas.sql` | Sin candidatos para cupos ya pasados ni para quien tiene cita a esa hora; `cerrar_cupos_vencidos()`; pg_cron: vencimiento de ofertas cada minuto y reproceso de cupos abiertos cada 5 minutos; `notificaciones` en Realtime. |
 | `20261015120000_priorizacion_ia.sql` | `ofrecer_cupo` completa `ofertas_factores.tipo` (columna NOT NULL del proyecto real); timeout de pg_net hacia la función de 5 s a 15 s (la IA puede tardar). |
 | `20261019120000_notificaciones_referencia.sql` | Trigger que completa `notificaciones.oferta_id` / `cita_id` desde `referencia_id`: el CHECK `chk_notificacion_referencia` del proyecto real hacía fallar `ofrecer_cupo`, `_expirar_oferta` y `aceptar_oferta`. |
+| `20261102120000_staff_panel_inasistencias.sql` | Rol staff (`staff`: usuario ↔ consultorio; el trigger de registro no crea paciente si `raw_app_meta_data.rol = 'staff'`), RLS del staff (solo su consultorio; pacientes por iniciales y código), RPC del panel (`cancelar_cita_staff`, `registrar_inasistencia`, `staff_metricas`, `staff_agenda`, `staff_cupos`, `mi_perfil_staff`, `staff_datos_riesgo`) y `riesgo_inasistencia` (escribe solo `guardar_riesgo_inasistencia`, service_role). |
 
 Todas las funciones son `security definer` con `search_path = ''` y usan
 `auth.uid()`; nunca reciben el id del paciente desde la app.
@@ -115,3 +116,34 @@ notificación, en una transacción).
   el score interno (`ofertas.score` no es legible para `authenticated`).
 - **Errores:** la función responde mensajes controlados; el detalle técnico
   queda solo en los logs de Supabase.
+
+## Panel del staff y riesgo de inasistencia
+
+- **Rol staff:** un usuario es staff si `auth.users.raw_app_meta_data.rol = 'staff'`
+  (solo lo asigna el servidor) y tiene filas activas en `staff`. La app lo
+  detecta al iniciar sesión y muestra el panel en lugar de la app del paciente.
+- **Privacidad:** el staff no lee `pacientes`, `citas` ni `ofertas`
+  directamente; las RPC del panel devuelven al paciente solo con iniciales y
+  un código opaco (`P-XXXXXX`) y solo de sus consultorios. Prueba:
+  `supabase db query --linked -f supabase/pruebas/rls_staff.sql` (termina en ROLLBACK).
+- **Acciones:** `cancelar_cita_staff` libera el cupo como `cancelar_cita`
+  (trigger → `priorizar-cupo`); `registrar_inasistencia` marca `no-show` una
+  cita confirmada cuya hora ya pasó (no libera cupo: el horario ya transcurrió).
+- **Edge Function `predecir-inasistencia`** (botón «Calcular riesgo» del panel,
+  por cita o para toda la agenda de 14 días). Factores sin datos clínicos:
+  historial de asistencia, días de antelación, día y hora (Colombia) y
+  respuesta a ofertas previas. El puntaje es determinista
+  (`functions/_shared/riesgo.ts`); DeepSeek recibe alias y señales y devuelve
+  nivel y explicación breve (es/en) con la misma llamada compartida de
+  `functions/_shared/deepseek.ts` (timeout, modo JSON, sin razonamiento). La
+  respuesta se valida estrictamente (alias, nivel a ≤ 1 escalón del
+  determinista, explicaciones de 10-220 caracteres sin enlaces); si algo
+  falla, ese lote usa el nivel y la explicación deterministas. Cada resultado
+  queda en `riesgo_inasistencia` con `estrategia` = `ai` o `fallback`.
+  - Desplegar: `supabase functions deploy predecir-inasistencia --no-verify-jwt`
+    (valida el token con `auth.getUser` y la RPC exige ser staff).
+  - Pruebas: `cd supabase/functions && deno test tests/` y los tests de la app.
+- **Datos demo:** `supabase/pruebas/datos_demo_fase4.sql` (ficticios, correos
+  `@turnosmart.test`, consultorio «Consultorio Demo TurnoSmart (ficticio)»).
+  Staff demo: `staff.demo@turnosmart.test`; su contraseña se define en el SQL
+  Editor (ver el encabezado del archivo).
