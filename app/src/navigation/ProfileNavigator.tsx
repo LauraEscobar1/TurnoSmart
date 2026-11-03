@@ -13,7 +13,7 @@ export function ProfileNavigator() {
   const { colors } = useTema();
   const t = useT();
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}>
       <Stack.Screen name="ProfileHome" component={ProfileHomeScreen} options={{ title: t("nav.perfil") }} />
       <Stack.Screen
         name="PersonalData"

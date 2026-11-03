@@ -10,6 +10,8 @@ interface PreferenciasFormProps {
   value: PreferenciasCupo;
   onChange: (value: PreferenciasCupo) => void;
   errorEspecialidades?: string;
+  /** El formulario está sobre el fondo de pantalla (etiquetas en su color «sobre fondo»). */
+  sobreFondo?: boolean;
 }
 
 const FRANJAS: FranjaHoraria[] = ["Mañana", "Tarde", "Indistinto"];
@@ -20,7 +22,7 @@ export function distanciaLabel(d: DistanciaMaxima, t: T) {
 }
 
 /** Preferencias de cupo: el mismo formulario en el registro (paso 2) y en Perfil. */
-export function PreferenciasForm({ value, onChange, errorEspecialidades }: PreferenciasFormProps) {
+export function PreferenciasForm({ value, onChange, errorEspecialidades, sobreFondo }: PreferenciasFormProps) {
   const t = useT();
   const dato = useDato();
   const set = <K extends keyof PreferenciasCupo>(k: K, v: PreferenciasCupo[K]) => onChange({ ...value, [k]: v });
@@ -36,18 +38,21 @@ export function PreferenciasForm({ value, onChange, errorEspecialidades }: Prefe
         value={value.especialidadesInteres}
         onChange={(v) => set("especialidadesInteres", v)}
         error={errorEspecialidades}
+        sobreFondo={sobreFondo}
       />
       <Segmented
         label={t("preferencias.franja")}
         options={FRANJAS.map((f) => ({ value: f, label: dato("franjas", f) }))}
         value={value.franjaPreferida}
         onChange={(v) => set("franjaPreferida", v)}
+        sobreFondo={sobreFondo}
       />
       <Segmented
         label={t("preferencias.distancia")}
         options={DISTANCIAS.map((d) => ({ value: d, label: distanciaLabel(d, t) }))}
         value={value.distanciaMaxKm}
         onChange={(v) => set("distanciaMaxKm", v)}
+        sobreFondo={sobreFondo}
       />
     </View>
   );

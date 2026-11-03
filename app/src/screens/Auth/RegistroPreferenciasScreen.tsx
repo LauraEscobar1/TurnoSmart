@@ -42,12 +42,12 @@ export function RegistroPreferenciasScreen({ navigation }: Props) {
     >
       <StepProgress step={2} total={3} />
       <View>
-        <Text style={heading(26, colors.text)}>{t("registro.queCupos")}</Text>
-        <Text style={[body(13, colors.neutral700), { marginTop: 4 }]}>
+        <Text style={heading(26, colors.textoSobreFondo)}>{t("registro.queCupos")}</Text>
+        <Text style={[body(13, colors.textoSuaveSobreFondo), { marginTop: 4 }]}>
           {t("registro.queCuposBajada")}
         </Text>
       </View>
-      <PreferenciasForm
+      <PreferenciasForm sobreFondo
         value={form}
         onChange={(v) => {
           setForm(v);

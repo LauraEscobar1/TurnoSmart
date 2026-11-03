@@ -19,7 +19,7 @@ const temaNavegacion = (colors: Paleta, oscuro: boolean): Theme => ({
   colors: {
     ...DefaultTheme.colors,
     primary: colors.accent,
-    background: colors.fondo,
+    background: colors.fondoPantalla,
     card: colors.superficie,
     text: colors.text,
     border: colors.divider,
@@ -44,7 +44,7 @@ export function RootNavigator() {
   return (
     <NavigationContainer theme={temaNavegacion(colors, oscuro)}>
       <StatusBar style={oscuro ? "light" : "dark"} />
-      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondo } }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}>
         {paciente ? (
           <>
             <Stack.Screen name="Tabs" component={TabNavigator} />
