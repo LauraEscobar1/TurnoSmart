@@ -36,6 +36,7 @@ import {
   EstrategiaPriorizacion,
   priorizarConRespaldo,
 } from "../_shared/priorizacion.ts";
+import { mismoSecreto } from "../_shared/secreto.ts";
 
 /**
  * Estrategia con IA (DeepSeek) si está el secret DEEPSEEK_API_KEY; sin él, o
@@ -57,16 +58,6 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Respuestas controladas: nunca incluyen detalles internos de Postgres. */
 function responder(cuerpo: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(cuerpo), { status, headers: { "Content-Type": "application/json" } });
-}
-
-/** Compara el secreto sin cortar en la primera diferencia (tiempo constante). */
-function mismoSecreto(recibido: string | null, esperado: string): boolean {
-  if (!recibido) return false;
-  const a = new TextEncoder().encode(recibido);
-  const b = new TextEncoder().encode(esperado);
-  let diferencia = a.length ^ b.length;
-  for (let i = 0; i < Math.max(a.length, b.length); i++) diferencia |= (a[i] ?? 0) ^ (b[i] ?? 0);
-  return diferencia === 0;
 }
 
 async function obtenerCandidatos(supabase: SupabaseClient, cupoId: string): Promise<Candidato[]> {
