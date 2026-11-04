@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import type { TextInputInstance } from "react-native";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { body, heading } from "@/theme/typography";
@@ -81,7 +82,7 @@ export function CodeInput({ value, onChange, autoFocus, testID = "codigo-input" 
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   const t = useT();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   return (
     <Pressable
