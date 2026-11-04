@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import type { ScrollViewInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
@@ -31,7 +32,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
   const styles = useEstilos(crearStyles);
   const t = useT();
   const { diaSemanaCorto, fechaLarga, mesYAnio } = useFormato();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const [ancho, setAncho] = useState(0);
   const offset = useRef(0);
   const claveSel = claveDia(seleccionado);
