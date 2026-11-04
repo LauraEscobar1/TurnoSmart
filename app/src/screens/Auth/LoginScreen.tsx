@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import type { TextInputInstance } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as LocalAuthentication from "expo-local-authentication";
 import { Paleta } from "@/theme/colors";
@@ -28,7 +29,7 @@ export function LoginScreen({ navigation, route }: Props) {
   const [error, setError] = useState<{ campo?: string; mensaje: string } | null>(null);
   const [aviso, setAviso] = useState<string | null>(route.params?.aviso ?? null);
   const [enviando, setEnviando] = useState(false);
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
 
   // Al volver de «Restablecer contraseña» llega el aviso por parámetro.
   useEffect(() => {

@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import type { ScrollViewInstance } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -40,7 +41,7 @@ export function IntroScreen({ navigation }: Props) {
   const styles = useEstilos(crearStyles);
   const t = useT();
   const { width } = useWindowDimensions();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const [paso, setPaso] = useState(0);
   const ultimo = paso === PASOS.length - 1;
 

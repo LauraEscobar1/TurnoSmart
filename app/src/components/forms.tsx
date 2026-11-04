@@ -1,5 +1,6 @@
 import React, { forwardRef, useState } from "react";
 import { Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
+import type { TextInputInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
@@ -24,7 +25,7 @@ interface TextFieldProps extends TextInputProps {
   revelable?: boolean;
 }
 
-export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function TextField(
   { label, error, hint, style, onFocus, onBlur, revelable, secureTextEntry, sobreFondo, ...input },
   ref
 ) {
