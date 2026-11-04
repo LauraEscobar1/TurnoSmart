@@ -10,8 +10,9 @@
  *      estrategia determinista. Cada priorización queda en los logs como
  *      "ai" o "fallback".
  *   3. crearOferta: `ofrecer_cupo` (RPC, solo service_role) crea en una
- *      transacción la oferta, sus factores (máx. 4), el evento «enviada» y
- *      la notificación, y vuelve a validar al candidato y el cupo.
+ *      transacción la oferta (con su estrategia, "ai" o "fallback"), sus
+ *      factores (máx. 4), el evento «enviada» y la notificación, y vuelve a
+ *      validar al candidato y el cupo.
  *
  * Quién la llama: SOLO la base de datos. El trigger
  * `cupos_solicitar_priorizacion` (migración 20260927140000) la invoca con
@@ -66,7 +67,12 @@ async function obtenerCandidatos(supabase: SupabaseClient, cupoId: string): Prom
   return (data ?? []) as Candidato[];
 }
 
-async function crearOferta(supabase: SupabaseClient, cupoId: string, elegido: CandidatoPriorizado): Promise<string> {
+async function crearOferta(
+  supabase: SupabaseClient,
+  cupoId: string,
+  elegido: CandidatoPriorizado,
+  estrategia: "ai" | "fallback"
+): Promise<string> {
   const minutos = Number(Deno.env.get("MINUTOS_OFERTA") ?? "10");
   const { data, error } = await supabase.rpc("ofrecer_cupo", {
     p_cupo_id: cupoId,
@@ -74,6 +80,8 @@ async function crearOferta(supabase: SupabaseClient, cupoId: string, elegido: Ca
     p_score: elegido.score,
     p_factores: elegido.factores,
     p_minutos: Number.isFinite(minutos) ? minutos : 10,
+    // La app muestra «Recomendado por IA» solo si es "ai" (migración 20261105120000).
+    p_estrategia: estrategia,
   });
   if (error) throw new Error(`ofrecer_cupo: ${error.code} ${error.message}`);
   return data as string;
@@ -125,7 +133,7 @@ Deno.serve(async (req) => {
         ms: Date.now() - inicio,
       })
     );
-    const ofertaId = await crearOferta(supabase, cupoId, priorizados[0]);
+    const ofertaId = await crearOferta(supabase, cupoId, priorizados[0], estrategia);
     return responder({ oferta_id: ofertaId, estrategia });
   } catch (error) {
     // El detalle técnico queda solo en los logs del servidor.

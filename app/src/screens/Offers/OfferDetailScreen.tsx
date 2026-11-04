@@ -15,6 +15,7 @@ import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { DataRow } from "@/components/OfferCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Card } from "@/components/Card";
+import { AnalisisRecomendacion, InsigniaRecomendacion } from "@/components/Recomendacion";
 import { hora, useFormato } from "@/utils/format";
 import { useDato, useT } from "@/i18n";
 
@@ -123,7 +124,8 @@ function OfertaVigente({
         <Card tono="acento" style={styles.timer}>
           <Countdown segundos={segundos} size={52} caption={t("oferta.tiempoParaResponder")} align="center" />
         </Card>
-        <View>
+        <View style={styles.titulo}>
+          <InsigniaRecomendacion estrategia={oferta.estrategia} />
           <Text style={heading(32, colors.textoSobreFondo)}>{dato("especialidades", oferta.especialidad)}</Text>
           <Text style={body(14, colors.textoSuaveSobreFondo)}>
             {oferta.profesional} · {oferta.consultorio}
@@ -131,7 +133,9 @@ function OfertaVigente({
         </View>
         <DataRow fecha={fechaConDia(oferta.fechaHoraISO)} hora={hora(oferta.fechaHoraISO)} size={18} />
         <Card style={styles.panel}>
-          <ExplainabilityPanel factores={oferta.factores} />
+          <AnalisisRecomendacion estrategia={oferta.estrategia} />
+          <View style={styles.divisor} />
+          <ExplainabilityPanel factores={oferta.factores} estrategia={oferta.estrategia} fechaHoraISO={oferta.fechaHoraISO} />
         </Card>
       </ScrollView>
       {/* La barra llega al borde inferior y absorbe el inset (indicador de inicio). */}
@@ -200,8 +204,16 @@ const crearStyles = (colors: Paleta) =>
   timer: {
     paddingVertical: 18,
   },
+  titulo: {
+    gap: 8,
+  },
   panel: {
     padding: 18,
+  },
+  divisor: {
+    height: 1,
+    marginVertical: 14,
+    backgroundColor: colors.borde,
   },
   barra: {
     gap: 10,

@@ -22,6 +22,8 @@ export interface NotificacionGuardada extends Omit<Notificacion, "titulo" | "cue
     fechaHoraISO?: string;
     /** "confirmar-asistencia": recordatorio por riesgo alto de inasistencia (no se muestra el riesgo). */
     accion?: string;
+    /** "ai": la oferta la priorizó la IA (solo entonces el texto la menciona). */
+    estrategia?: string;
   };
 }
 
@@ -64,7 +66,9 @@ function redactar(n: NotificacionGuardada, nombre: string, idioma: Idioma): Noti
   const base =
     n.tipo === "recordatorio" && datos.accion === "confirmar-asistencia"
       ? "notificaciones.mensajes.confirmar-asistencia"
-      : `notificaciones.mensajes.${n.tipo}`;
+      : n.tipo === "cupo-ultimo-minuto" && datos.estrategia === "ai"
+        ? "notificaciones.mensajes.cupo-ia"
+        : `notificaciones.mensajes.${n.tipo}`;
   return {
     ...resto,
     titulo: traducir(idioma, `${base}.titulo` as Clave),

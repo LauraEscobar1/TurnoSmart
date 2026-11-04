@@ -64,6 +64,19 @@ describe("Contenido de los avisos", () => {
     expect(aviso?.data).toEqual({ destino: "oferta", ofertaId: "of-9" });
   });
 
+  it("oferta priorizada por la IA: «La IA de TurnoSmart encontró un cupo para ti»", () => {
+    const aviso = avisoDeFila({
+      id: "n1b",
+      tipo: "cupo-ultimo-minuto",
+      oferta_id: "of-9",
+      datos: { especialidad: "Cardiología", fechaHoraISO: "2026-12-01T15:00:00Z", estrategia: "ai" },
+    });
+    expect(aviso?.title).toBe("La IA de TurnoSmart encontró un cupo para ti");
+    // Con el respaldo determinista, el título no menciona la IA.
+    const respaldo = avisoDeFila({ id: "n1c", tipo: "cupo-ultimo-minuto", oferta_id: "of-9", datos: { estrategia: "fallback" } });
+    expect(respaldo?.title).toBe("¡Cita de último minuto disponible!");
+  });
+
   it("riesgo alto: «Confirma tu asistencia» con botones, sin mencionar el riesgo", () => {
     const aviso = avisoDeFila({
       id: "n2",

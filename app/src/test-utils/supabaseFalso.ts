@@ -232,6 +232,7 @@ function sembrarDemo() {
       paciente_id: demo.id,
       estado: o.estado,
       score: 0.8, // interno: nunca llega a la app
+      estrategia: o.estrategia,
       expira_en: o.expiraEnISO,
       creada_en: o.expiraEnISO,
     });
@@ -810,7 +811,14 @@ function candidatosCupo(cupoId: string): Candidato[] {
 }
 
 /** `ofrecer_cupo`: solo service_role (la Edge Function). */
-function ofrecerCupo(cupoId: string, pacienteId: string, score: number, factores: Factor[], minutos = 10): string {
+function ofrecerCupo(
+  cupoId: string,
+  pacienteId: string,
+  score: number,
+  factores: Factor[],
+  minutos = 10,
+  estrategia: "ai" | "fallback" = "fallback"
+): string {
   const cupo = cupos.find((c) => c.id === cupoId);
   if (!cupo || cupo.estado !== "abierto") throw new Error("cupo_no_disponible");
   if (!candidatosCupo(cupoId).some((c) => c.paciente_id === pacienteId)) throw new Error("candidato_invalido");
@@ -821,6 +829,7 @@ function ofrecerCupo(cupoId: string, pacienteId: string, score: number, factores
     paciente_id: pacienteId,
     estado: "pendiente",
     score: Math.min(1, Math.max(0, score)),
+    estrategia,
     expira_en: new Date(Date.now() + minutos * 60_000).toISOString(),
     creada_en: new Date().toISOString(),
   });
@@ -829,7 +838,7 @@ function ofrecerCupo(cupoId: string, pacienteId: string, score: number, factores
   );
   cupo.estado = "ofrecido";
   evento(id, "enviada");
-  notificar(pacienteId, "cupo-ultimo-minuto", datosCupo(cupo), id);
+  notificar(pacienteId, "cupo-ultimo-minuto", { ...datosCupo(cupo), estrategia }, id);
   return id;
 }
 
@@ -1061,7 +1070,7 @@ function priorizarCupo(cupoId: string) {
   }
   const [elegido] = priorizarConIAFalsa(candidatos);
   return {
-    oferta_id: ofrecerCupo(cupoId, elegido.paciente_id, elegido.score, elegido.factores),
+    oferta_id: ofrecerCupo(cupoId, elegido.paciente_id, elegido.score, elegido.factores, 10, ultimaPriorizacion?.estrategia),
     estrategia: ultimaPriorizacion?.estrategia,
   };
 }
