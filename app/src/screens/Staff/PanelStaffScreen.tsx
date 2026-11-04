@@ -23,11 +23,20 @@ type Estado = "cargando" | "listo" | "error";
 /** "todo" mientras se calcula el riesgo de toda la agenda; si no, el id de la cita ocupada. */
 type Ocupado = string | null;
 
+/** Tras registrar una cancelación, cuántas veces y cada cuánto se mira a quién se ofreció el cupo. */
+const SEGUIMIENTO_INTENTOS = 5;
+const SEGUIMIENTO_MS = 2500;
+const esperar = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 /**
  * Panel del staff del consultorio: métricas de los últimos 30 días, agenda
  * de las próximas citas con su riesgo de inasistencia (y las acciones de
- * cancelar o marcar inasistencia) y los cupos liberados con el estado de
- * sus ofertas. Los pacientes se muestran solo con iniciales y código.
+ * registrar una cancelación avisada por teléfono o en recepción, o marcar
+ * inasistencia) y los cupos liberados con el estado de sus ofertas. Los
+ * pacientes se muestran solo con iniciales y código.
+ *
+ * El riesgo lo calcula el servidor solo (pg_cron, cada 30 minutos, citas de
+ * los próximos 3 días); «Actualizar riesgo» lo recalcula a pedido.
  */
 export function PanelStaffScreen() {
   const { colors } = useTema();
@@ -103,12 +112,45 @@ export function PanelStaffScreen() {
     [cargar, t]
   );
 
+  /**
+   * El cupo liberado lo ofrece el servidor (trigger → priorizar-cupo con IA)
+   * unos segundos después: se mira su estado hasta saber a quién se ofreció
+   * o que no había nadie en espera, y se recarga el panel.
+   */
+  const seguirCupo = useCallback(
+    async (cupoId: string) => {
+      for (let i = 0; i < SEGUIMIENTO_INTENTOS; i++) {
+        await esperar(SEGUIMIENTO_MS);
+        if (!montado.current) return;
+        try {
+          const cupo = (await staffService.getCupos()).find((c) => c.id === cupoId);
+          if (!montado.current) return;
+          const ultima = cupo?.ofertas[cupo.ofertas.length - 1];
+          if (cupo && ultima) {
+            setAviso(t("staff.avisos.ofrecido", { paciente: `${ultima.paciente.iniciales} · ${ultima.paciente.codigo}` }));
+          } else if (cupo?.estado === "expirado") {
+            setAviso(t("staff.avisos.sinCandidatos"));
+          } else {
+            continue;
+          }
+          await cargar();
+          return;
+        } catch (e) {
+          console.warn(`[staff] No se pudo seguir el cupo liberado. ${String(e)}`);
+          return;
+        }
+      }
+    },
+    [cargar, t]
+  );
+
   const ejecutar = useCallback(
     async (tipo: "cancelar" | "inasistencia", cita: CitaAgenda) => {
       setOcupado(cita.id);
       setAviso(null);
+      let cupoLiberado: string | null = null;
       try {
-        if (tipo === "cancelar") await staffService.cancelarCitaStaff(cita.id);
+        if (tipo === "cancelar") cupoLiberado = await staffService.cancelarCitaStaff(cita.id);
         else await staffService.registrarInasistencia(cita.id);
         if (!montado.current) return;
         setAviso(tipo === "cancelar" ? t("staff.avisos.cancelada") : t("staff.avisos.inasistencia"));
@@ -116,11 +158,13 @@ export function PanelStaffScreen() {
       } catch (e) {
         console.warn(`[staff] No se pudo completar la acción. ${String(e)}`);
         if (montado.current) setAviso(t("staff.errores.accion"));
+        return;
       } finally {
         if (montado.current) setOcupado(null);
       }
+      if (cupoLiberado) void seguirCupo(cupoLiberado);
     },
-    [cargar, t]
+    [cargar, seguirCupo, t]
   );
 
   const confirmar = useCallback(
@@ -189,7 +233,9 @@ export function PanelStaffScreen() {
               onPress={() => calcular()}
               disabled={ocupado !== null || agenda.length === 0}
             />
-            <Text style={body(12, colors.textoTenueSobreFondo)}>{t("staff.riesgo.aviso")}</Text>
+            <Text style={body(12, colors.textoTenueSobreFondo)}>
+              {t("staff.riesgo.automatico")} {t("staff.riesgo.aviso")}
+            </Text>
             {agenda.length === 0 ? (
               <EmptyState title={t("staff.agenda.vacio")} description={t("staff.agenda.vacioTexto")} />
             ) : (
