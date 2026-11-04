@@ -21,6 +21,7 @@ orden por nombre) y la priorización de cupos vive en la Edge Function
 | `20261015120000_priorizacion_ia.sql` | `ofrecer_cupo` completa `ofertas_factores.tipo` (columna NOT NULL del proyecto real); timeout de pg_net hacia la función de 5 s a 15 s (la IA puede tardar). |
 | `20261019120000_notificaciones_referencia.sql` | Trigger que completa `notificaciones.oferta_id` / `cita_id` desde `referencia_id`: el CHECK `chk_notificacion_referencia` del proyecto real hacía fallar `ofrecer_cupo`, `_expirar_oferta` y `aceptar_oferta`. |
 | `20261102120000_staff_panel_inasistencias.sql` | Rol staff (`staff`: usuario ↔ consultorio; el trigger de registro no crea paciente si `raw_app_meta_data.rol = 'staff'`), RLS del staff (solo su consultorio; pacientes por iniciales y código), RPC del panel (`cancelar_cita_staff`, `registrar_inasistencia`, `staff_metricas`, `staff_agenda`, `staff_cupos`, `mi_perfil_staff`, `staff_datos_riesgo`) y `riesgo_inasistencia` (escribe solo `guardar_riesgo_inasistencia`, service_role). |
+| `20261104120000_riesgo_programado_confirmacion.sql` | Riesgo automático: pg_cron `turnosmart-riesgo-inasistencia` (cada 30 min) → `solicitar_riesgo_programado()` → `predecir-inasistencia` para las citas de los próximos 3 días sin riesgo reciente (`datos_riesgo_programado`, solo service_role). `citas.asistencia_confirmada_en` + RPC `confirmar_asistencia` (paciente). Trigger `riesgo_avisar_paciente`: riesgo «alto» → una notificación «Confirma tu asistencia» (`recordatorio` con `datos.accion`). `staff_agenda` devuelve además la confirmación. |
 
 Todas las funciones son `security definer` con `search_path = ''` y usan
 `auth.uid()`; nunca reciben el id del paciente desde la app.
@@ -126,11 +127,20 @@ notificación, en una transacción).
   directamente; las RPC del panel devuelven al paciente solo con iniciales y
   un código opaco (`P-XXXXXX`) y solo de sus consultorios. Prueba:
   `supabase db query --linked -f supabase/pruebas/rls_staff.sql` (termina en ROLLBACK).
-- **Acciones:** `cancelar_cita_staff` libera el cupo como `cancelar_cita`
-  (trigger → `priorizar-cupo`); `registrar_inasistencia` marca `no-show` una
-  cita confirmada cuya hora ya pasó (no libera cupo: el horario ya transcurrió).
-- **Edge Function `predecir-inasistencia`** (botón «Calcular riesgo» del panel,
-  por cita o para toda la agenda de 14 días). Factores sin datos clínicos:
+- **Acciones:** «Registrar cancelación» (el paciente avisó por teléfono o en
+  recepción) usa `cancelar_cita_staff`, que libera el cupo igual que
+  `cancelar_cita` desde la app del paciente (trigger → `priorizar-cupo` con
+  IA); el panel sigue el cupo y muestra a quién se ofreció.
+  `registrar_inasistencia` marca `no-show` una cita confirmada cuya hora ya
+  pasó (no libera cupo: el horario ya transcurrió).
+- **Edge Function `predecir-inasistencia`**: se ejecuta **sola** cada 30
+  minutos (pg_cron → pg_net, con el secreto compartido de `priorizar-cupo` en
+  `x-servidor-secreto`; la URL se deriva de `priorizar_cupo_url`, no hay
+  secretos nuevos) para las citas confirmadas de los próximos 3 días sin
+  riesgo de las últimas 6 horas; si no hay ninguna, no se llama. El botón
+  «Actualizar riesgo» del panel la llama con la sesión del staff (una cita o
+  toda la agenda de 14 días). Al tocar el nivel de riesgo se ve la
+  explicación. Factores sin datos clínicos:
   historial de asistencia, días de antelación, día y hora (Colombia) y
   respuesta a ofertas previas. El puntaje es determinista
   (`functions/_shared/riesgo.ts`); DeepSeek recibe alias y señales y devuelve
@@ -140,9 +150,19 @@ notificación, en una transacción).
   determinista, explicaciones de 10-220 caracteres sin enlaces); si algo
   falla, ese lote usa el nivel y la explicación deterministas. Cada resultado
   queda en `riesgo_inasistencia` con `estrategia` = `ai` o `fallback`.
+  - **Aviso al paciente:** si una cita de los próximos 3 días queda en riesgo
+    «alto» y el paciente no confirmó, el trigger `riesgo_avisar_paciente`
+    crea una sola notificación «Confirma tu asistencia» (Confirmar / Cancelar
+    cita). El paciente nunca ve el nivel de riesgo ni la explicación.
+  - Comprobar la tarea: `select jobname, schedule, active from cron.job;` y
+    `select status_code, content from net._http_response order by created desc limit 5;`
   - Desplegar: `supabase functions deploy predecir-inasistencia --no-verify-jwt`
-    (valida el token con `auth.getUser` y la RPC exige ser staff).
+    (desde el panel valida el token con `auth.getUser` y la RPC exige ser
+    staff; en el modo programado exige el secreto compartido).
   - Pruebas: `cd supabase/functions && deno test tests/` y los tests de la app.
+- **Preparar la demo en vivo:** `supabase/pruebas/preparar_demo_fase5.sql`
+  (cuentas de prueba E2E A/B en la lista de Cardiología y sus citas; guion en
+  [`docs/DEMO.md`](../docs/DEMO.md)).
 - **Datos demo:** `supabase/pruebas/datos_demo_fase4.sql` (ficticios, correos
   `@turnosmart.test`, consultorio «Consultorio Demo TurnoSmart (ficticio)»).
   Staff demo: `staff.demo@turnosmart.test`; su contraseña se define en el SQL
