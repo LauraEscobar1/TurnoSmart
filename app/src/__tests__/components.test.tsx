@@ -126,7 +126,7 @@ describe("OfferCard", () => {
     const onAceptar = jest.fn();
     const onRechazar = jest.fn();
     await render(<OfferCard oferta={oferta} onAceptar={onAceptar} onRechazar={onRechazar} />);
-    expect(screen.getByText("Oferta para vos")).toBeTruthy();
+    expect(screen.getByText("Oferta para ti")).toBeTruthy();
     expect(screen.getByText("07:39")).toBeTruthy();
     await fireEvent.press(screen.getByText("Aceptar cupo"));
     await fireEvent.press(screen.getByText("Rechazar"));
