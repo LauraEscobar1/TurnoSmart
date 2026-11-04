@@ -1,5 +1,6 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { body, fonts, heading, label } from "@/theme/typography";
@@ -13,7 +14,8 @@ import { useDato, useT } from "@/i18n";
 /**
  * Piezas del panel del staff. Paleta mono del sistema de diseño: el estado
  * se codifica por relleno, nunca por color (§02 Vocabulario y estados).
- *   · Riesgo de inasistencia: contorno punteado («es una hipótesis»).
+ *   · Riesgo de inasistencia: contorno punteado («es una hipótesis»); al
+ *     tocarlo se ve la explicación de la IA (o de las reglas).
  *   · Cupo: disponible = contorno, oferta enviada = relleno tenue,
  *     recuperado = campo sólido, perdido = gris tachado.
  */
@@ -64,10 +66,34 @@ export function MetricasPanel({ metricas }: { metricas: MetricasStaff }) {
 
 // — Riesgo —
 
-export function BadgeRiesgo({ riesgo }: { riesgo: RiesgoCita | null }) {
+interface BadgeRiesgoProps {
+  riesgo: RiesgoCita | null;
+  /** Con riesgo calculado, el badge se puede tocar para mostrar u ocultar la explicación. */
+  abierto?: boolean;
+  onPress?: () => void;
+}
+
+export function BadgeRiesgo({ riesgo, abierto = false, onPress }: BadgeRiesgoProps) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
   const t = useT();
   if (!riesgo) return <Badge label={t("staff.riesgo.sinCalcular")} variant="neutral" />;
-  return <Badge label={t(`staff.riesgo.${riesgo.nivel}`)} variant="risk" />;
+  const etiqueta = t(`staff.riesgo.${riesgo.nivel}`);
+  if (!onPress) return <Badge label={etiqueta} variant="risk" />;
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={etiqueta}
+      accessibilityHint={t("staff.riesgo.verExplicacion")}
+      accessibilityState={{ expanded: abierto }}
+      style={({ pressed }) => [styles.badgeTocable, pressed && styles.presionado]}
+    >
+      <Badge label={etiqueta} variant="risk" />
+      <Ionicons name={abierto ? "chevron-up" : "information-circle-outline"} size={16} color={colors.neutral600} />
+    </Pressable>
+  );
 }
 
 // — Agenda —
@@ -87,7 +113,8 @@ export function CitaAgendaCard({ cita, pasada, ocupado, onCalcular, onCancelar, 
   const styles = useEstilos(crearStyles);
   const t = useT();
   const dato = useDato();
-  const { idioma, fechaConDia } = useFormato();
+  const { idioma, fechaConDia, haceCuanto } = useFormato();
+  const [verExplicacion, setVerExplicacion] = useState(false);
   const r = cita.riesgo;
   return (
     <Card style={styles.tarjeta}>
@@ -96,7 +123,7 @@ export function CitaAgendaCard({ cita, pasada, ocupado, onCalcular, onCancelar, 
           <Text style={heading(26, colors.accent900)}>{hora(cita.fechaHoraISO)}</Text>
           <Text style={label(11, colors.neutral600)}>{fechaConDia(cita.fechaHoraISO)}</Text>
         </View>
-        <BadgeRiesgo riesgo={r} />
+        <BadgeRiesgo riesgo={r} abierto={verExplicacion} onPress={r ? () => setVerExplicacion((v) => !v) : undefined} />
       </View>
 
       <Text style={[body(15, colors.text), styles.medio]}>
@@ -105,13 +132,19 @@ export function CitaAgendaCard({ cita, pasada, ocupado, onCalcular, onCancelar, 
       <Text style={body(13, colors.neutral700)}>
         {dato("especialidades", cita.especialidad)} · {cita.profesional}
       </Text>
-      {cita.origen === "cupo-recuperado" ? <Badge label={t("staff.agenda.recuperado")} variant="neutral" /> : null}
+      {cita.origen === "cupo-recuperado" || cita.asistenciaConfirmadaISO ? (
+        <View style={styles.etiquetas}>
+          {cita.origen === "cupo-recuperado" ? <Badge label={t("staff.agenda.recuperado")} variant="neutral" /> : null}
+          {cita.asistenciaConfirmadaISO ? <Badge label={t("staff.agenda.confirmoAsistencia")} variant="solid" /> : null}
+        </View>
+      ) : null}
 
-      {r ? (
-        <View style={styles.explicacion}>
+      {r && verExplicacion ? (
+        <View style={styles.explicacion} accessibilityLiveRegion="polite">
           <Text style={body(13, colors.text)}>{idioma === "en" ? r.explicacion.en : r.explicacion.es}</Text>
           <Text style={label(10, colors.neutral600)}>
             {r.estrategia === "ai" ? t("staff.riesgo.ia") : t("staff.riesgo.reglas")}
+            {r.calculadoEnISO ? ` · ${t("staff.riesgo.calculado", { cuando: haceCuanto(r.calculadoEnISO) })}` : ""}
           </Text>
         </View>
       ) : null}
@@ -130,21 +163,25 @@ export function CitaAgendaCard({ cita, pasada, ocupado, onCalcular, onCancelar, 
       ) : (
         <View style={styles.acciones}>
           <PrimaryButton
-            label={r ? t("staff.agenda.recalcular") : t("staff.agenda.calcular")}
+            label={t("staff.agenda.calcular")}
             variant="ghost"
             onPress={onCalcular}
             disabled={ocupado}
             style={[styles.boton, styles.flex]}
           />
-          <PrimaryButton
-            label={t("staff.agenda.cancelar")}
-            variant="secondary"
-            onPress={onCancelar}
-            disabled={ocupado}
-            style={[styles.boton, styles.flex]}
-          />
+          <View style={styles.flex}>
+            <PrimaryButton
+              label={t("staff.agenda.cancelar")}
+              variant="secondary"
+              onPress={onCancelar}
+              disabled={ocupado}
+              accessibilityHint={t("staff.agenda.cancelarSubtexto")}
+              style={styles.boton}
+            />
+          </View>
         </View>
       )}
+      {pasada ? null : <Text style={[body(12, colors.neutral600), styles.subtexto]}>{t("staff.agenda.cancelarSubtexto")}</Text>}
     </Card>
   );
 }
@@ -204,6 +241,10 @@ const crearStyles = (colors: Paleta) =>
       borderTopColor: colors.divider,
     },
     acciones: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4 },
+    subtexto: { textAlign: "right", marginTop: -2 },
+    etiquetas: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+    badgeTocable: { flexDirection: "row", alignItems: "center", gap: 4 },
+    presionado: { opacity: 0.7 },
     boton: { minHeight: 42 },
     oferta: { flexDirection: "row", alignItems: "center", gap: 10 },
   });

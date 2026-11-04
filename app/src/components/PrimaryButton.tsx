@@ -16,6 +16,8 @@ interface PrimaryButtonProps {
    */
   variant?: "primary" | "secondary" | "ghost" | "inverse";
   disabled?: boolean;
+  /** Texto extra para lectores de pantalla (qué pasa al tocarlo). */
+  accessibilityHint?: string;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -26,7 +28,7 @@ const crearTextColor = (colors: Paleta): Record<NonNullable<PrimaryButtonProps["
   inverse: colors.campo,
 });
 
-export function PrimaryButton({ label, onPress, variant = "primary", disabled, style }: PrimaryButtonProps) {
+export function PrimaryButton({ label, onPress, variant = "primary", disabled, accessibilityHint, style }: PrimaryButtonProps) {
   const styles = useEstilos(crearStyles);
   const pressedStyle = useEstilos(crearPressedStyle);
   const textColor = useEstilos(crearTextColor);
@@ -36,6 +38,7 @@ export function PrimaryButton({ label, onPress, variant = "primary", disabled, s
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={disabled ? { disabled } : undefined}
       style={({ pressed }) => [
         styles.base,
