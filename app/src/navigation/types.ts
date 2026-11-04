@@ -34,7 +34,11 @@ export type OffersStackParamList = {
 
 export type AppointmentsStackParamList = {
   AppointmentsList: { tab?: "proximas" | "pasadas" } | undefined;
-  AppointmentDetail: { citaId: string };
+  /**
+   * `accion`: llega desde la notificación «Confirma tu asistencia»
+   * (botón Confirmar → confirma al abrir; Cancelar cita → abre la confirmación).
+   */
+  AppointmentDetail: { citaId: string; accion?: "confirmar" | "cancelar" };
 };
 
 export type ProfileStackParamList = {

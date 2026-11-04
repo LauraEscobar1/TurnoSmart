@@ -162,6 +162,13 @@ export const en: Diccionario = {
     confirmarHorario: "Confirm new time",
     errorCancelar: "We couldn't cancel the appointment. Check your connection and try again.",
     errorReprogramar: "We couldn't change the time. Check your connection and try again.",
+    confirmarTitulo: "Confirm your attendance",
+    confirmarTexto: "Will you make it? If you can't, tap “Cancel appointment” so another waiting patient can use the slot.",
+    confirmar: "Confirm attendance",
+    asistencia: "Attendance",
+    asistenciaConfirmada: "Confirmed by you",
+    asistenciaConfirmadaAviso: "Thank you! You confirmed your attendance. See you there.",
+    errorConfirmar: "We couldn't confirm your attendance. Check your connection and try again.",
   },
   datos: {
     estadosCita: {
@@ -317,6 +324,10 @@ export const en: Diccionario = {
         titulo: "Offer expired",
         cuerpo: "The {especialidad} slot on {fechaCorta} at {hora} was offered to another patient. You're still on the waitlist.",
       },
+      "confirmar-asistencia": {
+        titulo: "Confirm your attendance",
+        cuerpo: "Hi, {nombre}. You have a {especialidad} appointment on {fechaLarga} at {hora} with {profesional}. Please confirm it or, if you can't make it, cancel it so another patient can use the slot.",
+      },
       confirmacion: {
         titulo: "Slot confirmed",
         cuerpo: "All set, {nombre}. Your {especialidad} appointment with {profesional} is confirmed for {fechaLarga} at {hora}.",
@@ -327,6 +338,19 @@ export const en: Diccionario = {
     todas: "All",
     vacio: "You have no notifications",
     sinLeer: "Unread",
+  },
+  avisosLocales: {
+    canal: "Slots and appointments",
+    ofertaTitulo: "Last-minute appointment available!",
+    ofertaCuerpo: "A {especialidad} slot opened up on {fecha} at {hora}. You have a few minutes to take it.",
+    confirmarTitulo: "Confirm your attendance",
+    confirmarCuerpo: "Your {especialidad} appointment is on {fecha} at {hora}. Will you make it? If you can't, cancel it so another patient can use the slot.",
+    confirmar: "Confirm",
+    cancelar: "Cancel appointment",
+    permisoTitulo: "Want instant alerts?",
+    permisoTexto: "Turn on notifications to know as soon as a slot opens up for you (each offer lasts only a few minutes) and to confirm your upcoming appointments. No ads, and you can turn them off anytime.",
+    permisoActivar: "Turn on notifications",
+    permisoAhoraNo: "Not now",
   },
   confirmacion: {
     confirmado: "Slot confirmed",

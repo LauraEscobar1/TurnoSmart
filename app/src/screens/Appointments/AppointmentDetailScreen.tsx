@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +9,13 @@ import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { AppointmentsStackParamList } from "@/navigation/types";
 import { Cita } from "@/types/domain";
-import { cancelarCita, getCitaPorId, getHorariosDisponibles, reprogramarCita } from "@/services/appointmentsService";
+import {
+  cancelarCita,
+  confirmarAsistencia,
+  getCitaPorId,
+  getHorariosDisponibles,
+  reprogramarCita,
+} from "@/services/appointmentsService";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Card } from "@/components/Card";
 import { HojaInferior } from "@/components/HojaInferior";
@@ -53,6 +59,11 @@ const iniciales = (nombre: string) =>
  * hora y estado; secciones Especialista, Lugar e Información de la reserva;
  * y acciones fijas abajo (Reprogramar, Cancelar cita) mientras la cita
  * esté confirmada y por venir. Solo muestra datos que la app tiene.
+ *
+ * «Confirma tu asistencia»: mientras la cita esté por venir y sin confirmar,
+ * una tarjeta pide confirmarla; si no puede ir, «Cancelar cita» (abajo)
+ * devuelve el cupo a la lista de espera a tiempo. La notificación del mismo nombre abre esta pantalla con
+ * `accion` = "confirmar" (confirma al abrir) o "cancelar" (abre la hoja).
  */
 export function AppointmentDetailScreen({ route, navigation }: Props) {
   const { colors } = useTema();
@@ -60,16 +71,38 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   const t = useT();
   const dato = useDato();
   const { idioma, diaSemanaCorto, fechaCorta, fechaLarga } = useFormato();
-  const { citaId } = route.params;
+  const { citaId, accion } = route.params;
   const [cita, setCita] = useState<Cita | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
+  /** La acción de la notificación se aplica una sola vez por cita. */
+  const accionAplicada = useRef<string | null>(null);
   const [hoja, setHoja] = useState<"cancelar" | "reprogramar" | null>(null);
   const [horarios, setHorarios] = useState<string[]>([]);
   const [elegido, setElegido] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
-    getCitaPorId(citaId).then((c) => setCita(c ? { ...c } : null));
-  }, [citaId]);
+    let vigente = true;
+    getCitaPorId(citaId).then(async (c) => {
+      if (!vigente) return;
+      setCita(c ? { ...c } : null);
+      const clave = `${citaId}:${accion ?? ""}`;
+      if (!c || !accion || accionAplicada.current === clave) return;
+      accionAplicada.current = clave;
+      if (c.estado !== "confirmada" || new Date(c.fechaHoraISO).getTime() <= Date.now()) return;
+      if (accion === "cancelar") setHoja("cancelar");
+      else if (!c.asistenciaConfirmadaISO) {
+        const confirmada = await confirmarAsistencia(c.id);
+        if (!vigente) return;
+        if (confirmada) setCita({ ...confirmada });
+        setAviso(confirmada ? t("citas.asistenciaConfirmadaAviso") : t("citas.errorConfirmar"));
+      }
+    });
+    return () => {
+      vigente = false;
+    };
+    // Sin `t` en las dependencias: cambiar el idioma no debe repetir la acción.
+  }, [citaId, accion]);
 
   const volver = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("AppointmentsList"));
 
@@ -86,6 +119,15 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   const porVenir = new Date(cita.fechaHoraISO).getTime() > Date.now();
   const editable = cita.estado === "confirmada" && porVenir;
   const recuperada = cita.origen === "cupo-recuperado";
+  const asistenciaConfirmada = !!cita.asistenciaConfirmadaISO;
+
+  async function confirmarMiAsistencia() {
+    setConfirmando(true);
+    const confirmada = await confirmarAsistencia(cita!.id);
+    setConfirmando(false);
+    if (confirmada) setCita({ ...confirmada });
+    setAviso(confirmada ? t("citas.asistenciaConfirmadaAviso") : t("citas.errorConfirmar"));
+  }
 
   async function abrirReprogramar() {
     setElegido(null);
@@ -148,6 +190,22 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
           </View>
         </View>
 
+        {editable && !asistenciaConfirmada ? (
+          <Card tono="acento" style={styles.confirmar}>
+            <View style={styles.confirmarCabecera}>
+              <Ionicons name="checkmark-circle-outline" size={22} color={colors.accent700} />
+              <Text style={[heading(20, colors.accent900), styles.flex]}>{t("citas.confirmarTitulo")}</Text>
+            </View>
+            <Text style={body(14, colors.accent800)}>{t("citas.confirmarTexto")}</Text>
+            <PrimaryButton
+              label={t("citas.confirmar")}
+              onPress={confirmarMiAsistencia}
+              disabled={confirmando}
+              style={styles.confirmarBoton}
+            />
+          </Card>
+        ) : null}
+
         {/* Especialista */}
         <Seccion titulo={t("comun.especialista")}>
           <Card style={styles.fila}>
@@ -183,6 +241,9 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
               valor={t(recuperada ? "citas.cupoRecuperado" : "citas.reservaDirecta")}
               detalle={recuperada ? t("citas.cupoRecuperadoDetalle") : undefined}
             />
+            {editable && asistenciaConfirmada ? (
+              <Dato icono="checkmark-done-outline" etiqueta={t("citas.asistencia")} valor={t("citas.asistenciaConfirmada")} divisor />
+            ) : null}
             {editable ? (
               <Dato icono="notifications-outline" etiqueta={t("citas.recordatorio")} valor={t("citas.dosHorasAntes")} divisor />
             ) : null}
@@ -309,6 +370,18 @@ const crearStyles = (colors: Paleta) =>
   },
   presionado: {
     opacity: 0.7,
+  },
+  confirmar: {
+    padding: 18,
+    gap: 10,
+  },
+  confirmarCabecera: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  confirmarBoton: {
+    marginTop: 4,
   },
   aviso: {
     flexDirection: "row",

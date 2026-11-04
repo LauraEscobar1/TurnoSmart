@@ -164,6 +164,13 @@ export const es = {
     confirmarHorario: "Confirmar nuevo horario",
     errorCancelar: "No pudimos cancelar la cita. Comprueba tu conexión e inténtalo de nuevo.",
     errorReprogramar: "No pudimos cambiar el horario. Comprueba tu conexión e inténtalo de nuevo.",
+    confirmarTitulo: "Confirma tu asistencia",
+    confirmarTexto: "¿Vas a asistir? Si no puedes, toca «Cancelar cita» para que otro paciente en espera use el horario.",
+    confirmar: "Confirmar asistencia",
+    asistencia: "Asistencia",
+    asistenciaConfirmada: "Confirmada por ti",
+    asistenciaConfirmadaAviso: "¡Gracias! Confirmaste tu asistencia. Te esperamos.",
+    errorConfirmar: "No pudimos confirmar tu asistencia. Comprueba tu conexión e inténtalo de nuevo.",
   },
   datos: {
     estadosCita: {
@@ -319,6 +326,10 @@ export const es = {
         titulo: "Oferta expirada",
         cuerpo: "El cupo de {especialidad} del {fechaCorta} a las {hora} ya se ofreció a otro paciente. Sigues en la lista de espera.",
       },
+      "confirmar-asistencia": {
+        titulo: "Confirma tu asistencia",
+        cuerpo: "Hola, {nombre}. Tienes una cita de {especialidad} el {fechaLarga} a las {hora} con {profesional}. Confírmala o, si no puedes ir, cancélala para que otro paciente use el cupo.",
+      },
       confirmacion: {
         titulo: "Cupo confirmado",
         cuerpo: "Listo, {nombre}. Tu cita de {especialidad} con {profesional} quedó confirmada para el {fechaLarga} a las {hora}.",
@@ -329,6 +340,19 @@ export const es = {
     todas: "Todas",
     vacio: "No tienes notificaciones",
     sinLeer: "Sin leer",
+  },
+  avisosLocales: {
+    canal: "Cupos y citas",
+    ofertaTitulo: "¡Cita de último minuto disponible!",
+    ofertaCuerpo: "Se liberó un cupo de {especialidad} el {fecha} a las {hora}. Tienes pocos minutos para tomarlo.",
+    confirmarTitulo: "Confirma tu asistencia",
+    confirmarCuerpo: "Tu cita de {especialidad} es el {fecha} a las {hora}. ¿Vas a asistir? Si no puedes, cancélala para que otro paciente use el cupo.",
+    confirmar: "Confirmar",
+    cancelar: "Cancelar cita",
+    permisoTitulo: "¿Te avisamos al instante?",
+    permisoTexto: "Activa las notificaciones para enterarte apenas se libere un cupo para ti (cada oferta dura solo unos minutos) y para confirmar tus próximas citas. No enviamos publicidad y puedes desactivarlas cuando quieras.",
+    permisoActivar: "Activar notificaciones",
+    permisoAhoraNo: "Ahora no",
   },
   confirmacion: {
     confirmado: "Cupo confirmado",

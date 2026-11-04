@@ -700,18 +700,42 @@ function completarReferencia(fila: Fila): Fila {
 }
 
 function notificar(pacienteId: unknown, tipo: string, datos: Fila, referencia: unknown, leida = false) {
-  notificaciones.push(
-    completarReferencia({
-      id: nuevoId("not"),
-      paciente_id: pacienteId,
-      tipo,
-      datos,
-      referencia_id: referencia,
-      leida,
-      creada_en: new Date().toISOString(),
-    })
+  const fila = completarReferencia({
+    id: nuevoId("not"),
+    paciente_id: pacienteId,
+    tipo,
+    datos,
+    referencia_id: referencia,
+    leida,
+    creada_en: new Date().toISOString(),
+  });
+  notificaciones.push(fila);
+  emitirRealtime(pacienteId, { eventType: "INSERT", new: { ...fila } });
+}
+
+/**
+ * Como el trigger `riesgo_avisar_paciente` (migración 20261104120000): el
+ * servidor calculó riesgo «alto» para una cita de los próximos 3 días sin
+ * confirmar y avisa al paciente «Confirma tu asistencia» (una sola vez).
+ */
+export function avisarRiesgoAltoFalso(citaId: string): boolean {
+  const cita = citas.find((c) => c.id === citaId);
+  const enTresDias = cita && new Date(String(cita.fecha_hora)).getTime() <= Date.now() + 3 * DIA;
+  if (!cita || cita.estado !== "confirmada" || cita.asistencia_confirmada_en || !enTresDias) return false;
+  if (notificaciones.some((n) => n.cita_id === citaId && (n.datos as Fila | null)?.accion === "confirmar-asistencia")) return false;
+  notificar(
+    cita.paciente_id,
+    "recordatorio",
+    {
+      especialidad: nombreEspecialidad(cita.especialidad_id),
+      profesional: nombreDe(profesionales, cita.profesional_id),
+      consultorio: nombreDe(consultorios, cita.consultorio_id),
+      fechaHoraISO: cita.fecha_hora,
+      accion: "confirmar-asistencia",
+    },
+    cita.id
   );
-  emitirRealtime(pacienteId);
+  return true;
 }
 
 function resolverAvisoCupo(ofertaId: unknown) {
@@ -875,6 +899,17 @@ const rpcs: Record<string, Rpc> = {
     });
     cuposPorPriorizar.push(id); // trigger AFTER INSERT
     return id;
+  },
+  confirmar_asistencia(uid, { p_cita_id }) {
+    const cita = citas.find(
+      (c) => c.id === p_cita_id && c.paciente_id === uid && c.estado === "confirmada" && new Date(String(c.fecha_hora)).getTime() > Date.now()
+    );
+    if (!cita) throw new ErrorRpc("22023", "cita_no_confirmable");
+    cita.asistencia_confirmada_en ??= new Date().toISOString();
+    notificaciones
+      .filter((n) => n.paciente_id === uid && n.cita_id === p_cita_id && (n.datos as Fila | null)?.accion === "confirmar-asistencia")
+      .forEach((n) => (n.leida = true));
+    return cita.asistencia_confirmada_en;
   },
   reprogramar_cita(uid, { p_cita_id, p_fecha_hora }) {
     if (new Date(String(p_fecha_hora)).getTime() <= Date.now()) throw new ErrorRpc("22023", "fecha_invalida");
@@ -1049,25 +1084,30 @@ const functions = {
 // Realtime: postgres_changes sobre `notificaciones` (migración 20261010220000)
 // ---------------------------------------------------------------------------
 
+interface CambioRealtime {
+  eventType: "INSERT" | "UPDATE";
+  new: Fila;
+}
+
 interface CanalFalso {
   nombre: string;
   filtro: string | null;
-  callback: (() => void) | null;
+  callback: ((cambio: CambioRealtime) => void) | null;
 }
 /** Canales suscritos desde la app, para revisar en las pruebas. */
 export let canalesRealtime: CanalFalso[] = [];
 const canalDeApi = new WeakMap<object, CanalFalso>();
 
 /** Como Realtime: el evento llega después de la transacción y solo al canal de ese paciente (RLS). */
-function emitirRealtime(pacienteId: unknown) {
+function emitirRealtime(pacienteId: unknown, cambio: CambioRealtime = { eventType: "UPDATE", new: {} }) {
   const destinos = canalesRealtime.filter((c) => c.filtro === `paciente_id=eq.${String(pacienteId)}`);
-  if (destinos.length) void Promise.resolve().then(() => destinos.forEach((c) => c.callback?.()));
+  if (destinos.length) void Promise.resolve().then(() => destinos.forEach((c) => c.callback?.(cambio)));
 }
 
 function channel(nombre: string) {
   const canal: CanalFalso = { nombre, filtro: null, callback: null };
   const api = {
-    on(_tipo: string, opciones: { table?: string; filter?: string }, callback: () => void) {
+    on(_tipo: string, opciones: { table?: string; filter?: string }, callback: (cambio: CambioRealtime) => void) {
       if (opciones.table === "notificaciones") {
         canal.filtro = opciones.filter ?? null;
         canal.callback = callback;
