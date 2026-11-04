@@ -261,6 +261,8 @@ describe("DeepSeek con el backend (Supabase falso)", () => {
     expect(vista.id).toBe(oferta.id);
     expect(vista.factores.map((f) => f.etiqueta)).toContain("Horario preferido");
     expect(vista).not.toHaveProperty("score");
+    // La app sabe que la priorizó la IA (para mostrar «Recomendado por IA»).
+    expect(vista.estrategia).toBe("ai");
 
     await offers.aceptarOferta(String(oferta.id));
     expect(filas("ofertas", (o) => o.id === oferta.id)[0].estado).toBe("aceptada");
@@ -277,6 +279,23 @@ describe("DeepSeek con el backend (Supabase falso)", () => {
     const oferta = await liberarCupoPorCancelacion();
     expect(ultimaPriorizacion).toEqual({ estrategia: "fallback", motivo: "json_invalido" });
     expect(oferta).toMatchObject({ paciente_id: demo, estado: "pendiente" });
+  });
+
+  it("honestidad: con la IA, la oferta y su aviso guardan la estrategia «ai»", async () => {
+    configurarIAFalsa(IA_PREFIERE_B);
+    const conIA = await liberarCupoPorCancelacion();
+    expect(conIA.estrategia).toBe("ai");
+    expect(filas("notificaciones", (n) => n.oferta_id === conIA.id)[0].datos).toMatchObject({ estrategia: "ai" });
+  });
+
+  it("honestidad: con el respaldo determinista, la oferta y su aviso quedan como «fallback»", async () => {
+    configurarIAFalsa("esto no es json");
+    const sinIA = await liberarCupoPorCancelacion();
+    expect(sinIA.estrategia).toBe("fallback");
+    expect(filas("notificaciones", (n) => n.oferta_id === sinIA.id)[0].datos).toMatchObject({ estrategia: "fallback" });
+    abrirSesionFalsa(CUENTA_DEMO.email);
+    const vista = (await offers.getOfertasPendientes()).find((o) => o.id === sinIA.id);
+    expect(vista?.estrategia).toBe("fallback");
   });
 
   it("la IA no puede saltarse las reglas: un paciente fuera de la lista no recibe la oferta", async () => {

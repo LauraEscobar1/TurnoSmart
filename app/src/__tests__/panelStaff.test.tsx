@@ -2,12 +2,15 @@ import { Alert } from "react-native";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import * as staffService from "@/services/staffService";
 import { irALogin, montarApp, reiniciarDatos } from "@/test-utils/app";
-import { abrirSesionFalsa, registrarStaffFalso } from "@/test-utils/supabaseFalso";
+import { abrirSesionFalsa, registrarStaffFalso, rpcLlamadas } from "@/test-utils/supabaseFalso";
+import { getOfertasPendientes } from "@/services/offersService";
+import { getNotificaciones } from "@/services/notificationsService";
+import { getCitasProximas } from "@/services/appointmentsService";
 import { CitaAgenda, CupoStaff, MetricasStaff, PerfilStaff } from "@/types/staff";
 
 /**
  * Panel del staff: navegación por rol, métricas, agenda con riesgo,
- * acciones (cancelar / inasistencia / calcular riesgo), cupos y estados de
+ * acciones (registrar cancelación / inasistencia / actualizar riesgo), cupos y estados de
  * carga, error y vacío. El servicio del staff (RPC y Edge Function) se
  * reemplaza por dobles: la seguridad de esas RPC la prueba
  * supabase/pruebas/rls_staff.sql contra la base real.
@@ -43,6 +46,7 @@ const citaConRiesgo: CitaAgenda = {
     explicacion: { es: "Tres inasistencias en cinco citas previas.", en: "Three no-shows in five previous appointments." },
     calculadoEnISO: new Date().toISOString(),
   },
+  asistenciaConfirmadaISO: null,
 };
 const citaSinRiesgo: CitaAgenda = {
   ...citaConRiesgo,
@@ -76,7 +80,7 @@ beforeEach(async () => {
   servicio.getAgenda.mockResolvedValue([citaConRiesgo, citaSinRiesgo, citaPasada]);
   servicio.getCupos.mockResolvedValue(cupos);
   servicio.calcularRiesgo.mockResolvedValue({ calculadas: 2, ai: 1, fallback: 1 });
-  servicio.cancelarCitaStaff.mockResolvedValue();
+  servicio.cancelarCitaStaff.mockResolvedValue(null);
   servicio.registrarInasistencia.mockResolvedValue();
   registrarStaffFalso(STAFF.email, STAFF.password);
 });
@@ -111,6 +115,17 @@ describe("Navegación por rol", () => {
     expect(servicio.getPerfilStaff).toHaveBeenCalledWith(STAFF.email);
   });
 
+  it("con sesión de staff no se llama ninguna RPC del paciente (sin «paciente_inexistente»)", async () => {
+    const aviso = jest.spyOn(console, "warn");
+    await abrirPanel();
+    // Aunque algo pida datos del paciente, los servicios ven que no hay paciente y no llaman a la base.
+    expect(await getOfertasPendientes()).toEqual([]);
+    expect(await getNotificaciones("")).toEqual([]);
+    expect(await getCitasProximas()).toEqual([]);
+    expect(rpcLlamadas).not.toContain("expirar_mis_ofertas");
+    expect(aviso.mock.calls.flat().join(" ")).not.toMatch(/paciente_inexistente/);
+  });
+
   it("sin consultorio asignado muestra el aviso y no pide datos", async () => {
     servicio.getPerfilStaff.mockResolvedValue(null);
     abrirSesionFalsa(STAFF.email);
@@ -140,27 +155,45 @@ describe("Métricas y agenda", () => {
     await abrirPanel();
     expect(screen.getByText("Paciente CT · P-1A2B3C")).toBeTruthy();
     expect(screen.getByText("Riesgo alto")).toBeTruthy();
-    expect(screen.getByText("Tres inasistencias en cinco citas previas.")).toBeTruthy();
-    expect(screen.getByText("Estimado con IA")).toBeTruthy();
     expect(screen.getAllByText("Riesgo sin calcular")).toHaveLength(2);
-    // Solo la cita cuya hora ya pasó permite marcar inasistencia; las futuras, cancelar.
+    // Solo la cita cuya hora ya pasó permite marcar inasistencia; las futuras, registrar la cancelación.
     expect(screen.getAllByRole("button", { name: "Marcar inasistencia" })).toHaveLength(1);
-    expect(screen.getAllByRole("button", { name: "Cancelar cita" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Registrar cancelación" })).toHaveLength(2);
+    expect(screen.getAllByText("El paciente avisó por teléfono o en recepción")).toHaveLength(2);
+    // El riesgo se calcula solo (pg_cron) y el panel lo explica.
+    expect(screen.getByText(/El riesgo se calcula solo, cada 30 minutos, para las citas de los próximos 3 días/)).toBeTruthy();
   });
 
-  it("«Calcular riesgo» calcula toda la agenda, informa IA/reglas y recarga", async () => {
+  it("al tocar el badge de riesgo se ve la explicación de la IA, y se oculta al tocarlo otra vez", async () => {
+    await abrirPanel();
+    expect(screen.queryByText("Tres inasistencias en cinco citas previas.")).toBeNull();
+    const badge = screen.getByRole("button", { name: "Riesgo alto" });
+    await fireEvent.press(badge);
+    expect(screen.getByText("Tres inasistencias en cinco citas previas.")).toBeTruthy();
+    expect(screen.getByText("Estimado con IA · Calculado ahora")).toBeTruthy();
+    await fireEvent.press(badge);
+    expect(screen.queryByText("Tres inasistencias en cinco citas previas.")).toBeNull();
+  });
+
+  it("muestra cuándo el paciente confirmó su asistencia", async () => {
+    servicio.getAgenda.mockResolvedValue([{ ...citaConRiesgo, asistenciaConfirmadaISO: new Date().toISOString() }]);
+    await abrirPanel();
+    expect(screen.getByText("Confirmó asistencia")).toBeTruthy();
+  });
+
+  it("«Actualizar riesgo de la agenda» recalcula toda la agenda, informa IA/reglas y recarga", async () => {
     await abrirPanel();
     const llamadasAgenda = servicio.getAgenda.mock.calls.length;
-    await fireEvent.press(screen.getAllByRole("button", { name: "Calcular riesgo" })[0]);
+    await fireEvent.press(screen.getByRole("button", { name: "Actualizar riesgo de la agenda" }));
     expect(await screen.findByText("Riesgo calculado para 2 citas: 1 con IA y 1 con reglas.")).toBeTruthy();
     expect(servicio.calcularRiesgo).toHaveBeenCalledWith(undefined);
     expect(servicio.getAgenda.mock.calls.length).toBeGreaterThan(llamadasAgenda);
   });
 
-  it("«Recalcular» calcula solo esa cita", async () => {
+  it("«Actualizar riesgo» de una cita recalcula solo esa cita", async () => {
     servicio.calcularRiesgo.mockResolvedValue({ calculadas: 1, ai: 1, fallback: 0 });
     await abrirPanel();
-    await fireEvent.press(screen.getByRole("button", { name: "Recalcular" }));
+    await fireEvent.press(screen.getAllByRole("button", { name: "Actualizar riesgo" })[0]);
     expect(await screen.findByText("Riesgo calculado para 1 cita: 1 con IA y 0 con reglas.")).toBeTruthy();
     expect(servicio.calcularRiesgo).toHaveBeenCalledWith("cita-alto");
   });
@@ -168,20 +201,49 @@ describe("Métricas y agenda", () => {
   it("si el cálculo falla avisa sin romper el panel", async () => {
     servicio.calcularRiesgo.mockRejectedValue(new Error("FunctionsHttpError"));
     await abrirPanel();
-    await fireEvent.press(screen.getAllByRole("button", { name: "Calcular riesgo" })[0]);
-    expect(await screen.findByText("No se pudo calcular el riesgo. Inténtalo de nuevo.")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Actualizar riesgo de la agenda" }));
+    expect(await screen.findByText("No se pudo actualizar el riesgo. Inténtalo de nuevo.")).toBeTruthy();
     expect(screen.getByText("Paciente CT · P-1A2B3C")).toBeTruthy();
   });
 
-  it("cancelar pide confirmación y libera el cupo con la RPC del staff", async () => {
+  it("«Registrar cancelación» pide confirmación, libera el cupo y muestra a quién se ofreció con IA", async () => {
     const alerta = jest.spyOn(Alert, "alert");
+    servicio.cancelarCitaStaff.mockResolvedValue("cupo-1");
     await abrirPanel();
-    await fireEvent.press(screen.getAllByRole("button", { name: "Cancelar cita" })[0]);
-    expect(alerta).toHaveBeenCalledWith("¿Cancelar esta cita?", expect.any(String), expect.any(Array));
+    await fireEvent.press(screen.getAllByRole("button", { name: "Registrar cancelación" })[0]);
+    expect(alerta).toHaveBeenCalledWith("¿Registrar la cancelación?", expect.stringMatching(/por teléfono o en recepción/), expect.any(Array));
     expect(servicio.cancelarCitaStaff).not.toHaveBeenCalled();
     await confirmarDialogo(alerta);
-    expect(await screen.findByText("Cita cancelada. El cupo se ofrece a la lista de espera.")).toBeTruthy();
+    expect(
+      await screen.findByText("Cancelación registrada. El cupo se liberó y se está ofreciendo con IA a la lista de espera…")
+    ).toBeTruthy();
     expect(servicio.cancelarCitaStaff).toHaveBeenCalledWith("cita-alto");
+    // El servidor ofrece el cupo unos segundos después: el panel lo sigue y muestra a quién.
+    expect(
+      await screen.findByText(
+        "Cancelación registrada. El cupo se liberó y se ofreció a JP · P-9F8E7D de la lista de espera.",
+        {},
+        { timeout: 5000 }
+      )
+    ).toBeTruthy();
+  });
+
+  it("si nadie espera ese horario, avisa que el cupo quedó cerrado", async () => {
+    const alerta = jest.spyOn(Alert, "alert");
+    servicio.cancelarCitaStaff.mockResolvedValue("cupo-3");
+    servicio.getCupos.mockResolvedValue([
+      { id: "cupo-3", fechaHoraISO: en(30), especialidad: "Cardiología", profesional: "Dra. Ruiz", motivo: "cancelacion", estado: "expirado", ofertas: [] },
+    ]);
+    await abrirPanel();
+    await fireEvent.press(screen.getAllByRole("button", { name: "Registrar cancelación" })[0]);
+    await confirmarDialogo(alerta);
+    expect(
+      await screen.findByText(
+        "Cancelación registrada. No hay pacientes en lista de espera para ese horario: el cupo quedó cerrado.",
+        {},
+        { timeout: 5000 }
+      )
+    ).toBeTruthy();
   });
 
   it("marcar inasistencia usa registrar_inasistencia; si falla, avisa", async () => {
@@ -229,11 +291,11 @@ describe("Carga, error y vacío", () => {
     expect(await screen.findByText("Paciente CT · P-1A2B3C")).toBeTruthy();
   });
 
-  it("sin citas próximas muestra el estado vacío y no permite calcular", async () => {
+  it("sin citas próximas muestra el estado vacío y no permite actualizar el riesgo", async () => {
     servicio.getAgenda.mockResolvedValue([]);
     await abrirPanel();
     expect(screen.getByText("No hay citas próximas")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Calcular riesgo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Actualizar riesgo de la agenda" })).toBeDisabled();
   });
 
   it("muestra el panel en inglés al cambiar el idioma", async () => {
@@ -241,8 +303,9 @@ describe("Carga, error y vacío", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Ajustes" }));
     await fireEvent.press(await screen.findByRole("radio", { name: "English" }));
     await waitFor(() => expect(screen.getByText("Clinic dashboard")).toBeTruthy());
-    expect(screen.getByText("High risk")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "High risk" }));
     expect(screen.getByText("Three no-shows in five previous appointments.")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Record cancellation" })).toHaveLength(2);
     expect(screen.getByText("Recovery rate")).toBeTruthy();
   });
 });

@@ -40,6 +40,8 @@ export interface CitaAgenda {
   origen: "reserva-directa" | "cupo-recuperado";
   paciente: { iniciales: string; codigo: string };
   riesgo: RiesgoCita | null;
+  /** Cuándo el paciente confirmó su asistencia («Confirma tu asistencia»); null si no confirmó. */
+  asistenciaConfirmadaISO: string | null;
 }
 
 export type EstadoCupo = "abierto" | "ofrecido" | "tomado" | "expirado";

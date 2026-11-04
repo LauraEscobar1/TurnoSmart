@@ -53,7 +53,7 @@ describe("authService", () => {
     expect(await auth.getUltimoUsuario()).toBe(CUENTA_DEMO.email);
     // Sin sesión no hay forma de reingresar sin contraseña: la app no la guarda.
     await expect(auth.iniciarSesionBiometrica()).rejects.toMatchObject({
-      message: "Ingresá una vez con tu correo para activar Face ID.",
+      message: "Ingresa una vez con tu correo para activar Face ID.",
     });
     const guardado = JSON.stringify(await AsyncStorage.multiGet(await AsyncStorage.getAllKeys()));
     expect(guardado).not.toContain(CUENTA_DEMO.password);
@@ -149,7 +149,7 @@ describe("authService", () => {
     await expect(intento).rejects.toBeInstanceOf(auth.ConfirmacionCorreoPendiente);
     await expect(intento).rejects.toMatchObject({
       cuentaCreada: true,
-      message: "Te enviamos un correo para confirmar tu cuenta. Confirmalo y después iniciá sesión.",
+      message: "Te enviamos un correo para confirmar tu cuenta. Confírmalo y después inicia sesión.",
     });
     expect(await auth.getSesion()).toBeNull();
 
@@ -160,7 +160,7 @@ describe("authService", () => {
     // Antes de confirmar no puede ingresar; después, sí, con sus datos del registro.
     await expect(auth.iniciarSesion("laura@correo.com", "segura123")).rejects.toMatchObject({
       campo: "email",
-      message: "Confirmá tu correo antes de iniciar sesión.",
+      message: "Confirma tu correo antes de iniciar sesión.",
     });
     confirmarCorreoFalso("laura@correo.com");
     await expect(auth.iniciarSesion("laura@correo.com", "segura123")).resolves.toMatchObject({
@@ -199,7 +199,7 @@ describe("Acceso en pantalla", () => {
     await montarApp({ sesion: false });
     await irALogin();
     await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
-    expect(await screen.findByText("Ingresá una vez con tu correo para activar Face ID.")).toBeTruthy();
+    expect(await screen.findByText("Ingresa una vez con tu correo para activar Face ID.")).toBeTruthy();
     expect(LocalAuthentication.authenticateAsync).not.toHaveBeenCalled();
   });
 
@@ -211,7 +211,7 @@ describe("Acceso en pantalla", () => {
 
     await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
     expect(LocalAuthentication.authenticateAsync).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText("Ingresá una vez con tu correo para activar Face ID.")).toBeTruthy();
+    expect(await screen.findByText("Ingresa una vez con tu correo para activar Face ID.")).toBeTruthy();
     expect(screen.queryByText("Martín Ávila")).toBeNull();
   });
 
@@ -223,13 +223,15 @@ describe("Acceso en pantalla", () => {
     await irALogin();
 
     await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
-    expect(screen.getByText("Ingresá a tu cuenta")).toBeTruthy();
+    expect(screen.getByText("Ingresa a tu cuenta")).toBeTruthy();
     expect(screen.queryByText("Martín Ávila")).toBeNull();
   });
 
   it("registro en 3 pasos: valida, verifica el código, pide notificaciones y entra a Home", async () => {
     // Espía sin reemplazar: el servicio real genera el código y lo leemos.
     const enviar = jest.spyOn(auth, "enviarCodigo");
+    // Instalación nueva: el sistema todavía no dio el permiso de notificaciones.
+    jest.mocked(Notifications.getPermissionsAsync).mockResolvedValueOnce({ granted: false, canAskAgain: true } as never);
     await montarApp({ sesion: false });
     await fireEvent.press(await screen.findByRole("button", { name: "Empezar" }));
 
@@ -237,7 +239,7 @@ describe("Acceso en pantalla", () => {
     expect(await screen.findByText("Tus datos")).toBeTruthy();
     expect(screen.getByText("1 / 3")).toBeTruthy();
     await fireEvent.press(screen.getByText("Continuar"));
-    expect(await screen.findByText("Ingresá tu nombre.")).toBeTruthy();
+    expect(await screen.findByText("Ingresa tu nombre.")).toBeTruthy();
 
     await fireEvent.changeText(screen.getByLabelText("Nombre"), "Laura");
     await fireEvent.changeText(screen.getByLabelText("Apellido"), "Escobar");
@@ -259,7 +261,7 @@ describe("Acceso en pantalla", () => {
     expect(await screen.findByText("¿Qué cupos te sirven?")).toBeTruthy();
     expect(screen.getByText("2 / 3")).toBeTruthy();
     await fireEvent.press(screen.getByText("Continuar"));
-    expect(await screen.findByText("Elegí al menos una especialidad.")).toBeTruthy();
+    expect(await screen.findByText("Elige al menos una especialidad.")).toBeTruthy();
     await fireEvent.press(screen.getByRole("checkbox", { name: "Cardiología" }));
     await fireEvent.press(screen.getByRole("checkbox", { name: "Nutrición" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Tarde" }));
@@ -267,7 +269,7 @@ describe("Acceso en pantalla", () => {
     await fireEvent.press(screen.getByText("Continuar"));
 
     // Paso 3 — verificación
-    expect(await screen.findByText("Verificá tu teléfono")).toBeTruthy();
+    expect(await screen.findByText("Verifica tu teléfono")).toBeTruthy();
     expect(screen.getByText("3 / 3")).toBeTruthy();
     expect(screen.getByText("Enviamos un código de 6 dígitos al +54 11 4444 1234.")).toBeTruthy();
     expect(enviar).toHaveBeenCalledWith("+54 11 4444 1234");
@@ -276,7 +278,7 @@ describe("Acceso en pantalla", () => {
     const crear = () => screen.getByRole("button", { name: "Crear cuenta" });
     expect(crear()).toBeDisabled();
     await fireEvent.press(crear());
-    expect(screen.getByText("Verificá tu teléfono")).toBeTruthy();
+    expect(screen.getByText("Verifica tu teléfono")).toBeTruthy();
 
     const codigo = await enviar.mock.results[0].value;
     const incorrecto = codigo === "000000" ? "111111" : "000000";
@@ -291,7 +293,7 @@ describe("Acceso en pantalla", () => {
     expect(await screen.findByText("Laura Escobar")).toBeTruthy();
     expect(Notifications.requestPermissionsAsync).toHaveBeenCalled();
     // Lista de espera real: en Nutrición no espera nadie, así que es el primero.
-    expect(screen.getByText("Sos el primero: el próximo cupo que te sirva es tuyo.")).toBeTruthy();
+    expect(screen.getByText("Eres el primero: el próximo cupo que te sirva es tuyo.")).toBeTruthy();
 
     // Lo elegido en el paso 2 aparece en Perfil.
     await fireEvent.press(screen.getByRole("tab", { name: "Perfil" }));
@@ -303,7 +305,7 @@ describe("Acceso en pantalla", () => {
     // Cada paciente ve solo sus notificaciones: la cuenta nueva empieza sin
     // ninguna y nunca ve las de la cuenta demo.
     await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
-    expect(await screen.findByText("No tenés notificaciones")).toBeTruthy();
+    expect(await screen.findByText("No tienes notificaciones")).toBeTruthy();
     expect(screen.queryByText(/Martín/)).toBeNull();
   });
 
@@ -325,14 +327,14 @@ describe("Acceso en pantalla", () => {
     await fireEvent.press(await screen.findByRole("checkbox", { name: "Cardiología" }));
     await fireEvent.press(screen.getByText("Continuar"));
 
-    expect(await screen.findByText("Verificá tu teléfono")).toBeTruthy();
+    expect(await screen.findByText("Verifica tu teléfono")).toBeTruthy();
     await fireEvent.changeText(screen.getByTestId("codigo-input"), await enviar.mock.results[0].value);
     await fireEvent.press(screen.getByRole("checkbox", { name: "Acepto términos y política de privacidad" }));
     await fireEvent.press(screen.getByRole("button", { name: "Crear cuenta" }));
 
     // Inicio de sesión con el aviso de confirmación; no es un error ni entra a la app.
-    expect(await screen.findByText("Te enviamos un correo para confirmar tu cuenta. Confirmalo y después iniciá sesión.")).toBeTruthy();
-    expect(screen.getByText("Ingresá a tu cuenta")).toBeTruthy();
+    expect(await screen.findByText("Te enviamos un correo para confirmar tu cuenta. Confírmalo y después inicia sesión.")).toBeTruthy();
+    expect(screen.getByText("Ingresa a tu cuenta")).toBeTruthy();
     expect(screen.queryByText("No pudimos crear la cuenta.")).toBeNull();
     expect(screen.queryByText("Laura Escobar")).toBeNull();
     expect(ingresar).not.toHaveBeenCalled();
@@ -342,7 +344,7 @@ describe("Acceso en pantalla", () => {
     // «Atrás» vuelve a la Bienvenida, no al paso 3 del registro.
     await fireEvent.press(screen.getByLabelText("Volver"));
     expect(await screen.findByRole("button", { name: "Empezar" })).toBeTruthy();
-    expect(screen.queryByText("Verificá tu teléfono")).toBeNull();
+    expect(screen.queryByText("Verifica tu teléfono")).toBeNull();
   });
 
   it("en inglés, entrando al registro desde «Log in»: Login recibe el aviso de confirmación y lo muestra", async () => {

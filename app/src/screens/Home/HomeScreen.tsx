@@ -110,14 +110,16 @@ export function HomeScreen() {
               onPress={() => navigation.navigate("OfferDetail", { ofertaId: oferta.id })}
             />
           ) : (
+            // Sin oferta: el asistente IA queda atento (describe el sistema, no una priorización).
             <Card tono="acento" style={styles.sinOferta}>
               <View style={styles.radar}>
                 <View style={styles.radarAnillo} />
-                <Ionicons name="notifications-outline" size={20} color={colors.sobreAcento} />
+                <Ionicons name="sparkles" size={20} color={colors.sobreAcento} />
               </View>
-              <View style={styles.flex}>
-                <Text style={heading(18, colors.accent900)}>{t("inicio.sinOfertas")}</Text>
-                <Text style={body(13, colors.accent800)}>{t("inicio.sinOfertasTexto")}</Text>
+              <View style={styles.flex} accessible accessibilityLabel={`${t("asistenteIA.atentoTitulo")}. ${t("asistenteIA.atentoTexto")}`}>
+                <Text style={label(9, colors.accent700)}>{t("inicio.sinOfertas")}</Text>
+                <Text style={heading(18, colors.accent900)}>{t("asistenteIA.atentoTitulo")}</Text>
+                <Text style={body(13, colors.accent800)}>{t("asistenteIA.atentoTexto")}</Text>
                 <View style={styles.estadoAlertas}>
                   <View style={[styles.puntoEstado, !paciente.notificacionesActivas && styles.puntoApagado]} />
                   <Text style={styles.estadoTexto}>

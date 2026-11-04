@@ -1,0 +1,3 @@
+# Respaldos y dumps de la base: nunca al repositorio.
+respaldo*.sql
+*_dump.sql

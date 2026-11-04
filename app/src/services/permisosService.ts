@@ -1,27 +1,20 @@
-import { Linking, Platform } from "react-native";
-import { isRunningInExpoGo } from "expo";
-
-type ModuloNotificaciones = typeof import("expo-notifications");
+import { Linking } from "react-native";
+import { cargarNotificaciones, configurarNotificaciones } from "@/services/notificacionesLocales";
 
 /**
- * expo-notifications se carga recién al usarlo: en Android, dentro de Expo
- * Go (SDK 53+), el módulo lanza un error apenas se importa porque Expo Go
- * ya no soporta push remotas. Ahí no se carga y el permiso queda en «no».
- * En un development build o en la app publicada funciona normal.
- */
-function cargarNotificaciones(): ModuloNotificaciones | null {
-  if (Platform.OS === "android" && isRunningInExpoGo()) return null;
-  return require("expo-notifications") as ModuloNotificaciones;
-}
-
-/**
- * Permiso de notificaciones push. Sin push no existe la ruta crítica de
- * 2 toques, por eso se pide al crear la cuenta (paso 3 del registro).
+ * Permiso de notificaciones. Sin avisos no existe la ruta crítica de 2
+ * toques (las ofertas duran minutos), por eso se pide al crear la cuenta
+ * (paso 3 del registro) y, con una explicación, al entrar a la app.
+ *
+ * Son notificaciones LOCALES (ver notificacionesLocales): funcionan en Expo
+ * Go, también en Android. En Android 13+ el sistema solo muestra la
+ * pregunta si ya existe un canal, así que se configura antes de pedirlo.
  */
 export async function pedirPermisoNotificaciones(): Promise<boolean> {
   try {
     const Notifications = cargarNotificaciones();
     if (!Notifications) return false;
+    await configurarNotificaciones();
     const actual = await Notifications.getPermissionsAsync();
     if (actual.granted) return true;
     if (!actual.canAskAgain) return false;

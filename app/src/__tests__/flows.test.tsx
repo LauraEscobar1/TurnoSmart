@@ -26,11 +26,12 @@ describe("Home", () => {
   it("tablero: saludo, oferta, próxima cita, lista de espera, avisos y una sola barra de navegación", async () => {
     await montarApp();
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
-    expect(screen.getByText("Tenés una oferta de cupo esperando respuesta.")).toBeTruthy();
+    expect(screen.getByText("Tienes una oferta de cupo esperando respuesta.")).toBeTruthy();
     // Sin segunda barra de navegación arriba: ni accesos rápidos ni indicador de sección.
     expect(screen.queryByRole("button", { name: "Buscar especialista" })).toBeNull();
     expect(screen.queryByText(/\/ 5 · deslizá/)).toBeNull();
-    expect(screen.getByText("Oferta para vos")).toBeTruthy();
+    // La oferta más urgente la priorizó la IA: así se le cuenta al paciente.
+    expect(screen.getByText("Recomendado por IA")).toBeTruthy();
     expect(screen.getByText("Ver oferta")).toBeTruthy();
     // Próxima cita: especialidad → fecha → especialista → consultorio → estado.
     expect(screen.getByText("Próxima cita")).toBeTruthy();
@@ -38,7 +39,7 @@ describe("Home", () => {
     expect(screen.getByText("Dr. J. Peralta")).toBeTruthy();
     expect(screen.getByText("Confirmada")).toBeTruthy();
     // Lista de espera: puesto 3 → 2 personas antes.
-    expect(screen.getByText("2 personas antes que vos. Te avisamos cuando se libere un cupo.")).toBeTruthy();
+    expect(screen.getByText("2 personas antes que tú. Te avisamos cuando se libere un cupo.")).toBeTruthy();
     // Notificaciones recientes: las 2 sin leer.
     expect(screen.getByText("Notificaciones recientes")).toBeTruthy();
     expect(screen.getByText("Recordatorio de cita")).toBeTruthy();
@@ -62,8 +63,9 @@ describe("Ruta crítica · 2 toques", () => {
 
     expect(await screen.findByText("Tiempo para responder")).toBeTruthy();
     expect(screen.getByText("Oferta de cupo")).toBeTruthy();
-    expect(screen.getByText("Por qué te lo ofrecemos")).toBeTruthy();
-    expect(screen.getByText("Tiempo en espera")).toBeTruthy();
+    expect(screen.getByText("Por qué la IA te recomienda este turno")).toBeTruthy();
+    expect(screen.getByText("Llevas 34 días en la lista de espera.")).toBeTruthy();
+    expect(screen.getByText(/^Tu asistente TurnoSmart analizó/)).toBeTruthy();
     expect(screen.queryByText(/0[.,]87/)).toBeNull(); // nunca el score
 
     await fireEvent.press(screen.getByText("Aceptar cupo")); // toque 2 — sin «¿seguro?»
@@ -110,10 +112,13 @@ describe("Secciones", () => {
   it("Ofertas: lo pendiente como protagonista, historial compacto con filtros y ayuda colapsable", async () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Ofertas" }));
-    expect(await screen.findByText("Ofertas para vos")).toBeTruthy();
+    expect(await screen.findByText("Ofertas para ti")).toBeTruthy();
     expect(screen.getByText("2 ofertas requieren tu respuesta")).toBeTruthy();
     // Cada pendiente: especialidad, fecha, hora, especialista, consultorio, estado y acciones.
     expect(screen.getAllByText("Esperando tu respuesta")).toHaveLength(2);
+    // Honestidad: una la priorizó la IA y la otra el respaldo determinista.
+    expect(screen.getAllByText("Recomendado por IA")).toHaveLength(1);
+    expect(screen.getAllByText("Recomendado por TurnoSmart")).toHaveLength(1);
     expect(screen.getByText("Dra. Lucía Méndez")).toBeTruthy();
     expect(screen.getByText("Consultorio 1C")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Aceptar cupo" })).toHaveLength(2);
@@ -156,7 +161,8 @@ describe("Secciones", () => {
 
     await fireEvent.press(await screen.findByRole("tab", { name: "Ofertas" }));
     expect(await screen.findByText("No hay nuevas ofertas por ahora")).toBeTruthy();
-    expect(screen.getByText("Te avisaremos cuando encontremos un cupo que pueda interesarte.")).toBeTruthy();
+    expect(screen.getByText("Tu asistente IA está atento")).toBeTruthy();
+    expect(screen.getByText("Cuando se libere un cupo compatible, te lo ofrecerá primero si eres el mejor candidato.")).toBeTruthy();
   });
 
   it("Mis citas: calendario, citas del día elegido, Próximas / Pasadas y detalle", async () => {
@@ -197,18 +203,18 @@ describe("Secciones", () => {
     expect(
       screen.getByText(/^Hola, Martín\. Te recordamos que el .+ tienes una cita de Dermatología a las \d\d:\d\d con el Dr\. J\. Peralta, en el consultorio 1C\.$/)
     ).toBeTruthy();
-    expect(screen.getByText(/^Hola, Martín\. Tenemos un cupo disponible que podría interesarte en Cardiología\./)).toBeTruthy();
+    expect(screen.getByText(/^Hola, Martín\. Tu asistente analizó tu disponibilidad, especialidad y tiempo de espera, y encontró un cupo de Cardiología para ti\./)).toBeTruthy();
     expect(screen.getByText(/^Ayer · \d\d:\d\d$/)).toBeTruthy();
     expect(screen.queryByText("Tiempo para responder")).toBeNull();
 
     // Tocar el cupo solo lo marca como leído; el destino se abre con «Ver oferta».
-    await fireEvent.press(screen.getByText("Cupo disponible"));
+    await fireEvent.press(screen.getByText("La IA de TurnoSmart encontró un cupo para ti"));
     expect(screen.queryByText("Tiempo para responder")).toBeNull();
     expect(await screen.findAllByLabelText(/^Sin leer\./)).toHaveLength(1);
 
     // Marcar todo como leído.
     await fireEvent.press(screen.getByText("Marcar todo como leído"));
-    await screen.findAllByLabelText(/^Cupo disponible\./);
+    await screen.findAllByLabelText(/^La IA de TurnoSmart encontró un cupo para ti\./);
     expect(screen.queryAllByLabelText(/^Sin leer\./)).toHaveLength(0);
     expect(screen.queryByText("Marcar todo como leído")).toBeNull();
   });
@@ -336,8 +342,8 @@ describe("Idioma", () => {
     // Notificaciones: la bandeja y los mensajes, en inglés.
     await fireEvent.press(screen.getByRole("tab", { name: "Notifications" }));
     expect(await screen.findByText("Mark all as read")).toBeTruthy();
-    expect(screen.getByText("Slot available")).toBeTruthy();
-    expect(screen.getByText(/^Hi, Martín\. We have an open Cardiology slot/)).toBeTruthy();
+    expect(screen.getByText("TurnoSmart's AI found a slot for you")).toBeTruthy();
+    expect(screen.getByText(/^Hi, Martín\. Your assistant analyzed your availability, specialty and waiting time, and found a Cardiology slot/)).toBeTruthy();
     expect(screen.getByText(/^Yesterday · \d\d:\d\d$/)).toBeTruthy();
 
     // Ofertas, Mis citas y Perfil.
@@ -357,8 +363,9 @@ describe("Idioma", () => {
 
     await fireEvent.press((await screen.findAllByText("View offer"))[0]);
     expect(await screen.findByText("Time left to reply")).toBeTruthy();
-    expect(screen.getByText("Why we're offering it to you")).toBeTruthy();
-    expect(screen.getByText("Time waiting")).toBeTruthy();
+    expect(screen.getByText("Why the AI recommends this appointment")).toBeTruthy();
+    expect(screen.getByText("You've been on the waiting list for 34 days.")).toBeTruthy();
+    expect(screen.getByText("AI recommended")).toBeTruthy();
     expect(screen.getByText("Decline")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back"));
 
@@ -468,6 +475,7 @@ describe("Inicio: acciones de cada sección", () => {
     }
 
     expect(await screen.findByText("Sin ofertas por ahora")).toBeTruthy();
+    expect(screen.getByText("Tu asistente IA está atento")).toBeTruthy();
     expect(screen.getByText(/Alertas activas · 2 especialidades/)).toBeTruthy();
     // Queda el recordatorio sin leer; al leerlo, el Inicio queda «Todo al día».
     await fireEvent.press(screen.getByText("Recordatorio de cita"));
@@ -476,7 +484,7 @@ describe("Inicio: acciones de cada sección", () => {
     await screen.findByText("Especialista");
     await fireEvent.press(screen.getByRole("tab", { name: "Inicio" }));
     expect(await screen.findByText("Todo al día")).toBeTruthy();
-    expect(screen.getByText("No tenés notificaciones nuevas.")).toBeTruthy();
+    expect(screen.getByText("No tienes notificaciones nuevas.")).toBeTruthy();
   });
 });
 
@@ -506,7 +514,7 @@ describe("Detalle de cita", () => {
   it("Reprogramar: elegir un horario disponible actualiza la cita", async () => {
     await abrirDetalle();
     await fireEvent.press(screen.getByRole("button", { name: "Reprogramar" }));
-    expect(await screen.findByText("Elegí un nuevo horario")).toBeTruthy();
+    expect(await screen.findByText("Elige un nuevo horario")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Confirmar nuevo horario" })).toBeDisabled();
 
     const horario = screen.getAllByRole("button").find((b) => /, 09:00$/.test(b.props.accessibilityLabel ?? ""))!;

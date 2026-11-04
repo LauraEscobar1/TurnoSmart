@@ -134,6 +134,8 @@ function FiguraExplicacion() {
           { etiqueta: "Tu especialidad", valor: "Cardiología", peso: 1 },
           { etiqueta: "Horario preferido", valor: "Tarde", peso: 0.64 },
         ]}
+        // Un cupo de ejemplo a las 15:00 de Colombia: coincide con «Tarde».
+        fechaHoraISO="2026-12-01T20:00:00.000Z"
       />
     </Card>
   );
