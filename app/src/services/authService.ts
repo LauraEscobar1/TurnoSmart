@@ -5,6 +5,8 @@ import { getSupabase } from "@/services/supabaseClient";
 import { actualizarPacienteRemoto, getPacienteRemoto, PacienteRemoto } from "@/services/pacientesService";
 import { getResumenListaEspera, ResumenListaEspera, sincronizarListaEspera } from "@/services/solicitudesEsperaService";
 import { tr } from "@/i18n";
+import type { PerfilStaff } from "@/types/staff";
+import { getPerfilStaff } from "@/services/staffService";
 
 /**
  * Capa de servicio de cuentas y sesión, sobre Supabase Auth.
@@ -187,20 +189,62 @@ async function guardarPerfil(paciente: Paciente) {
   await AsyncStorage.setItem(KEY_PERFILES, JSON.stringify(perfiles));
 }
 
-/** Paciente con sesión abierta en este dispositivo (sesión de Supabase restaurada), o null. */
-export async function getSesion(): Promise<Paciente | null> {
+// — Rol: paciente o staff del consultorio —
+
+/**
+ * El rol lo asigna el servidor en `app_metadata.rol` (la app no puede
+ * escribirlo). Solo decide qué navegación se muestra: los permisos reales
+ * los imponen RLS y las RPC del staff.
+ */
+export function esUsuarioStaff(user: Pick<User, "app_metadata"> | null | undefined): boolean {
+  return user?.app_metadata?.rol === "staff";
+}
+
+/** Sesión abierta: un paciente o un miembro del staff, nunca ambos. */
+export type SesionApp = { paciente: Paciente; staff: null } | { paciente: null; staff: PerfilStaff };
+
+async function perfilStaffDe(user: User): Promise<PerfilStaff> {
+  const email = user.email ?? "";
+  try {
+    return (await getPerfilStaff(email)) ?? { nombre: "", email, consultorios: [] };
+  } catch (e) {
+    // Sin red: el panel se abre igual y muestra su propio estado de error al cargar.
+    console.warn(`[staff] No se pudo leer el perfil del staff. ${String(e)}`);
+    return { nombre: "", email, consultorios: [] };
+  }
+}
+
+async function sesionDeUsuario(user: User): Promise<SesionApp> {
+  if (esUsuarioStaff(user)) return { paciente: null, staff: await perfilStaffDe(user) };
+  return { paciente: await pacienteDeUsuario(user), staff: null };
+}
+
+/** Usuario de la sesión de Supabase guardada en el teléfono, o null. */
+async function usuarioGuardado(): Promise<User | null> {
   await limpiarCuentasLegado();
   try {
     const { data, error } = await getSupabase().auth.getSession();
     if (error || !data.session) return null;
-    return pacienteDeUsuario(data.session.user);
+    return data.session.user;
   } catch {
     // Sin conexión o sin configurar Supabase: se muestra el acceso.
     return null;
   }
 }
 
-export async function iniciarSesion(email: string, password: string): Promise<Paciente> {
+/** Paciente con sesión abierta en este dispositivo (sesión de Supabase restaurada), o null. */
+export async function getSesion(): Promise<Paciente | null> {
+  const user = await usuarioGuardado();
+  return user && !esUsuarioStaff(user) ? pacienteDeUsuario(user) : null;
+}
+
+/** Sesión restaurada con su rol (paciente o staff), o null. */
+export async function getSesionApp(): Promise<SesionApp | null> {
+  const user = await usuarioGuardado();
+  return user ? sesionDeUsuario(user) : null;
+}
+
+async function ingresar(email: string, password: string): Promise<User> {
   if (!email.trim()) throw new AuthError(tr("errores.ingresaCorreo"), "email");
   if (!password) throw new AuthError(tr("errores.ingresaPassword"), "password");
   const { data, error } = await getSupabase().auth.signInWithPassword({ email: normalizarEmail(email), password });
@@ -210,7 +254,16 @@ export async function iniciarSesion(email: string, password: string): Promise<Pa
     throw new AuthError(tr("errores.credenciales"), "password");
   }
   await AsyncStorage.setItem(KEY_ULTIMO, data.user.email ?? normalizarEmail(email));
-  return pacienteDeUsuario(data.user);
+  return data.user;
+}
+
+export async function iniciarSesion(email: string, password: string): Promise<Paciente> {
+  return pacienteDeUsuario(await ingresar(email, password));
+}
+
+/** Inicia sesión y devuelve el rol: la app abre la app del paciente o el panel del staff. */
+export async function iniciarSesionApp(email: string, password: string): Promise<SesionApp> {
+  return sesionDeUsuario(await ingresar(email, password));
 }
 
 /** Correo del último paciente que ingresó (para ingresar con biometría). */
@@ -224,12 +277,20 @@ export async function getUltimoUsuario(): Promise<string | null> {
  * cerrar sesión) hay que ingresar con correo y contraseña: la app nunca
  * guarda la contraseña para reingresar sola.
  */
-export async function iniciarSesionBiometrica(): Promise<Paciente> {
+async function usuarioBiometrico(): Promise<User> {
   const email = await getUltimoUsuario();
   const { data } = await getSupabase().auth.getSession();
   const user = data.session?.user;
   if (!email || !user || user.email !== email) throw new AuthError(tr("errores.faceIdPrimeraVez"));
-  return pacienteDeUsuario(user);
+  return user;
+}
+
+export async function iniciarSesionBiometrica(): Promise<Paciente> {
+  return pacienteDeUsuario(await usuarioBiometrico());
+}
+
+export async function iniciarSesionBiometricaApp(): Promise<SesionApp> {
+  return sesionDeUsuario(await usuarioBiometrico());
 }
 
 export async function cerrarSesion(): Promise<void> {

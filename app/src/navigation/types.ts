@@ -55,4 +55,6 @@ export type RootStackParamList = {
   OfferDetail: { ofertaId: string };
   OfferConfirmation: { ofertaId: string; resultado: "aceptada" | "rechazada" };
   BuscarEspecialista: undefined;
+  /** Panel del staff del consultorio: es la única pantalla cuando la sesión es de staff. */
+  PanelStaff: undefined;
 };

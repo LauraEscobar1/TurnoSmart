@@ -11,6 +11,7 @@ import { OfferConfirmationScreen } from "@/screens/Offers/OfferConfirmationScree
 import { AuthNavigator } from "@/navigation/AuthNavigator";
 import { BuscarEspecialistaScreen } from "@/screens/Home/BuscarEspecialistaScreen";
 import { useAuth } from "@/auth/AuthContext";
+import { PanelStaffScreen } from "@/screens/Staff/PanelStaffScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -36,9 +37,11 @@ const temaNavegacion = (colors: Paleta, oscuro: boolean): Theme => ({
  *
  * Sin sesión abierta solo existe el acceso (iniciar sesión / registro);
  * al ingresar o crear la cuenta, React Navigation pasa solo a la app.
+ * Navegación por rol: un usuario de staff (app_metadata.rol, lo asigna el
+ * servidor) ve solo el panel del consultorio, nunca la app del paciente.
  */
 export function RootNavigator() {
-  const { paciente } = useAuth();
+  const { paciente, staff } = useAuth();
   const { colors, oscuro } = useTema();
 
   return (
@@ -58,6 +61,8 @@ export function RootNavigator() {
               />
             </Stack.Group>
           </>
+        ) : staff ? (
+          <Stack.Screen name="PanelStaff" component={PanelStaffScreen} />
         ) : (
           <Stack.Screen name="Acceso" component={AuthNavigator} options={{ animationTypeForReplace: "pop" }} />
         )}
