@@ -36,10 +36,29 @@ jest.mock("expo-local-authentication", () => ({
   isEnrolledAsync: jest.fn(async () => true),
   authenticateAsync: jest.fn(async () => ({ success: true })),
 }));
-jest.mock("expo-notifications", () => ({
-  getPermissionsAsync: jest.fn(async () => ({ granted: false, canAskAgain: true })),
-  requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
-}));
+// Notificaciones locales: `__tocar(respuesta)` simula que el usuario toca una
+// notificación (o uno de sus botones) con la app abierta.
+jest.mock("expo-notifications", () => {
+  const oyentes = new Set();
+  return {
+    AndroidImportance: { HIGH: 4 },
+    DEFAULT_ACTION_IDENTIFIER: "expo.modules.notifications.actions.DEFAULT",
+    // Por defecto el permiso ya está concedido; cada prueba puede cambiarlo.
+    getPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true })),
+    requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+    setNotificationHandler: jest.fn(),
+    setNotificationChannelAsync: jest.fn(async () => null),
+    setNotificationCategoryAsync: jest.fn(async () => null),
+    scheduleNotificationAsync: jest.fn(async () => "aviso-local"),
+    getLastNotificationResponseAsync: jest.fn(async () => null),
+    clearLastNotificationResponse: jest.fn(),
+    addNotificationResponseReceivedListener: jest.fn((oyente) => {
+      oyentes.add(oyente);
+      return { remove: () => oyentes.delete(oyente) };
+    }),
+    __tocar: (respuesta) => oyentes.forEach((oyente) => oyente(respuesta)),
+  };
+});
 
 // Supabase: cliente falso en memoria (Auth + INSERT en pacientes), sin red.
 jest.mock("@/services/supabaseClient", () => require("@/test-utils/supabaseFalso"));

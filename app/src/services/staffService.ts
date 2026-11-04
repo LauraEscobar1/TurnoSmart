@@ -16,7 +16,8 @@ import {
  * `security definer` que validan que la cita o el cupo sea de un consultorio
  * del staff; el staff no lee `pacientes`, `citas` ni `ofertas` directamente,
  * y los pacientes llegan solo con iniciales y código. El riesgo lo calcula la
- * Edge Function `predecir-inasistencia` con la sesión del staff.
+ * Edge Function `predecir-inasistencia`: sola, cada 30 minutos (pg_cron), y
+ * cuando el staff pide «Actualizar riesgo» (con su sesión).
  *
  * A diferencia de los servicios del paciente, aquí los errores se lanzan
  * (DatosError) para que el panel muestre su estado de error.
@@ -73,6 +74,7 @@ interface FilaAgenda {
   riesgo_explicacion_es: string | null;
   riesgo_explicacion_en: string | null;
   riesgo_calculado_en: string | null;
+  asistencia_confirmada_en?: string | null;
 }
 
 export async function getAgenda(dias = 14): Promise<CitaAgenda[]> {
@@ -96,6 +98,7 @@ export async function getAgenda(dias = 14): Promise<CitaAgenda[]> {
             calculadoEnISO: f.riesgo_calculado_en ?? "",
           }
         : null,
+    asistenciaConfirmadaISO: f.asistencia_confirmada_en ? new Date(f.asistencia_confirmada_en).toISOString() : null,
   }));
 }
 
@@ -127,10 +130,15 @@ export async function getCupos(limite = 30): Promise<CupoStaff[]> {
   }));
 }
 
-/** Cancela la cita y libera el cupo (la base lo ofrece a la lista de espera). */
-export async function cancelarCitaStaff(citaId: string): Promise<void> {
-  const { error } = await getSupabase().rpc("cancelar_cita_staff", { p_cita_id: citaId });
+/**
+ * Registra la cancelación que el paciente avisó por teléfono o en recepción:
+ * cancela la cita y libera el cupo, que la base ofrece a la lista de espera
+ * (trigger → priorizar-cupo, con IA). Devuelve el id del cupo liberado.
+ */
+export async function cancelarCitaStaff(citaId: string): Promise<string | null> {
+  const { data, error } = await getSupabase().rpc("cancelar_cita_staff", { p_cita_id: citaId });
   if (error) fallo(error);
+  return typeof data === "string" ? data : null;
 }
 
 /** Marca como inasistencia una cita cuya hora ya pasó. */

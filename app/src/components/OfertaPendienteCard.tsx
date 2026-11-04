@@ -10,6 +10,7 @@ import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Countdown, useCountdown } from "@/components/Countdown";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { AnalisisRecomendacion, InsigniaRecomendacion } from "@/components/Recomendacion";
 import { hora, useFormato } from "@/utils/format";
 import { useDato, useT } from "@/i18n";
 
@@ -21,7 +22,9 @@ interface Props {
 
 /**
  * Oferta pendiente en la pantalla Ofertas: la tarjeta más importante de la
- * sección. Estado y contador arriba, la especialidad protagonista, los
+ * sección. Estado, quién la recomendó («Recomendado por IA» solo si la
+ * priorizó la IA) y contador arriba; la especialidad protagonista con el
+ * análisis del asistente, los
  * cuatro datos en una grilla y, abajo, «Aceptar cupo» como acción clara
  * (un toque: sin «¿seguro?», regla de 2 toques) y «Ver detalles».
  */
@@ -37,14 +40,20 @@ export function OfertaPendienteCard({ oferta, onAceptar, onVerDetalles }: Props)
   return (
     <Card style={[styles.card, expirada && styles.expirada]}>
       <View style={styles.cabecera}>
-        <Badge
-          label={t(expirada ? "oferta.expirada" : "oferta.esperandoRespuesta")}
-          variant={expirada ? "lost" : "tint"}
-        />
+        <View style={styles.estado}>
+          <Badge
+            label={t(expirada ? "oferta.expirada" : "oferta.esperandoRespuesta")}
+            variant={expirada ? "lost" : "tint"}
+          />
+          {!expirada && <InsigniaRecomendacion estrategia={oferta.estrategia} />}
+        </View>
         {!expirada && <Countdown segundos={segundos} size={22} caption={t("oferta.paraResponder")} />}
       </View>
 
-      <Text style={heading(26, colors.accent900)}>{dato("especialidades", oferta.especialidad)}</Text>
+      <View style={styles.titulo}>
+        <Text style={heading(26, colors.accent900)}>{dato("especialidades", oferta.especialidad)}</Text>
+        {!expirada && <AnalisisRecomendacion estrategia={oferta.estrategia} />}
+      </View>
 
       <View style={styles.grilla}>
         <Dato icono="calendar-outline" etiqueta={t("comun.fecha")} valor={fechaConDia(oferta.fechaHoraISO)} />
@@ -101,6 +110,15 @@ const crearStyles = (colors: Paleta) =>
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: 12,
+  },
+  estado: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  titulo: {
+    gap: 4,
   },
   grilla: {
     flexDirection: "row",

@@ -1,7 +1,8 @@
 # TurnoSmart — App de pacientes (Mobile)
 
 App móvil (React Native + Expo + TypeScript) para el caso de estudio TurnoSmart.
-Implementa el flujo de **recibir y aceptar cupos liberados por cancelaciones/inasistencias**.
+Implementa el flujo de **recibir y aceptar cupos liberados por cancelaciones/inasistencias**
+y el **panel del staff** del consultorio. Visión general, arquitectura e IA: [`../README.md`](../README.md).
 
 Esta estructura sigue directamente los documentos de diseño en `../docs/`:
 
@@ -11,17 +12,27 @@ Esta estructura sigue directamente los documentos de diseño en `../docs/`:
 
 ## Cómo correrla
 
-Requisitos: Node.js 18+ y npm. No requiere Mac/Xcode para probar (usa la app Expo Go en tu celular).
+Requisitos: Node.js 20+ y npm. No requiere Mac/Xcode para probar (usa la app Expo Go en tu celular).
 
 ```bash
 cd app
 npm install
-npm start
+cp .env.example .env      # solo la clave PÚBLICA de Supabase
+npx expo start --tunnel   # o `npm start` si el celular está en la misma red
 ```
 
 Luego escanea el código QR con la app **Expo Go** (iOS/Android) o presiona `i`/`a` en la terminal para abrir un simulador, si lo tienes instalado.
 
-> Nota: este scaffold se generó sin conexión de terminal al equipo, así que `npm install` aún no se ha ejecutado. Es el primer paso pendiente antes de correr la app.
+Verificación: `npm run typecheck`, `npm test` y `npx expo-doctor`.
+
+### Notificaciones
+
+Son **locales** (expo-notifications), así funcionan en Expo Go también en
+Android: Supabase Realtime avisa cada fila nueva de `notificaciones` y la app
+muestra el aviso del sistema (`src/services/notificacionesLocales.ts`,
+`src/components/AvisosLocales.tsx`). Llegan con la app abierta o recién pasada
+a segundo plano; lo demás queda en la pestaña Notificaciones. Push remotas
+requerirían un development build.
 
 ## Estructura de carpetas
 
@@ -64,8 +75,8 @@ app/
     │   └── EmptyState.tsx
     │
     ├── types/domain.ts             # Entidades: Cita, OfertaCupo, Paciente, Notificacion
-    ├── data/mockData.ts            # Datos de ejemplo para desarrollar sin backend
-    ├── services/                   # Capa de datos — hoy usa mocks, mañana la API real
+    ├── data/mockData.ts            # Datos de ejemplo (los usan las pruebas)
+    ├── services/                   # Capa de datos sobre Supabase (RPC, RLS, Realtime)
     │   ├── offersService.ts
     │   ├── appointmentsService.ts
     │   └── notificationsService.ts
@@ -76,13 +87,11 @@ app/
 
 ## Decisiones de arquitectura
 
-- **Separación pantalla / servicio**: ninguna pantalla llama datos "a mano"; todas pasan por `src/services/*`. Cuando exista el backend real, solo se reescribe el contenido de esos archivos — las pantallas no cambian.
+- **Separación pantalla / servicio**: ninguna pantalla llama datos "a mano"; todas pasan por `src/services/*`, que hablan con Supabase. Las pruebas reemplazan el cliente por un Supabase falso en memoria (`src/test-utils/supabaseFalso.ts`).
 - **`OfferDetail` vive en el stack raíz, no dentro del tab de Ofertas**: se llega a ella desde tres lugares distintos (Home, Ofertas, notificación push), tal como exige el flujo crítico de `docs/03-navegacion.md §2.4`.
 - **Vocabulario controlado**: los nombres de tipos y variables (`OfertaCupo`, `Cita`, `cupo`, `oferta`) respetan el glosario de `docs/01-arquitectura-informacion.md §5`, para que el código hable el mismo idioma que los documentos de diseño.
 
 ## Próximos pasos sugeridos
 
-1. `npm install` y correr en Expo Go para validar la navegación.
-2. Reemplazar `src/data/mockData.ts` y los `services/*` por llamadas reales cuando exista la API/backend.
-3. Conectar notificaciones push reales (Expo Notifications) para el deep link de "cupo de último minuto".
-4. Diseño visual (Design System) — cuando esté listo, migrar los estilos inline de `theme/` a los tokens definitivos de marca.
+1. Push remotas (development build + Expo Push) para avisar con la app cerrada.
+2. Agenda real de profesionales para reprogramar (hoy se proponen horarios fijos).

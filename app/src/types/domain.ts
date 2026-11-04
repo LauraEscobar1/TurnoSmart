@@ -16,9 +16,18 @@ export interface Cita {
   fechaHoraISO: string;
   estado: EstadoCita;
   origen: "reserva-directa" | "cupo-recuperado";
+  /** Cuándo el paciente confirmó que asistirá («Confirma tu asistencia»); null si no confirmó. */
+  asistenciaConfirmadaISO?: string | null;
 }
 
 export type EstadoOferta = "pendiente" | "aceptada" | "rechazada" | "expirada";
+
+/**
+ * Quién priorizó la oferta: "ai" = la IA ordenó a los candidatos (validado
+ * en el servidor); "fallback" = la estrategia determinista de respaldo.
+ * La app solo menciona la IA con "ai".
+ */
+export type EstrategiaOferta = "ai" | "fallback";
 
 export interface OfertaCupo {
   id: string;
@@ -35,6 +44,8 @@ export interface OfertaCupo {
    * interno con el que se priorizó nunca llega a la app.
    */
   factores: FactorPrioridad[];
+  /** Estrategia con la que se priorizó (`ofertas.estrategia`). */
+  estrategia: EstrategiaOferta;
 }
 
 export interface FactorPrioridad {
