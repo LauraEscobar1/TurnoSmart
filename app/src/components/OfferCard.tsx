@@ -9,6 +9,7 @@ import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Countdown, useCountdown } from "@/components/Countdown";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { InsigniaRecomendacion } from "@/components/Recomendacion";
 import { hora, useFormato } from "@/utils/format";
 import { useDato, useT } from "@/i18n";
 
@@ -55,7 +56,11 @@ function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress
   return (
     <Card tono="acento" style={[styles.home, expirada && styles.expired]}>
       <View style={styles.topRow}>
-        <Badge label={t(expirada ? "oferta.expirada" : "oferta.paraVos")} variant={expirada ? "lost" : "accent"} />
+        {expirada ? (
+          <Badge label={t("oferta.expirada")} variant="lost" />
+        ) : (
+          <InsigniaRecomendacion estrategia={oferta.estrategia} sobreAcento />
+        )}
         {!expirada && (
           <Countdown
             segundos={segundos}
@@ -89,7 +94,11 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
   return (
     <Card style={styles.full}>
       <View style={styles.topRow}>
-        <Badge label={t(expirada ? "oferta.expirada" : "oferta.paraVos")} variant={expirada ? "lost" : "tint"} />
+        {expirada ? (
+          <Badge label={t("oferta.expirada")} variant="lost" />
+        ) : (
+          <InsigniaRecomendacion estrategia={oferta.estrategia} />
+        )}
         {!expirada && <Countdown segundos={segundos} size={26} caption={t("oferta.paraResponder")} />}
       </View>
       <View>

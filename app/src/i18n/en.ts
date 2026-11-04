@@ -90,7 +90,7 @@ export const en: Diccionario = {
     },
     pasos: {
       uno: "When someone cancels an appointment, that slot opens up.",
-      dos: "We offer it to the best match: time waiting, specialty, schedule and distance. We always show you why.",
+      dos: "Your AI assistant offers it to the best match (if it isn't available, we use fixed rules): time waiting, specialty, schedule and availability. We always show you why.",
       tres: "You have a few minutes to accept it with one tap. If you don't reply, it goes to the next patient on the list.",
     },
     titulo: "Offers for you",
@@ -98,7 +98,6 @@ export const en: Diccionario = {
     requierenRespuesta: "{count} offers need your reply",
     requierenRespuesta_one: "1 offer needs your reply",
     sinNuevas: "No new offers right now",
-    sinNuevasTexto: "We'll let you know when we find an appointment you might like.",
     historial: "History",
     comoFuncionan: "How do offers work?",
   },
@@ -125,6 +124,25 @@ export const en: Diccionario = {
     expiradaTexto: "This slot was already offered to another patient.",
     errorNoDisponible: "This offer is no longer available: it expired or was already resolved.",
     errorSinConexion: "We couldn't send your answer. Check your connection and try again.",
+    recomendacion: {
+      ia: "AI recommended",
+      iaAccesible: "Recommended by TurnoSmart's artificial intelligence",
+      turnoSmart: "Recommended by TurnoSmart",
+      analisisIA: "Your TurnoSmart assistant analyzed your availability, specialty and waiting time, and found this appointment for you.",
+      analisisTurnoSmart: "TurnoSmart reviewed your availability, specialty and waiting time, and found this appointment for you.",
+      porQueIA: "Why the AI recommends this appointment",
+      notaIA: "The AI only decides who gets each slot first: it doesn't make medical decisions.",
+    },
+    razones: {
+      tiempoEspera: "You've been on the waiting list for {valor}.",
+      especialidad: "It's the specialty you're waiting for: {valor}.",
+      horarioManana: "It's in the morning, your preferred time.",
+      horarioTarde: "It's in the afternoon, your preferred time.",
+      horarioIndistinto: "Any time works for you.",
+      horarioOtro: "Your preferred time is {valor}; check whether this one works for you.",
+      disponibilidad: "Your alerts are on, so you can reply in time.",
+      distancia: "The office is {valor} away.",
+    },
   },
   citas: {
     cupoRecuperado: "Freed-up slot",
@@ -273,7 +291,6 @@ export const en: Diccionario = {
     ofertas: "Appointment offers",
     verTodas: "View all",
     sinOfertas: "No offers right now",
-    sinOfertasTexto: "We'll let you know as soon as a slot you might like opens up.",
     alertasActivas: "Alerts on",
     alertasDesactivadas: "Alerts off",
     nEspecialidades: "{count} specialties",
@@ -310,11 +327,19 @@ export const en: Diccionario = {
     sumarme: "Join",
     sinResultados: "We couldn't find “{busqueda}”.",
   },
+  asistenteIA: {
+    atentoTitulo: "Your AI assistant is on it",
+    atentoTexto: "When a matching slot opens up, it will offer it to you first if you're the best candidate.",
+  },
   notificaciones: {
     mensajes: {
       "cupo-ultimo-minuto": {
         titulo: "Slot available",
         cuerpo: "Hi, {nombre}. We have an open {especialidad} slot you might be interested in. Take a look before it expires.",
+      },
+      "cupo-ia": {
+        titulo: "TurnoSmart's AI found a slot for you",
+        cuerpo: "Hi, {nombre}. Your assistant analyzed your availability, specialty and waiting time, and found a {especialidad} slot for you. Take a look before it expires.",
       },
       recordatorio: {
         titulo: "Appointment reminder",
@@ -342,6 +367,7 @@ export const en: Diccionario = {
   avisosLocales: {
     canal: "Slots and appointments",
     ofertaTitulo: "Last-minute appointment available!",
+    ofertaTituloIA: "TurnoSmart's AI found a slot for you",
     ofertaCuerpo: "A {especialidad} slot opened up on {fecha} at {hora}. You have a few minutes to take it.",
     confirmarTitulo: "Confirm your attendance",
     confirmarCuerpo: "Your {especialidad} appointment is on {fecha} at {hora}. Will you make it? If you can't, cancel it so another patient can use the slot.",

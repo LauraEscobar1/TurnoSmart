@@ -13,6 +13,7 @@ import { Badge, BadgeVariant } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { IlustracionSinOfertas } from "@/components/IlustracionSinOfertas";
 import { OfertaPendienteCard } from "@/components/OfertaPendienteCard";
+import { AsistenteAtento } from "@/components/Recomendacion";
 import { EstadoOferta, OfertaCupo } from "@/types/domain";
 import { aceptarOferta, getHistorialOfertas, getOfertasPendientes, OfertaNoDisponibleError } from "@/services/offersService";
 import { RootStackParamList } from "@/navigation/types";
@@ -124,9 +125,7 @@ export function OffersListScreen() {
           <View style={styles.vacio}>
             <IlustracionSinOfertas />
             <Text style={[heading(22, colors.textoSobreFondo), styles.centro]}>{t("ofertas.sinNuevas")}</Text>
-            <Text style={[body(14, colors.textoSuaveSobreFondo), styles.centro, styles.vacioTexto]}>
-              {t("ofertas.sinNuevasTexto")}
-            </Text>
+            <AsistenteAtento style={styles.atento} />
           </View>
         )}
 
@@ -281,8 +280,9 @@ const crearStyles = (colors: Paleta) =>
     gap: 8,
     paddingVertical: 8,
   },
-  vacioTexto: {
-    maxWidth: 290,
+  atento: {
+    alignSelf: "stretch",
+    marginTop: 8,
   },
   // Historial
   filtrosScroll: {

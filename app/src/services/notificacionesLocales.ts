@@ -10,8 +10,9 @@ import { fechaCorta, hora } from "@/utils/format";
  * sistema. Por eso solo llegan mientras la app está abierta o recién pasada
  * a segundo plano; lo demás queda en la pestaña Notificaciones.
  *
- *   · Oferta nueva (`cupo-ultimo-minuto`): «¡Cita de último minuto
- *     disponible!» → al tocarla abre la oferta.
+ *   · Oferta nueva (`cupo-ultimo-minuto`): «La IA de TurnoSmart encontró
+ *     un cupo para ti» si la priorizó la IA, o «¡Cita de último minuto
+ *     disponible!» con el respaldo determinista → al tocarla abre la oferta.
  *   · Riesgo alto de inasistencia (`recordatorio` con
  *     `datos.accion = "confirmar-asistencia"`): «Confirma tu asistencia», con
  *     los botones Confirmar y Cancelar cita → abren la cita. El paciente
@@ -49,7 +50,7 @@ export type DestinoAviso =
 export interface FilaNotificacionRealtime {
   id: string;
   tipo: string;
-  datos?: { accion?: string; especialidad?: string; fechaHoraISO?: string } | null;
+  datos?: { accion?: string; especialidad?: string; fechaHoraISO?: string; estrategia?: string } | null;
   referencia_id?: string | null;
   oferta_id?: string | null;
   cita_id?: string | null;
@@ -129,7 +130,9 @@ export function avisoDeFila(fila: FilaNotificacionRealtime) {
   const ofertaId = fila.oferta_id ?? fila.referencia_id;
   if (fila.tipo === "cupo-ultimo-minuto" && ofertaId) {
     const destino: DestinoAviso = { destino: "oferta", ofertaId };
-    return { title: tr("avisosLocales.ofertaTitulo"), body: tr("avisosLocales.ofertaCuerpo", params), data: destino };
+    // Solo menciona la IA si la IA priorizó esta oferta (datos.estrategia de ofrecer_cupo).
+    const title = tr(fila.datos?.estrategia === "ai" ? "avisosLocales.ofertaTituloIA" : "avisosLocales.ofertaTitulo");
+    return { title, body: tr("avisosLocales.ofertaCuerpo", params), data: destino };
   }
   const citaId = fila.cita_id ?? fila.referencia_id;
   if (fila.tipo === "recordatorio" && fila.datos?.accion === "confirmar-asistencia" && citaId) {

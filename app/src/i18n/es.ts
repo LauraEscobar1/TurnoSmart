@@ -92,7 +92,7 @@ export const es = {
     },
     pasos: {
       uno: "Cuando alguien cancela una cita, ese cupo queda libre.",
-      dos: "Lo ofrecemos a quien mejor coincide: tiempo en espera, especialidad, horario y distancia. Siempre te mostramos por qué.",
+      dos: "Tu asistente IA lo ofrece a quien mejor coincide (si no está disponible, usamos reglas fijas): tiempo en espera, especialidad, horario y disponibilidad. Siempre te mostramos por qué.",
       tres: "Tienes unos minutos para aceptarlo con un toque. Si no respondes, pasa al siguiente paciente de la lista.",
     },
     titulo: "Ofertas para ti",
@@ -100,7 +100,6 @@ export const es = {
     requierenRespuesta: "{count} ofertas requieren tu respuesta",
     requierenRespuesta_one: "1 oferta requiere tu respuesta",
     sinNuevas: "No hay nuevas ofertas por ahora",
-    sinNuevasTexto: "Te avisaremos cuando encontremos un cupo que pueda interesarte.",
     historial: "Historial",
     comoFuncionan: "¿Cómo funcionan las ofertas?",
   },
@@ -127,6 +126,25 @@ export const es = {
     expiradaTexto: "Este cupo ya se ofreció a otro paciente.",
     errorNoDisponible: "Esta oferta ya no está disponible: venció o ya se resolvió.",
     errorSinConexion: "No pudimos enviar tu respuesta. Comprueba tu conexión e inténtalo de nuevo.",
+    recomendacion: {
+      ia: "Recomendado por IA",
+      iaAccesible: "Recomendado por la inteligencia artificial de TurnoSmart",
+      turnoSmart: "Recomendado por TurnoSmart",
+      analisisIA: "Tu asistente TurnoSmart analizó tu disponibilidad, especialidad y tiempo de espera, y encontró este turno para ti.",
+      analisisTurnoSmart: "TurnoSmart revisó tu disponibilidad, especialidad y tiempo de espera, y encontró este turno para ti.",
+      porQueIA: "Por qué la IA te recomienda este turno",
+      notaIA: "La IA solo decide a quién ofrecer primero cada cupo: no toma decisiones médicas.",
+    },
+    razones: {
+      tiempoEspera: "Llevas {valor} en la lista de espera.",
+      especialidad: "Es la especialidad que estás esperando: {valor}.",
+      horarioManana: "Es en la mañana, tu horario preferido.",
+      horarioTarde: "Es en la tarde, tu horario preferido.",
+      horarioIndistinto: "Te sirve cualquier horario.",
+      horarioOtro: "Tu horario preferido es {valor}; revisa si este te sirve.",
+      disponibilidad: "Tienes las alertas activas, así que puedes responder a tiempo.",
+      distancia: "El consultorio queda a {valor}.",
+    },
   },
   citas: {
     cupoRecuperado: "Cupo recuperado",
@@ -275,7 +293,6 @@ export const es = {
     ofertas: "Ofertas de cupo",
     verTodas: "Ver todas",
     sinOfertas: "Sin ofertas por ahora",
-    sinOfertasTexto: "Te avisaremos apenas se libere un cupo que te pueda interesar.",
     alertasActivas: "Alertas activas",
     alertasDesactivadas: "Alertas desactivadas",
     nEspecialidades: "{count} especialidades",
@@ -312,11 +329,19 @@ export const es = {
     sumarme: "Sumarme",
     sinResultados: "No encontramos «{busqueda}».",
   },
+  asistenteIA: {
+    atentoTitulo: "Tu asistente IA está atento",
+    atentoTexto: "Cuando se libere un cupo compatible, te lo ofrecerá primero si eres el mejor candidato.",
+  },
   notificaciones: {
     mensajes: {
       "cupo-ultimo-minuto": {
         titulo: "Cupo disponible",
         cuerpo: "Hola, {nombre}. Tenemos un cupo disponible que podría interesarte en {especialidad}. Échale un vistazo antes de que expire.",
+      },
+      "cupo-ia": {
+        titulo: "La IA de TurnoSmart encontró un cupo para ti",
+        cuerpo: "Hola, {nombre}. Tu asistente analizó tu disponibilidad, especialidad y tiempo de espera, y encontró un cupo de {especialidad} para ti. Échale un vistazo antes de que expire.",
       },
       recordatorio: {
         titulo: "Recordatorio de cita",
@@ -344,6 +369,7 @@ export const es = {
   avisosLocales: {
     canal: "Cupos y citas",
     ofertaTitulo: "¡Cita de último minuto disponible!",
+    ofertaTituloIA: "La IA de TurnoSmart encontró un cupo para ti",
     ofertaCuerpo: "Se liberó un cupo de {especialidad} el {fecha} a las {hora}. Tienes pocos minutos para tomarlo.",
     confirmarTitulo: "Confirma tu asistencia",
     confirmarCuerpo: "Tu cita de {especialidad} es el {fecha} a las {hora}. ¿Vas a asistir? Si no puedes, cancélala para que otro paciente use el cupo.",

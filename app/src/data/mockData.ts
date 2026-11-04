@@ -66,6 +66,7 @@ export const ofertasMock: OfertaCupo[] = [
     fechaHoraISO: ofertaActivaISO,
     estado: "pendiente",
     expiraEnISO: new Date(Date.now() + 8 * MIN).toISOString(),
+    estrategia: "ai",
     factores: [
       { etiqueta: "Tiempo en espera", valor: "34 días", peso: 0.92 },
       { etiqueta: "Tu especialidad", valor: "Cardiología", peso: 1 },
@@ -82,6 +83,8 @@ export const ofertasMock: OfertaCupo[] = [
     fechaHoraISO: new Date(Date.now() + DIA + 3 * 60 * MIN).toISOString(),
     estado: "pendiente",
     expiraEnISO: new Date(Date.now() + 25 * MIN).toISOString(),
+    // Priorizada con el respaldo determinista: la app no menciona la IA.
+    estrategia: "fallback",
     factores: [
       { etiqueta: "Tu especialidad", valor: "Dermatología", peso: 1 },
       { etiqueta: "Tiempo en espera", valor: "34 días", peso: 0.92 },
@@ -98,6 +101,7 @@ export const ofertasMock: OfertaCupo[] = [
     estado: "expirada",
     expiraEnISO: new Date(Date.now() - 6 * DIA).toISOString(),
     factores: [],
+    estrategia: "fallback",
   },
   {
     id: "of-099",
@@ -109,6 +113,7 @@ export const ofertasMock: OfertaCupo[] = [
     estado: "aceptada",
     expiraEnISO: new Date(Date.now() - 12 * DIA).toISOString(),
     factores: [],
+    estrategia: "fallback",
   },
   {
     id: "of-098",
@@ -120,6 +125,7 @@ export const ofertasMock: OfertaCupo[] = [
     estado: "rechazada",
     expiraEnISO: new Date(Date.now() - 19 * DIA).toISOString(),
     factores: [],
+    estrategia: "fallback",
   },
 ];
 
@@ -152,14 +158,14 @@ export const citasMock: Cita[] = [
  * notificación.
  */
 export interface NotificacionGuardada extends Omit<Notificacion, "titulo" | "cuerpo"> {
-  datos: { especialidad: string; profesional?: string; consultorio?: string; fechaHoraISO?: string };
+  datos: { especialidad: string; profesional?: string; consultorio?: string; fechaHoraISO?: string; estrategia?: string };
 }
 
 export const notificacionesMock: NotificacionGuardada[] = [
   {
     id: "n-001",
     tipo: "cupo-ultimo-minuto",
-    datos: { especialidad: ofertasMock[0].especialidad },
+    datos: { especialidad: ofertasMock[0].especialidad, estrategia: ofertasMock[0].estrategia },
     fechaISO: new Date().toISOString(),
     leida: false,
     referenciaId: "of-001",

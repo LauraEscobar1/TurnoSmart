@@ -1,4 +1,4 @@
-import { EstadoOferta, FactorPrioridad, OfertaCupo } from "@/types/domain";
+import { EstadoOferta, EstrategiaOferta, FactorPrioridad, OfertaCupo } from "@/types/domain";
 import { getSupabase } from "@/services/supabaseClient";
 import { DatosError, getNombresPorId } from "@/services/catalogoService";
 import { getPacienteActualId } from "@/services/sesionService";
@@ -50,15 +50,22 @@ function errorDeRespuesta(ofertaId: string, error: { code?: string; message: str
     : new RespuestaNoEnviadaError(ofertaId, error.message);
 }
 
-/** Columnas de `ofertas` que puede leer el paciente (sin `score`). */
-const COLUMNAS_OFERTA = "id, cupo_id, estado, expira_en";
+/**
+ * Columnas de `ofertas` que puede leer el paciente (sin `score`).
+ * `estrategia` dice si la priorizó la IA ("ai") o el respaldo ("fallback").
+ */
+const COLUMNAS_OFERTA = "id, cupo_id, estado, expira_en, estrategia";
 
 interface FilaOferta {
   id: string;
   cupo_id: string;
   estado: EstadoOferta;
   expira_en: string;
+  estrategia: string | null;
 }
+
+/** Solo "ai" explícito cuenta como IA: cualquier otro valor (o la falta de él) es el respaldo. */
+const estrategiaDe = (valor: string | null | undefined): EstrategiaOferta => (valor === "ai" ? "ai" : "fallback");
 
 interface FilaCupo {
   id: string;
@@ -124,6 +131,7 @@ async function aOfertas(filas: FilaOferta[]): Promise<OfertaCupo[]> {
         estado: f.estado,
         expiraEnISO: new Date(f.expira_en).toISOString(),
         factores: explicacion,
+        estrategia: estrategiaDe(f.estrategia),
       },
     ];
   });

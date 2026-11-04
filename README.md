@@ -32,9 +32,15 @@ riesgo de inasistencia de sus próximas citas.
   `auth.uid()`; nunca reciben el id del paciente desde la app.
 - **Notificaciones:** la base crea filas en `notificaciones`, Realtime las
   publica (RLS: cada paciente recibe las suyas) y la app muestra un aviso
-  **local** del sistema (expo-notifications, compatible con Expo Go): «¡Cita
-  de último minuto disponible!» abre la oferta; «Confirma tu asistencia»
-  (Confirmar / Cancelar cita) abre la cita.
+  **local** del sistema (expo-notifications, compatible con Expo Go): «La IA
+  de TurnoSmart encontró un cupo para ti» (o «¡Cita de último minuto
+  disponible!» si priorizó el respaldo determinista) abre la oferta;
+  «Confirma tu asistencia» (Confirmar / Cancelar cita) abre la cita.
+- **IA visible y honesta:** cada oferta guarda su estrategia
+  (`ofertas.estrategia`). La app muestra «Recomendado por IA» y «Por qué la
+  IA te recomienda este turno» solo si fue `"ai"`; con `"fallback"`,
+  «Recomendado por TurnoSmart», sin mencionar la IA. Nunca muestra el
+  puntaje, el riesgo ni datos de otros pacientes.
 
 ## Dónde está la IA
 

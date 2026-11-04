@@ -52,8 +52,8 @@ con la «Dra. Demo Ficticia». Los demás pacientes de la agenda son ficticios
 |---|---|---|
 | 0:00 | Presentar el problema con la pantalla de Inicio de A. | En Colombia muchos cupos médicos se pierden por cancelaciones de último minuto e inasistencias. TurnoSmart los recupera. |
 | 0:45 | **Teléfono 1 (A):** *Mis citas* → la cita de Cardiología → **Cancelar cita** → **Sí, cancelar cita**. | Cancelar libera el cupo al instante; la app no decide a quién va: lo hace el servidor. |
-| 1:30 | Esperar 3-8 s. **Teléfono 2 (B):** llega **«¡Cita de último minuto disponible!»**. | La base dispara la Edge Function `priorizar-cupo`; DeepSeek ordena a los candidatos con datos anónimos (alias, días en espera, puesto, franja horaria, alertas) y el servidor valida la respuesta antes de crear la oferta. |
-| 2:15 | **B** toca la notificación → se abre la oferta con su contador y **«Por qué te lo ofrecemos»**. | La IA no ve nombres, cédulas ni datos clínicos, y el paciente ve los motivos, nunca un puntaje. |
+| 1:30 | Esperar 3-8 s. **Teléfono 2 (B):** llega **«La IA de TurnoSmart encontró un cupo para ti»** (si DeepSeek falló, «¡Cita de último minuto disponible!»). | La base dispara la Edge Function `priorizar-cupo`; DeepSeek ordena a los candidatos con datos anónimos (alias, días en espera, puesto, franja horaria, alertas) y el servidor valida la respuesta antes de crear la oferta. |
+| 2:15 | **B** toca la notificación → se abre la oferta con su contador, la insignia **«Recomendado por IA»** y **«Por qué la IA te recomienda este turno»**. | La IA no ve nombres, cédulas ni datos clínicos, y el paciente ve los motivos, nunca un puntaje. |
 | 2:45 | **B** → **Aceptar cupo** → «Cupo confirmado». | Dos toques: la cita queda creada en una transacción. |
 | 3:15 | **Teléfono 1:** cerrar sesión (Perfil) e ingresar como **staff**. | El mismo login: el rol lo asigna el servidor y el staff solo ve su consultorio. |
 | 3:45 | Panel: métricas (cancelaciones, cupos liberados, **cupos recuperados**, tasa). Pestaña **Cupos**: el cupo de A en «Recuperado» con la oferta «Aceptada». | Así mide la clínica cuántas citas recupera. |
@@ -72,6 +72,7 @@ funcionar. Para saber qué estrategia se usó:
 
 ```sql
 select content from net._http_response order by created desc limit 3;  -- "estrategia":"ai" o "fallback"
+select estrategia, count(*) from public.ofertas group by 1;               -- lo que ve el paciente
 select estrategia, count(*) from public.riesgo_inasistencia group by 1;
 ```
 
