@@ -16,6 +16,12 @@
  *     factores; `priorizarConRespaldo` vuelve a la determinista si falla.
  */
 
+import { ConfigDeepSeek, errorIA, MotivoRespaldo, motivoDeError, pedirJSONDeepSeek } from "./deepseek.ts";
+
+// Se reexportan para no cambiar lo que ya importaban la función y las pruebas.
+export { DEEPSEEK_MODELO, DEEPSEEK_TIMEOUT_MS, DEEPSEEK_URL, errorIA, motivoDeError } from "./deepseek.ts";
+export type { ConfigDeepSeek, MotivoRespaldo } from "./deepseek.ts";
+
 /** Fila de `candidatos_cupo(p_cupo_id)`. */
 export interface Candidato {
   paciente_id: string;
@@ -170,41 +176,6 @@ export const CLAVES_IA: ClaveFactor[] = ["especialidad", "horario", "tiempo-espe
 /** Candidatos por solicitud (los primeros según la estrategia determinista): acota costo y tamaño. */
 export const MAXIMO_CANDIDATOS_IA = 20;
 
-/** API oficial de DeepSeek (formato OpenAI), api-docs.deepseek.com. */
-export const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
-/**
- * El modelo más económico; se usa en modo sin razonamiento y con temperatura 0.
- * Nombre vigente según api-docs.deepseek.com (verificado el 2026-11-02);
- * se puede cambiar sin tocar el código con el secret DEEPSEEK_MODEL.
- */
-export const DEEPSEEK_MODELO = "deepseek-flash";
-export const DEEPSEEK_TIMEOUT_MS = 8000;
-
-/** Por qué no se usó la respuesta de la IA (solo para los logs del servidor). */
-export type MotivoRespaldo =
-  | "ia_no_configurada"
-  | "timeout"
-  | "error_red"
-  | `http_${number}`
-  | "respuesta_incompleta"
-  | "respuesta_vacia"
-  | "json_invalido"
-  | "formato_invalido"
-  | "candidato_desconocido"
-  | "candidato_repetido"
-  | "score_invalido"
-  | "factores_invalidos"
-  | "error_inesperado";
-
-// Errores como objetos Error con un motivo (sin clases: ver la nota de estrategiaDeterminista).
-function errorIA(motivo: MotivoRespaldo): Error {
-  return Object.assign(new Error(`priorizacion_ia: ${motivo}`), { motivoIA: motivo });
-}
-
-export function motivoDeError(error: unknown): MotivoRespaldo {
-  return (error as { motivoIA?: MotivoRespaldo } | null)?.motivoIA ?? "error_inesperado";
-}
-
 /** Lo único que viaja a la IA por candidato: un alias y las señales de los cuatro factores. */
 export interface CandidatoParaIA {
   candidato: string;
@@ -314,69 +285,22 @@ export function aplicarRespuestaIA(candidatos: Candidato[], contenido: unknown):
   return [...ordenados, ...sinOrdenar, ...resto];
 }
 
-export interface ConfigDeepSeek {
-  apiKey: string;
-  modelo?: string;
-  timeoutMs?: number;
-  /** Inyectable para las pruebas; por defecto, el fetch global. */
-  fetch?: typeof fetch;
-}
-
 /**
  * Estrategia DeepSeek: UNA solicitud por cupo con todos los candidatos
  * evaluados, modo JSON, sin razonamiento y temperatura 0 (estable).
- * Lanza un error con su motivo si no hay una respuesta válida a tiempo.
+ * Lanza un error con su motivo si no hay una respuesta válida a tiempo
+ * (la llamada, el timeout y los errores HTTP están en deepseek.ts).
  */
 export function crearEstrategiaDeepSeek(config: ConfigDeepSeek): EstrategiaPriorizacion {
-  const pedir = config.fetch ?? fetch;
-  const timeoutMs = config.timeoutMs && config.timeoutMs > 0 ? config.timeoutMs : DEEPSEEK_TIMEOUT_MS;
   return {
     nombre: "deepseek",
     priorizar: (candidatos) => {
       const datos = datosParaIA(candidatos);
-      const control = new AbortController();
-      let temporizador: ReturnType<typeof setTimeout> | undefined;
-      const limite = new Promise<never>((_, rechazar) => {
-        temporizador = setTimeout(() => {
-          control.abort();
-          rechazar(errorIA("timeout"));
-        }, timeoutMs);
-      });
-      const llamada = pedir(DEEPSEEK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.apiKey}` },
-        body: JSON.stringify({
-          model: config.modelo || DEEPSEEK_MODELO,
-          thinking: { type: "disabled" },
-          temperature: 0,
-          response_format: { type: "json_object" },
-          max_tokens: Math.min(4000, 200 + 120 * datos.candidatos.length),
-          stream: false,
-          messages: [
-            { role: "system", content: INSTRUCCIONES_IA },
-            { role: "user", content: JSON.stringify(datos) },
-          ],
-        }),
-        signal: control.signal,
-      })
-        .then(
-          (respuesta) => {
-            if (!respuesta.ok) throw errorIA(`http_${respuesta.status}`);
-            return respuesta.json().catch(() => {
-              throw errorIA("json_invalido");
-            });
-          },
-          () => {
-            throw errorIA("error_red");
-          }
-        )
-        .then((cuerpo: { choices?: { finish_reason?: string; message?: { content?: unknown } }[] }) => {
-          const opcion = cuerpo?.choices?.[0];
-          // "length" (cortada), "content_filter", etc.: la respuesta no está completa.
-          if (opcion?.finish_reason !== "stop") throw errorIA("respuesta_incompleta");
-          return aplicarRespuestaIA(candidatos, opcion.message?.content);
-        });
-      return Promise.race([llamada, limite]).finally(() => clearTimeout(temporizador));
+      return pedirJSONDeepSeek(config, {
+        instrucciones: INSTRUCCIONES_IA,
+        datos,
+        maxTokens: Math.min(4000, 200 + 120 * datos.candidatos.length),
+      }).then((contenido) => aplicarRespuestaIA(candidatos, contenido));
     },
   };
 }
