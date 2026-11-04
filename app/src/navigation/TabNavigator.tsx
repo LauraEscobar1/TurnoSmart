@@ -14,6 +14,8 @@ import { getConteoNoLeidas } from "@/services/notificationsService";
 import { getConteoOfertasPendientes } from "@/services/offersService";
 import { alCambiarDatos, escucharCambios } from "@/services/cambiosService";
 import { usePaciente } from "@/auth/AuthContext";
+import { AvisosLocales } from "@/components/AvisosLocales";
+import { avisarNotificacionNueva, FilaNotificacionRealtime } from "@/services/notificacionesLocales";
 
 const Tab = createMaterialTopTabNavigator<RootTabParamList>();
 
@@ -56,31 +58,42 @@ export function TabNavigator() {
       dejarDeOir();
     };
   }, [refrescar]);
-  // Mientras haya sesión (las pestañas montadas), se escuchan los cambios del paciente.
-  useEffect(() => escucharCambios(paciente.id), [paciente.id]);
+  // Mientras haya sesión (las pestañas montadas), se escuchan los cambios del
+  // paciente; cada notificación nueva (oferta, «Confirma tu asistencia») se
+  // muestra además como aviso local del sistema, salvo con las alertas apagadas.
+  const alertas = paciente.notificacionesActivas;
+  useEffect(() => {
+    const avisar = (fila: FilaNotificacionRealtime) => {
+      if (alertas) void avisarNotificacionNueva(fila);
+    };
+    return escucharCambios(paciente.id, avisar);
+  }, [paciente.id, alertas]);
 
   return (
-    <Tab.Navigator
-      tabBarPosition="bottom"
-      tabBar={(props) => <TabBar {...props} badges={badges} />}
-      screenOptions={{ lazy: false, swipeEnabled: true }}
-      screenListeners={{ focus: refrescar, state: refrescar }}
-      style={{ backgroundColor: colors.fondoPantalla }}
-      sceneContainerStyle={{ backgroundColor: colors.fondoPantalla }}
-    >
-      <Tab.Screen name="Inicio" component={HomeScreen} options={{ title: t("nav.inicio") }} />
-      <Tab.Screen name="Ofertas" component={OffersNavigator} options={{ title: t("nav.ofertas") }} />
-      <Tab.Screen
-        name="MisCitas"
-        component={AppointmentsNavigator}
-        options={({ route }) => ({ title: t("nav.citas"), ...soloEnRaiz(route, "AppointmentsList") })}
-      />
-      <Tab.Screen name="Notificaciones" component={NotificationsScreen} options={{ title: t("nav.notificaciones") }} />
-      <Tab.Screen
-        name="Perfil"
-        component={ProfileNavigator}
-        options={({ route }) => ({ title: t("nav.perfil"), ...soloEnRaiz(route, "ProfileHome") })}
-      />
-    </Tab.Navigator>
+    <>
+      <Tab.Navigator
+        tabBarPosition="bottom"
+        tabBar={(props) => <TabBar {...props} badges={badges} />}
+        screenOptions={{ lazy: false, swipeEnabled: true }}
+        screenListeners={{ focus: refrescar, state: refrescar }}
+        style={{ backgroundColor: colors.fondoPantalla }}
+        sceneContainerStyle={{ backgroundColor: colors.fondoPantalla }}
+      >
+        <Tab.Screen name="Inicio" component={HomeScreen} options={{ title: t("nav.inicio") }} />
+        <Tab.Screen name="Ofertas" component={OffersNavigator} options={{ title: t("nav.ofertas") }} />
+        <Tab.Screen
+          name="MisCitas"
+          component={AppointmentsNavigator}
+          options={({ route }) => ({ title: t("nav.citas"), ...soloEnRaiz(route, "AppointmentsList") })}
+        />
+        <Tab.Screen name="Notificaciones" component={NotificationsScreen} options={{ title: t("nav.notificaciones") }} />
+        <Tab.Screen
+          name="Perfil"
+          component={ProfileNavigator}
+          options={({ route }) => ({ title: t("nav.perfil"), ...soloEnRaiz(route, "ProfileHome") })}
+        />
+      </Tab.Navigator>
+      <AvisosLocales />
+    </>
   );
 }

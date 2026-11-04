@@ -230,6 +230,8 @@ describe("Acceso en pantalla", () => {
   it("registro en 3 pasos: valida, verifica el código, pide notificaciones y entra a Home", async () => {
     // Espía sin reemplazar: el servicio real genera el código y lo leemos.
     const enviar = jest.spyOn(auth, "enviarCodigo");
+    // Instalación nueva: el sistema todavía no dio el permiso de notificaciones.
+    jest.mocked(Notifications.getPermissionsAsync).mockResolvedValueOnce({ granted: false, canAskAgain: true } as never);
     await montarApp({ sesion: false });
     await fireEvent.press(await screen.findByRole("button", { name: "Empezar" }));
 

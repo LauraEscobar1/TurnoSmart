@@ -5,9 +5,9 @@ import { getPacienteActualId } from "@/services/sesionService";
 
 /**
  * Citas del paciente (`public.citas`). RLS: cada paciente lee solo las
- * suyas. Cancelar y reprogramar pasan por RPC (`cancelar_cita`,
- * `reprogramar_cita`) que validan que la cita sea propia, confirmada y
- * futura. Cancelar libera un cupo (uno solo por cita); la base lo ofrece
+ * suyas. Cancelar, reprogramar y confirmar la asistencia pasan por RPC
+ * (`cancelar_cita`, `reprogramar_cita`, `confirmar_asistencia`) que validan
+ * que la cita sea propia, confirmada y futura. Cancelar libera un cupo (uno solo por cita); la base lo ofrece
  * sola a la lista de espera (trigger → Edge Function priorizar-cupo).
  *
  * Las firmas son las mismas que usaban las pantallas con los datos de
@@ -23,9 +23,10 @@ interface FilaCita {
   fecha_hora: string;
   estado: EstadoCita;
   origen: Cita["origen"];
+  asistencia_confirmada_en?: string | null;
 }
 
-const COLUMNAS = "id, especialidad_id, profesional_id, consultorio_id, fecha_hora, estado, origen";
+const COLUMNAS = "id, especialidad_id, profesional_id, consultorio_id, fecha_hora, estado, origen, asistencia_confirmada_en";
 
 /** Filas de `citas` → `Cita` con los nombres de especialidad, profesional y consultorio. */
 async function aCitas(filas: FilaCita[]): Promise<Cita[]> {
@@ -42,6 +43,7 @@ async function aCitas(filas: FilaCita[]): Promise<Cita[]> {
     fechaHoraISO: new Date(f.fecha_hora).toISOString(),
     estado: f.estado,
     origen: f.origen,
+    asistenciaConfirmadaISO: f.asistencia_confirmada_en ? new Date(f.asistencia_confirmada_en).toISOString() : null,
   }));
 }
 
@@ -110,6 +112,20 @@ export async function cancelarCita(id: string): Promise<Cita | null> {
   const { data: cupoId, error } = await getSupabase().rpc("cancelar_cita", { p_cita_id: id });
   if (error || typeof cupoId !== "string") {
     console.warn(`[citas] No se pudo cancelar la cita: ${error?.message ?? "sin cupo"}`);
+    return null;
+  }
+  return getCitaPorId(id);
+}
+
+/**
+ * «Confirma tu asistencia»: el paciente confirma que irá a su cita (propia,
+ * confirmada y futura; la RPC es idempotente y marca leído el aviso).
+ * Devuelve la cita actualizada, o null si no se pudo.
+ */
+export async function confirmarAsistencia(id: string): Promise<Cita | null> {
+  const { error } = await getSupabase().rpc("confirmar_asistencia", { p_cita_id: id });
+  if (error) {
+    console.warn(`[citas] No se pudo confirmar la asistencia: ${error.message}`);
     return null;
   }
   return getCitaPorId(id);

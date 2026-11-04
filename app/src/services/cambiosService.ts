@@ -1,5 +1,6 @@
 import { AppState } from "react-native";
 import { getSupabase } from "@/services/supabaseClient";
+import type { FilaNotificacionRealtime } from "@/services/notificacionesLocales";
 
 /**
  * Aviso de «cambiaron los datos del paciente en el servidor»: una oferta
@@ -9,8 +10,9 @@ import { getSupabase } from "@/services/supabaseClient";
  * las suyas). También avisa cuando la app vuelve a primer plano, porque en
  * segundo plano no recibe eventos.
  *
- * El evento no trae datos para mostrar: las pantallas vuelven a leer con sus
- * servicios, que siguen siendo la única fuente (y nunca ven el score).
+ * Las pantallas vuelven a leer con sus servicios, que siguen siendo la
+ * única fuente (y nunca ven el score). La fila nueva solo se usa para el
+ * aviso local del sistema (`alInsertar`, ver notificacionesLocales).
  */
 type Oyente = () => void;
 
@@ -32,14 +34,21 @@ function avisar() {
  * Escucha los cambios del paciente con sesión mientras la app está abierta.
  * Devuelve la función que deja de escuchar (al cerrar sesión o desmontar).
  */
-export function escucharCambios(pacienteId: string): () => void {
+export function escucharCambios(
+  pacienteId: string,
+  alInsertar?: (fila: FilaNotificacionRealtime) => void
+): () => void {
   const supabase = getSupabase();
   const canal = supabase
     .channel(`notificaciones-${pacienteId}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "notificaciones", filter: `paciente_id=eq.${pacienteId}` },
-      avisar
+      (cambio?: { eventType?: string; new?: unknown }) => {
+        avisar();
+        const fila = cambio?.new as FilaNotificacionRealtime | undefined;
+        if (alInsertar && cambio?.eventType === "INSERT" && fila?.id) alInsertar(fila);
+      }
     )
     .subscribe();
   const primerPlano = AppState.addEventListener("change", (estado) => {

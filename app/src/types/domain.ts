@@ -16,6 +16,8 @@ export interface Cita {
   fechaHoraISO: string;
   estado: EstadoCita;
   origen: "reserva-directa" | "cupo-recuperado";
+  /** Cuándo el paciente confirmó que asistirá («Confirma tu asistencia»); null si no confirmó. */
+  asistenciaConfirmadaISO?: string | null;
 }
 
 export type EstadoOferta = "pendiente" | "aceptada" | "rechazada" | "expirada";

@@ -15,7 +15,14 @@ import { getPacienteActualId } from "@/services/sesionService";
 
 /** Notificación tal como la guarda el sistema: tipo y datos, sin texto. */
 export interface NotificacionGuardada extends Omit<Notificacion, "titulo" | "cuerpo"> {
-  datos: { especialidad: string; profesional?: string; consultorio?: string; fechaHoraISO?: string };
+  datos: {
+    especialidad: string;
+    profesional?: string;
+    consultorio?: string;
+    fechaHoraISO?: string;
+    /** "confirmar-asistencia": recordatorio por riesgo alto de inasistencia (no se muestra el riesgo). */
+    accion?: string;
+  };
 }
 
 interface FilaNotificacion {
@@ -54,7 +61,10 @@ function redactar(n: NotificacionGuardada, nombre: string, idioma: Idioma): Noti
     fechaCorta: cuando ? fechaCorta(cuando, idioma) : "",
     hora: cuando ? hora(cuando) : "",
   };
-  const base = `notificaciones.mensajes.${n.tipo}`;
+  const base =
+    n.tipo === "recordatorio" && datos.accion === "confirmar-asistencia"
+      ? "notificaciones.mensajes.confirmar-asistencia"
+      : `notificaciones.mensajes.${n.tipo}`;
   return {
     ...resto,
     titulo: traducir(idioma, `${base}.titulo` as Clave),
