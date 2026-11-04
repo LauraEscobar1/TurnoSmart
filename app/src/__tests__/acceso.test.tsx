@@ -90,7 +90,7 @@ describe("Restablecer contraseña — pantalla", () => {
 
     await fireEvent.changeText(screen.getByLabelText("Confirmar contraseña"), "nueva1234");
     await fireEvent.press(cambiar());
-    expect(await screen.findByText("Listo: ya podés ingresar con tu contraseña nueva.")).toBeTruthy();
+    expect(await screen.findByText("Listo: ya puedes ingresar con tu contraseña nueva.")).toBeTruthy();
 
     await fireEvent.changeText(screen.getByLabelText("Contraseña"), "nueva1234");
     await fireEvent.press(screen.getByRole("button", { name: "Iniciar sesión" }));

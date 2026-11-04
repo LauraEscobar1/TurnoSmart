@@ -26,11 +26,11 @@ describe("Home", () => {
   it("tablero: saludo, oferta, próxima cita, lista de espera, avisos y una sola barra de navegación", async () => {
     await montarApp();
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
-    expect(screen.getByText("Tenés una oferta de cupo esperando respuesta.")).toBeTruthy();
+    expect(screen.getByText("Tienes una oferta de cupo esperando respuesta.")).toBeTruthy();
     // Sin segunda barra de navegación arriba: ni accesos rápidos ni indicador de sección.
     expect(screen.queryByRole("button", { name: "Buscar especialista" })).toBeNull();
     expect(screen.queryByText(/\/ 5 · deslizá/)).toBeNull();
-    expect(screen.getByText("Oferta para vos")).toBeTruthy();
+    expect(screen.getByText("Oferta para ti")).toBeTruthy();
     expect(screen.getByText("Ver oferta")).toBeTruthy();
     // Próxima cita: especialidad → fecha → especialista → consultorio → estado.
     expect(screen.getByText("Próxima cita")).toBeTruthy();
@@ -38,7 +38,7 @@ describe("Home", () => {
     expect(screen.getByText("Dr. J. Peralta")).toBeTruthy();
     expect(screen.getByText("Confirmada")).toBeTruthy();
     // Lista de espera: puesto 3 → 2 personas antes.
-    expect(screen.getByText("2 personas antes que vos. Te avisamos cuando se libere un cupo.")).toBeTruthy();
+    expect(screen.getByText("2 personas antes que tú. Te avisamos cuando se libere un cupo.")).toBeTruthy();
     // Notificaciones recientes: las 2 sin leer.
     expect(screen.getByText("Notificaciones recientes")).toBeTruthy();
     expect(screen.getByText("Recordatorio de cita")).toBeTruthy();
@@ -110,7 +110,7 @@ describe("Secciones", () => {
   it("Ofertas: lo pendiente como protagonista, historial compacto con filtros y ayuda colapsable", async () => {
     await montarApp();
     await fireEvent.press(await screen.findByRole("tab", { name: "Ofertas" }));
-    expect(await screen.findByText("Ofertas para vos")).toBeTruthy();
+    expect(await screen.findByText("Ofertas para ti")).toBeTruthy();
     expect(screen.getByText("2 ofertas requieren tu respuesta")).toBeTruthy();
     // Cada pendiente: especialidad, fecha, hora, especialista, consultorio, estado y acciones.
     expect(screen.getAllByText("Esperando tu respuesta")).toHaveLength(2);
@@ -476,7 +476,7 @@ describe("Inicio: acciones de cada sección", () => {
     await screen.findByText("Especialista");
     await fireEvent.press(screen.getByRole("tab", { name: "Inicio" }));
     expect(await screen.findByText("Todo al día")).toBeTruthy();
-    expect(screen.getByText("No tenés notificaciones nuevas.")).toBeTruthy();
+    expect(screen.getByText("No tienes notificaciones nuevas.")).toBeTruthy();
   });
 });
 
@@ -506,7 +506,7 @@ describe("Detalle de cita", () => {
   it("Reprogramar: elegir un horario disponible actualiza la cita", async () => {
     await abrirDetalle();
     await fireEvent.press(screen.getByRole("button", { name: "Reprogramar" }));
-    expect(await screen.findByText("Elegí un nuevo horario")).toBeTruthy();
+    expect(await screen.findByText("Elige un nuevo horario")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Confirmar nuevo horario" })).toBeDisabled();
 
     const horario = screen.getAllByRole("button").find((b) => /, 09:00$/.test(b.props.accessibilityLabel ?? ""))!;

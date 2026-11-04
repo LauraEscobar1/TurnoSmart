@@ -47,5 +47,5 @@ export async function montarApp({ sesion = true, intro = false } = {}) {
 /** Desde Bienvenida, abre «Iniciar sesión». */
 export async function irALogin() {
   await fireEvent.press(await screen.findByRole("button", { name: "Iniciar sesión" }));
-  await screen.findByText("Ingresá a tu cuenta");
+  await screen.findByText("Ingresa a tu cuenta");
 }
