@@ -31,20 +31,36 @@ function avisar() {
 }
 
 /**
+ * Cada suscripción usa un canal propio. supabase-js reutiliza el canal si
+ * el tema ya existe y `removeChannel` es asíncrono (espera la respuesta del
+ * servidor): con un nombre fijo, un segundo montaje (otro TabNavigator en la
+ * pila, el doble montaje de StrictMode o un cambio de dependencias) recibía
+ * el canal ya suscrito y `.on()` lanzaba «cannot add postgres_changes
+ * callbacks ... after subscribe()».
+ */
+let secuenciaCanal = 0;
+
+/**
  * Escucha los cambios del paciente con sesión mientras la app está abierta.
- * Devuelve la función que deja de escuchar (al cerrar sesión o desmontar).
+ * Devuelve la función que deja de escuchar (al cerrar sesión o desmontar);
+ * llamarla más de una vez no hace nada.
  */
 export function escucharCambios(
   pacienteId: string,
   alInsertar?: (fila: FilaNotificacionRealtime) => void
 ): () => void {
   const supabase = getSupabase();
+  let activo = true;
+  secuenciaCanal += 1;
+  // Todos los .on() van antes de subscribe(): después, Realtime los rechaza.
   const canal = supabase
-    .channel(`notificaciones-${pacienteId}`)
+    .channel(`notificaciones-${pacienteId}-${secuenciaCanal}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "notificaciones", filter: `paciente_id=eq.${pacienteId}` },
       (cambio?: { eventType?: string; new?: unknown }) => {
+        // Un evento puede llegar mientras el canal se cierra: ya no es de nadie.
+        if (!activo) return;
         avisar();
         const fila = cambio?.new as FilaNotificacionRealtime | undefined;
         if (alInsertar && cambio?.eventType === "INSERT" && fila?.id) alInsertar(fila);
@@ -52,10 +68,12 @@ export function escucharCambios(
     )
     .subscribe();
   const primerPlano = AppState.addEventListener("change", (estado) => {
-    if (estado === "active") avisar();
+    if (activo && estado === "active") avisar();
   });
   return () => {
+    if (!activo) return;
+    activo = false;
     primerPlano.remove();
-    supabase.removeChannel(canal);
+    void Promise.resolve(supabase.removeChannel(canal)).catch(() => {});
   };
 }
