@@ -107,7 +107,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
                 pressed && !activo && styles.capsulaPresionada,
               ]}
             >
-              <Text style={[styles.diaSemana, activo ? { color: colors.sobreAcento, opacity: 0.85 } : { color: colors.neutral600 }]}>
+              <Text style={[styles.diaSemana, { color: activo ? colors.sobreAcento : colors.neutral600 }]}>
                 {diaSemanaCorto(d)}
               </Text>
               <Text style={[styles.numero, { color: activo ? colors.sobreAcento : colors.accent900 }]}>{d.getDate()}</Text>

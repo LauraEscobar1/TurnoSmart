@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { sombra } from "@/theme/spacing";
 import { body } from "@/theme/typography";
 import { Card } from "@/components/Card";
@@ -266,7 +266,7 @@ export function PanelStaffScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScreenHeader
         title={t("staff.titulo")}
         accion={
@@ -311,13 +311,13 @@ export function PanelStaffScreen() {
         {contenido()}
       </ScrollView>
       <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
 const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
-    safe: { flex: 1, backgroundColor: colors.fondoPantalla },
+    safe: { flex: 1 },
     content: { paddingHorizontal: 18, paddingBottom: 40, gap: 16 },
     saludo: { gap: 2 },
     bloque: { gap: 12 },

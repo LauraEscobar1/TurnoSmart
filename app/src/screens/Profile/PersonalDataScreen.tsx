@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { body, label } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
@@ -80,7 +80,7 @@ export function PersonalDataScreen() {
   ];
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top", "bottom"]} style={styles.safe}>
       <ScreenHeader title={t("datos.titulo")} onBack={navigation.goBack} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -90,10 +90,11 @@ export function PersonalDataScreen() {
               <PrimaryButton
                 label={t(paciente.fotoUri ? "datos.cambiarFoto" : "datos.subirFoto")}
                 variant="ghost"
+                sobreFondo
                 onPress={cambiarFoto}
               />
               {paciente.fotoUri ? (
-                <PrimaryButton label={t("datos.quitarFoto")} variant="ghost" onPress={() => actualizar({ fotoUri: undefined })} />
+                <PrimaryButton label={t("datos.quitarFoto")} variant="ghost" sobreFondo onPress={() => actualizar({ fotoUri: undefined })} />
               ) : null}
             </View>
           </View>
@@ -154,14 +155,14 @@ export function PersonalDataScreen() {
 
         <View style={styles.footer}>
           {guardado && !cambios ? (
-            <Text style={[body(13, colors.acentoSobreFondo), styles.centrado]} accessibilityLiveRegion="polite">
+            <Text style={[body(13, colors.exitoSobreFondo), styles.centrado]} accessibilityLiveRegion="polite">
               {t("datos.guardado")}
             </Text>
           ) : null}
           <PrimaryButton label={t("comun.guardar")} onPress={guardar} disabled={!cambios || guardando} />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -169,7 +170,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   flex: {
     flex: 1,
@@ -210,6 +210,6 @@ const crearStyles = (colors: Paleta) =>
     paddingVertical: 14,
     paddingHorizontal: 18,
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    borderTopColor: colors.divisorSobreFondo,
   },
 });

@@ -46,7 +46,7 @@ export function BackBar({ onBack }: { onBack: () => void }) {
   );
 }
 
-/** Barras de progreso de 3 px: completas en acero, pendientes en neutro 300. */
+/** Barras de progreso sobre el fondo: completas en Merino / Light Blue, pendientes tenues. */
 export function StepProgress({ step, total }: { step: number; total: number }) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
@@ -54,7 +54,7 @@ export function StepProgress({ step, total }: { step: number; total: number }) {
   return (
     <View style={styles.progress} accessibilityLabel={t("registro.pasoDe", { paso: step, total })}>
       {Array.from({ length: total }, (_, i) => (
-        <View key={i} style={[styles.segment, { backgroundColor: i < step ? colors.accent : colors.accent200 }]} />
+        <View key={i} style={[styles.segment, { backgroundColor: i < step ? colors.puntoActivoSobreFondo : colors.puntoSobreFondo }]} />
       ))}
     </View>
   );

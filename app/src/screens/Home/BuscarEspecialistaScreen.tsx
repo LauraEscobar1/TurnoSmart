@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { useDato, useT } from "@/i18n";
@@ -57,7 +57,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
     });
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top", "bottom"]} style={styles.safe}>
       <ScreenHeader title={t("buscar.titulo")} onBack={navigation.goBack} />
       <FlatList
         contentContainerStyle={styles.content}
@@ -114,7 +114,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
           <Text style={[body(14, colors.textoSuaveSobreFondo), styles.vacio]}>{t("buscar.sinResultados", { busqueda: busqueda.trim() })}</Text>
         }
       />
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -122,7 +122,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     padding: 20,

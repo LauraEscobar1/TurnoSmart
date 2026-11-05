@@ -386,7 +386,7 @@ describe("Idioma", () => {
 describe("Modo oscuro", () => {
   it("por defecto la app está en claro", async () => {
     await montarApp();
-    // Título de sección sobre el fondo de pantalla: en claro, blanco.
+    // Título de sección sobre el fondo de pantalla: en claro, Merino.
     expect(await screen.findByText("Ofertas de cupo")).toHaveStyle({ color: paletaClara.textoSobreFondo });
   });
 

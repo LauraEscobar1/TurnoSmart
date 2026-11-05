@@ -55,13 +55,13 @@ export function ReenviarCodigo({
   return (
     <View style={styles.reenvio}>
       {restante > 0 ? (
-        <Text style={body(12, colors.neutral600)}>{t("codigo.reenviarEn", { tiempo: mmss(restante).replace(/^0/, "") })}</Text>
+        <Text style={body(12, colors.textoTenueSobreFondo)}>{t("codigo.reenviarEn", { tiempo: mmss(restante).replace(/^0/, "") })}</Text>
       ) : (
         <Pressable onPress={onReenviar} hitSlop={8} style={{ alignSelf: "flex-start" }}>
-          <Text style={body(12, colors.accent700)}>{t("codigo.reenviar")}</Text>
+          <Text style={body(12, colors.acentoSobreFondo)}>{t("codigo.reenviar")}</Text>
         </Pressable>
       )}
-      {codigoPrueba ? <Text style={body(12, colors.neutral600)}>{t("codigo.dePrueba", { codigo: codigoPrueba })}</Text> : null}
+      {codigoPrueba ? <Text style={body(12, colors.textoTenueSobreFondo)}>{t("codigo.dePrueba", { codigo: codigoPrueba })}</Text> : null}
     </View>
   );
 }

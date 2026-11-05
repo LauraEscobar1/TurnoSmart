@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { CapaVidrio, Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { AppointmentsStackParamList } from "@/navigation/types";
@@ -108,9 +108,9 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 
   if (!cita) {
     return (
-      <SafeAreaView edges={["top"]} style={styles.safe}>
+      <Pantalla edges={["top"]} style={styles.safe}>
         <ScreenHeader title={t("citas.detalle")} onBack={volver} />
-      </SafeAreaView>
+      </Pantalla>
     );
   }
 
@@ -159,13 +159,13 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   }
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top", "bottom"]} style={styles.safe}>
       <ScreenHeader title={t("citas.detalle")} onBack={volver} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {aviso ? (
           <View style={styles.aviso} accessibilityLiveRegion="polite">
-            <Ionicons name="information-circle-outline" size={18} color={colors.accent700} />
-            <Text style={[body(13, colors.accent800), styles.flex]}>{aviso}</Text>
+            <Ionicons name="information-circle-outline" size={18} color={colors.info} />
+            <Text style={[body(13, colors.info), styles.flex]}>{aviso}</Text>
           </View>
         ) : null}
 
@@ -253,6 +253,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 
       {editable ? (
         <View style={styles.acciones}>
+          <CapaVidrio variante="barra" />
           <PrimaryButton label={t("citas.reprogramar")} onPress={abrirReprogramar} style={styles.flex} />
           <Pressable
             onPress={() => setHoja("cancelar")}
@@ -307,7 +308,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         </View>
         <PrimaryButton label={t("citas.confirmarHorario")} onPress={confirmarReprogramacion} disabled={!elegido} />
       </HojaInferior>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -353,7 +354,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,
@@ -389,7 +389,7 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "flex-start",
     padding: 14,
     borderRadius: radius.md,
-    backgroundColor: colors.accent100,
+    backgroundColor: colors.infoFondo,
     borderWidth: 1,
     borderColor: colors.accent200,
   },
@@ -501,9 +501,9 @@ const crearStyles = (colors: Paleta) =>
     paddingTop: 14,
     paddingBottom: 10,
     paddingHorizontal: 20,
-    backgroundColor: colors.superficie,
     borderTopWidth: 1,
-    borderTopColor: colors.borde,
+    borderTopColor: colors.bordeCard,
+    overflow: "hidden",
   },
   cancelar: {
     minHeight: 50,
@@ -517,7 +517,7 @@ const crearStyles = (colors: Paleta) =>
   cancelarTexto: {
     fontFamily: fonts.heading,
     fontSize: 17,
-    color: colors.accent900,
+    color: colors.error,
   },
   // Horarios
   horarios: {

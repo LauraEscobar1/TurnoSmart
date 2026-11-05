@@ -93,7 +93,7 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
         </Text>
       </Card>
 
-      <CheckRow checked={acepta} onChange={setAcepta}>
+      <CheckRow checked={acepta} onChange={setAcepta} sobreFondo>
         {t("registro.aceptoTerminos")}
       </CheckRow>
     </FormScreen>
@@ -105,7 +105,7 @@ const crearStyles = (colors: Paleta) =>
   error: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    color: colors.text,
+    color: colors.errorSobreFondo,
     marginTop: -8,
   },
   notice: {

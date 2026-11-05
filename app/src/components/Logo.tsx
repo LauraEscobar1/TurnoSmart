@@ -99,6 +99,5 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: "uppercase",
-    opacity: 0.75,
   },
 });

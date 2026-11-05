@@ -41,7 +41,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
             onValueChange={(modoOscuro) => cambiar({ modoOscuro })}
             accessibilityLabel={t("ajustes.modoOscuro")}
             trackColor={{ false: colors.neutral300, true: colors.accent }}
-            thumbColor="#ffffff"
+            thumbColor={colors.pulgarSwitch}
             ios_backgroundColor={colors.neutral300}
           />
         </View>

@@ -4,8 +4,8 @@ import { colors } from "@/theme/colors";
 /**
  * Retícula de la app. Los espaciados siguen las pantallas de referencia
  * ("Design System/TurnoSmart - Sistema de Diseño.dc.html" §04); los radios
- * y sombras son los del estilo suave que adoptó toda la app (esquinas
- * redondeadas, superficies blancas, sombras tenues en Campo).
+ * y sombras son los del estilo suave de la app (esquinas redondeadas,
+ * vidrio sobre el degradado, sombras tenues).
  */
 export const spacing = {
   xs: 4,
@@ -23,20 +23,22 @@ export const radius = {
   md: 12,
   lg: 18,
   xl: 24,
+  /** Cards de vidrio. */
+  card: 20,
   pill: 999,
 } as const;
 
-/** Sombra de tarjeta: apenas separa la superficie blanca del fondo. */
+/** Sombra de botones y superficies sólidas (las cards de vidrio no llevan sombra). */
 export const sombra: Record<"sm" | "md", ViewStyle> = {
   sm: {
-    shadowColor: colors.accent900,
+    shadowColor: colors.colorSombra,
     shadowOpacity: 0.06,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
     elevation: 1,
   },
   md: {
-    shadowColor: colors.accent900,
+    shadowColor: colors.colorSombra,
     shadowOpacity: 0.16,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },

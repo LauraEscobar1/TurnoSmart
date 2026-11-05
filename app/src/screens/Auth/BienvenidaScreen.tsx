@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
@@ -11,16 +10,18 @@ import { AuthStackParamList } from "@/navigation/types";
 import { DoctoraIlustracion, PROPORCION_ILUSTRACION } from "@/components/DoctoraIlustracion";
 import { Logo } from "@/components/Logo";
 import { OndasPulso } from "@/components/OndasPulso";
+import { FondoDegradado, Pantalla } from "@/components/Vidrio";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Bienvenida">;
 
 const MARGEN = 28;
 
 /**
- * Bienvenida. Modo claro: arriba la zona azul con líneas de pulso y el logo
- * en blanco, que cierra en una curva; abajo, sobre la zona clara, titular,
- * bajada y acciones. Modo oscuro: el retrato de la doctora en su arco,
- * alineado al margen derecho del texto. Textos y botón, iguales en ambos.
+ * Bienvenida. Modo claro: arriba el degradado azul con líneas de pulso y el
+ * logo en Merino, que cierra en una curva; abajo, sobre la zona crema,
+ * titular, bajada y acciones. Modo oscuro: todo sobre el degradado nocturno,
+ * con el retrato de la doctora en su arco alineado al margen derecho del
+ * texto. Textos y botón, iguales en ambos.
  */
 export function BienvenidaScreen({ navigation }: Props) {
   const { colors, oscuro } = useTema();
@@ -35,13 +36,16 @@ export function BienvenidaScreen({ navigation }: Props) {
   const anchoContenido = Math.min(width, 480) - MARGEN * 2;
   const anchoIlustracion = Math.min(anchoContenido, height * 0.47 * PROPORCION_ILUSTRACION);
 
+  // En claro la zona azul llega hasta arriba (bajo la barra de estado) y abajo
+  // queda la zona crema; en oscuro, toda la pantalla es el degradado.
+  const Raiz = oscuro ? Pantalla : SafeAreaView;
+
   return (
-    // En claro la zona azul llega hasta arriba (bajo la barra de estado); en oscuro, igual que siempre.
-    <SafeAreaView edges={oscuro ? ["top", "bottom"] : ["bottom"]} style={styles.safe}>
+    <Raiz edges={oscuro ? ["top", "bottom"] : ["bottom"]} style={[styles.safe, !oscuro && styles.zonaCrema]}>
       {oscuro ? (
         <>
           <View style={styles.marca}>
-            <Logo size={20} wordmark disposicion="horizontal" />
+            <Logo size={20} wordmark disposicion="horizontal" color={colors.logoSobreFondo} acento={colors.logoAcentoSobreFondo} />
           </View>
 
           <View style={styles.ilustracion}>
@@ -49,11 +53,10 @@ export function BienvenidaScreen({ navigation }: Props) {
           </View>
         </>
       ) : (
-        <View
+        <FondoDegradado
           style={[styles.cabecera, { paddingTop: insets.top }]}
           onLayout={(e) => setCabecera({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
         >
-          <StatusBar style="light" />
           <OndasPulso
             width={cabecera.width}
             height={cabecera.height}
@@ -61,9 +64,9 @@ export function BienvenidaScreen({ navigation }: Props) {
             colorCurva={colors.fondoBienvenida}
           />
           <View style={styles.marca}>
-            <Logo size={20} wordmark disposicion="horizontal" color={colors.trazoSobreFondo} acento={colors.trazoSobreFondo} />
+            <Logo size={20} wordmark disposicion="horizontal" color={colors.logoSobreFondo} acento={colors.logoAcentoSobreFondo} />
           </View>
-        </View>
+        </FondoDegradado>
       )}
 
       <View style={styles.texto}>
@@ -97,7 +100,7 @@ export function BienvenidaScreen({ navigation }: Props) {
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </Raiz>
   );
 }
 
@@ -105,12 +108,13 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
+  },
+  zonaCrema: {
     backgroundColor: colors.fondoBienvenida,
   },
-  // Modo claro: zona azul con las líneas de pulso; ocupa el lugar de la ilustración.
+  // Modo claro: degradado azul con las líneas de pulso; ocupa el lugar de la ilustración.
   cabecera: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
     overflow: "hidden",
   },
   marca: {
@@ -162,7 +166,7 @@ const crearStyles = (colors: Paleta) =>
     elevation: 3,
   },
   presionado: {
-    backgroundColor: colors.accent700,
+    backgroundColor: colors.acentoPresionado,
   },
   botonTexto: {
     fontFamily: fonts.heading,
