@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { RootTabParamList } from "@/navigation/types";
@@ -92,7 +93,7 @@ export function TabBar({
           };
 
           return (
-            <Pressable
+            <Presionable
               key={route.key}
               onPress={onPress}
               style={styles.cell}
@@ -131,7 +132,7 @@ export function TabBar({
                   <Text style={styles.badgeText}>{badge}</Text>
                 </View>
               ) : null}
-            </Pressable>
+            </Presionable>
           );
         })}
       </View>

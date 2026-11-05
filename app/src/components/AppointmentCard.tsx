@@ -13,11 +13,11 @@ import { useDato, useT } from "@/i18n";
 
 /** Relleno de la etiqueta de cada estado; el texto sale de i18n (datos.estadosCita). */
 export const varianteEstado: Record<Cita["estado"], BadgeVariant> = {
-  confirmada: "solid",
+  confirmada: "exito",
   asistida: "neutral",
-  cancelada: "lost",
-  reasignada: "outline",
-  "no-show": "neutral",
+  cancelada: "error",
+  reasignada: "info",
+  "no-show": "advertencia",
 };
 
 interface AppointmentCardProps {

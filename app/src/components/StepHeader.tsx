@@ -1,8 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
 import { sombra } from "@/theme/spacing";
 import { label } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -21,9 +22,9 @@ export function StepHeader({ title, step, total, onBack }: StepHeaderProps) {
   const t = useT();
   return (
     <View style={styles.bar}>
-      <Pressable onPress={onBack} hitSlop={12} accessibilityLabel={t("comun.volver")} style={styles.back}>
+      <Presionable onPress={onBack} hitSlop={12} accessibilityLabel={t("comun.volver")} style={styles.back}>
         <Ionicons name="arrow-back" size={18} color={colors.icono} />
-      </Pressable>
+      </Presionable>
       <Text style={label(11, colors.textoSobreFondo)}>{title}</Text>
       <Text style={[label(10, colors.textoTenueSobreFondo), styles.count]}>
         {step} / {total}
@@ -39,9 +40,9 @@ export function BackBar({ onBack }: { onBack: () => void }) {
   const t = useT();
   return (
     <View style={styles.backBar}>
-      <Pressable onPress={onBack} hitSlop={12} accessibilityLabel={t("comun.volver")} style={styles.back}>
+      <Presionable onPress={onBack} hitSlop={12} accessibilityLabel={t("comun.volver")} style={styles.back}>
         <Ionicons name="arrow-back" size={18} color={colors.icono} />
-      </Pressable>
+      </Presionable>
     </View>
   );
 }

@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
+import { Presionable } from "@/components/Presionable";
 import { Pantalla } from "@/components/Vidrio";
 import { sombra } from "@/theme/spacing";
 import { body } from "@/theme/typography";
@@ -271,7 +273,7 @@ export function PanelStaffScreen() {
         title={t("staff.titulo")}
         accion={
           <View style={styles.iconos}>
-            <Pressable
+            <Presionable
               onPress={() => setAjustesAbiertos(true)}
               hitSlop={8}
               style={styles.icono}
@@ -279,8 +281,8 @@ export function PanelStaffScreen() {
               accessibilityLabel={t("staff.ajustes")}
             >
               <Ionicons name="settings-outline" size={18} color={colors.icono} />
-            </Pressable>
-            <Pressable
+            </Presionable>
+            <Presionable
               onPress={cerrarSesion}
               hitSlop={8}
               style={styles.icono}
@@ -288,7 +290,7 @@ export function PanelStaffScreen() {
               accessibilityLabel={t("staff.cerrarSesion")}
             >
               <Ionicons name="log-out-outline" size={18} color={colors.icono} />
-            </Pressable>
+            </Presionable>
           </View>
         }
       />
@@ -308,7 +310,10 @@ export function PanelStaffScreen() {
             <Text style={body(13, colors.textoSuaveSobreFondo)}>{staff.consultorios.map((c) => c.nombre).join(" · ")}</Text>
           ) : null}
         </View>
-        {contenido()}
+        {/* Carga → contenido: cada estado (cargando, error, panel) entra con un fundido. */}
+        <Animated.View key={sinConsultorio ? "sin" : estado} entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)}>
+          {contenido()}
+        </Animated.View>
       </ScrollView>
       <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
     </Pantalla>

@@ -66,3 +66,10 @@ jest.mock("expo-notifications", () => {
 
 // Supabase: cliente falso en memoria (Auth + INSERT en pacientes), sin red.
 jest.mock("@/services/supabaseClient", () => require("@/test-utils/supabaseFalso"));
+
+// Háptica: sin motor de vibración en Jest.
+jest.mock("expo-haptics", () => ({
+  selectionAsync: jest.fn(async () => {}),
+  impactAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+}));

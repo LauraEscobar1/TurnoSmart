@@ -132,10 +132,15 @@ const crearStyles = (colors: Paleta) =>
       fontSize: 11,
       letterSpacing: 0.2,
     },
+    // Aro en degradado con un brillo suave de IA alrededor.
     aroIA: {
       alignSelf: "flex-start",
       padding: 1.5,
       borderRadius: radius.pill,
+      shadowColor: colors.brilloIA,
+      shadowOpacity: 0.5,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 0 },
     },
     insigniaIA: {
       alignSelf: "auto",
@@ -158,6 +163,10 @@ const crearStyles = (colors: Paleta) =>
       height: 32,
       borderRadius: 16,
       backgroundColor: colors.acentoIA,
+      shadowColor: colors.brilloIA,
+      shadowOpacity: 0.55,
+      shadowRadius: 9,
+      shadowOffset: { width: 0, height: 0 },
       alignItems: "center",
       justifyContent: "center",
     },

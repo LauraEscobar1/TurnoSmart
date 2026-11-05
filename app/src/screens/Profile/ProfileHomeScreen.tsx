@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { IconoCirculo } from "@/components/Adornos";
+import { Presionable } from "@/components/Presionable";
 import { Pantalla } from "@/components/Vidrio";
 import { radius, sombra } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
@@ -131,7 +133,7 @@ export function ProfileHomeScreen() {
           <Card tono="acento" style={styles.espera}>
             <View style={styles.esperaFila}>
               <View style={styles.reloj}>
-                <Ionicons name="hourglass-outline" size={30} color={colors.icono} />
+                <IconoCirculo nombre="hourglass-outline" tamano={64} tamanoIcono={30} />
               </View>
               <View style={styles.flex}>
                 <Text style={heading(21, colors.accent900)}>{t("perfil.esperando")}</Text>
@@ -172,26 +174,26 @@ export function ProfileHomeScreen() {
 
           {/* Cuenta */}
           <Card style={styles.cuenta}>
-            <Pressable
+            <Presionable
               onPress={alternarNotificaciones}
               accessibilityRole="button"
               accessibilityLabel={`${t("notificaciones.titulo")}: ${t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}`}
               style={({ pressed }) => [styles.fila, pressed && styles.presionado]}
             >
-              <Ionicons name="notifications-outline" size={20} color={colors.icono} />
+              <IconoCirculo nombre="notifications-outline" tamano={34} tamanoIcono={18} />
               <Text style={[body(15, colors.text), styles.flex]}>{t("notificaciones.titulo")}</Text>
               <Text style={body(14, colors.neutral600)}>
                 {pidiendo ? "…" : t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}
               </Text>
-            </Pressable>
-            <Pressable
+            </Presionable>
+            <Presionable
               onPress={cerrarSesion}
               accessibilityRole="button"
               style={({ pressed }) => [styles.fila, styles.divisor, pressed && styles.presionado]}
             >
-              <Ionicons name="log-out-outline" size={20} color={colors.icono} />
+              <IconoCirculo nombre="log-out-outline" tamano={34} tamanoIcono={18} />
               <Text style={[body(15, colors.accent700), styles.flex]}>{t("perfil.cerrarSesion")}</Text>
-            </Pressable>
+            </Presionable>
           </Card>
         </View>
       </ScrollView>
@@ -211,7 +213,7 @@ function BotonRedondo({
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   return (
-    <Pressable
+    <Presionable
       onPress={onPress}
       hitSlop={6}
       accessibilityRole="button"
@@ -219,7 +221,7 @@ function BotonRedondo({
       style={({ pressed }) => [styles.redondo, pressed && styles.presionado]}
     >
       <Ionicons name={icono} size={22} color={colors.icono} />
-    </Pressable>
+    </Presionable>
   );
 }
 
@@ -243,7 +245,7 @@ function Indicador({
       accessibilityLabel={`${etiqueta}: ${valor}`}
       style={styles.indicador}
     >
-      <Ionicons name={icono} size={20} color={colors.icono} style={styles.indicadorIcono} />
+      <IconoCirculo nombre={icono} tamano={36} tamanoIcono={18} />
       <View style={styles.flex}>
         <Text style={heading(22, colors.accent900)}>{valor}</Text>
         <Text style={body(13, colors.neutral600)}>{etiqueta}</Text>
@@ -345,7 +347,7 @@ const crearStyles = (colors: Paleta) =>
     flex: 1,
     height: 10,
     borderRadius: radius.pill,
-    backgroundColor: colors.neutral200,
+    backgroundColor: colors.circuloIcono,
     overflow: "hidden",
   },
   relleno: {
@@ -363,15 +365,13 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "center",
     gap: 14,
   },
+  // Brillo suave alrededor del reloj de la lista de espera.
   reloj: {
-    width: 64,
-    height: 64,
     borderRadius: 32,
-    borderWidth: 2,
-    borderColor: colors.accent200,
-    backgroundColor: colors.superficie,
-    alignItems: "center",
-    justifyContent: "center",
+    shadowColor: colors.brilloIA,
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
   },
   par: {
     flexDirection: "row",

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,14 +7,15 @@ import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { usePaciente } from "@/auth/AuthContext";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
-import Animated from "react-native-reanimated";
-import { EncabezadoConVidrio, EntradaEscalonada, useEncabezadoAlDesplazar } from "@/components/Animaciones";
+import Animated, { LinearTransition, ReduceMotion } from "react-native-reanimated";
+import { EncabezadoCompacto, EntradaEscalonada, useEncabezadoAlDesplazar } from "@/components/Animaciones";
+import { IconoCirculo, TituloSeccion } from "@/components/Adornos";
+import { Presionable } from "@/components/Presionable";
 import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
-import { body, fonts, label } from "@/theme/typography";
+import { body, fonts } from "@/theme/typography";
 import { EmptyState } from "@/components/EmptyState";
 import { Card } from "@/components/Card";
-import { ScreenHeader } from "@/components/ScreenHeader";
 import { Notificacion, TipoNotificacion } from "@/types/domain";
 import { getNotificaciones, marcarComoLeida, marcarTodasComoLeidas } from "@/services/notificationsService";
 import { RootStackParamList } from "@/navigation/types";
@@ -68,7 +69,7 @@ export function NotificationsScreen() {
       setRonda((r) => r + 1);
     });
   }, [cargar]);
-  const { onScroll, estiloVidrio } = useEncabezadoAlDesplazar();
+  const { onScroll, desplazamiento } = useEncabezadoAlDesplazar();
 
   const hayNoLeidas = items.some((n) => !n.leida);
 
@@ -105,74 +106,80 @@ export function NotificationsScreen() {
     cargar();
   }
 
+  // Grupos (Hoy, Ayer…) y avisos en una sola lista: cada card entra al aparecer en pantalla.
+  const filas = useMemo<Fila[]>(
+    () =>
+      grupos.flatMap(([grupo, avisos]) => [
+        { clave: `g-${grupo}`, grupo },
+        ...avisos.map((aviso) => ({ clave: aviso.id, aviso })),
+      ]),
+    [grupos]
+  );
+
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
-      <EncabezadoConVidrio estilo={estiloVidrio}>
-        <ScreenHeader
-          title={t("notificaciones.titulo")}
-          accion={
-            hayNoLeidas ? (
-              <Pressable
-                onPress={handleMarcarTodas}
-                hitSlop={10}
-                accessibilityRole="button"
-                style={({ pressed }) => pressed && styles.presionado}
-              >
-                <Text style={styles.marcarTodas}>{t("notificaciones.marcarTodo")}</Text>
-              </Pressable>
-            ) : null
-          }
-        />
-      </EncabezadoConVidrio>
+      <EncabezadoCompacto
+        titulo={t("notificaciones.titulo")}
+        desplazamiento={desplazamiento}
+        accion={
+          hayNoLeidas ? (
+            <Presionable onPress={handleMarcarTodas} hitSlop={10} accessibilityRole="button">
+              <Text style={styles.marcarTodas}>{t("notificaciones.marcarTodo")}</Text>
+            </Presionable>
+          ) : null
+        }
+      />
 
-      <Animated.ScrollView
+      <Animated.FlatList
+        data={filas}
+        keyExtractor={(f) => `${ronda}-${f.clave}`}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
+        initialNumToRender={8}
+        windowSize={7}
+        itemLayoutAnimation={LinearTransition.duration(220).reduceMotion(ReduceMotion.System)}
         refreshControl={
           <RefreshControl refreshing={refrescando} onRefresh={refrescar} tintColor={colors.textoSobreFondo} />
         }
-      >
-        <View style={styles.filtros}>
-          <View accessibilityState={{ selected: true }} style={[styles.filtro, styles.filtroActivo]}>
-            <Text style={[styles.filtroTexto, styles.filtroTextoActivo]}>{t("notificaciones.todas")}</Text>
+        ListHeaderComponent={
+          <View style={styles.filtros}>
+            <View accessibilityState={{ selected: true }} style={[styles.filtro, styles.filtroActivo]}>
+              <Text style={[styles.filtroTexto, styles.filtroTextoActivo]}>{t("notificaciones.todas")}</Text>
+            </View>
           </View>
-        </View>
-
-        {items.length === 0 ? (
-          <EmptyState title={t("notificaciones.vacio")} />
-        ) : (
-          grupos.map(([grupo, avisos], indice) => (
-            <EntradaEscalonada key={`${ronda}-${grupo}`} indice={indice} style={styles.grupo}>
-              <Text style={label(10, colors.textoTenueSobreFondo)}>{grupo}</Text>
-              <Card>
-                {avisos.map((n, i) => (
-                  <FilaAviso
-                    key={n.id}
-                    aviso={n}
-                    divisor={i > 0}
-                    onPress={() => handlePress(n)}
-                    onVerOferta={() => handleVerOferta(n)}
-                  />
-                ))}
-              </Card>
+        }
+        ListEmptyComponent={<EmptyState title={t("notificaciones.vacio")} />}
+        renderItem={({ item, index }) =>
+          "grupo" in item ? (
+            <View style={[styles.grupo, index > 0 && styles.grupoSeparado]}>
+              <TituloSeccion titulo={item.grupo} />
+            </View>
+          ) : (
+            // Las primeras entran escalonadas; las que aparecen al desplazar, sin espera.
+            <EntradaEscalonada indice={index < 8 ? index : 0}>
+              <FilaAviso
+                aviso={item.aviso}
+                onPress={() => handlePress(item.aviso)}
+                onVerOferta={() => handleVerOferta(item.aviso)}
+              />
             </EntradaEscalonada>
-          ))
-        )}
-      </Animated.ScrollView>
+          )
+        }
+      />
     </Pantalla>
   );
 }
 
+type Fila = { clave: string; grupo: string } | { clave: string; aviso: Notificacion };
+
 function FilaAviso({
   aviso,
-  divisor,
   onPress,
   onVerOferta,
 }: {
   aviso: Notificacion;
-  divisor: boolean;
   onPress: () => void;
   onVerOferta: () => void;
 }) {
@@ -184,27 +191,22 @@ function FilaAviso({
   const noLeida = !aviso.leida;
   const conOferta = aviso.tipo === "cupo-ultimo-minuto" && !!aviso.referenciaId;
   return (
-    <Pressable
+    <Card
       onPress={onPress}
+      tono={noLeida ? "superficie" : "plana"}
       accessibilityRole="button"
       accessibilityLabel={`${noLeida ? `${t("notificaciones.sinLeer")}. ` : ""}${aviso.titulo}. ${marcaAviso(aviso.fechaISO)}. ${aviso.cuerpo}`}
-      style={({ pressed }) => [styles.fila, pressed && styles.filaPresionada]}
+      style={styles.fila}
     >
-      <View
-        style={[
-          styles.icono,
-          tipo.tono === "fuerte" && styles.iconoFuerte,
-          tipo.tono === "apagado" && styles.iconoApagado,
-        ]}
-      >
-        <Ionicons
-          name={tipo.icono}
-          size={18}
-          color={tipo.tono === "fuerte" ? colors.sobreAcento : tipo.tono === "apagado" ? colors.icono : colors.icono}
-        />
-      </View>
+      {tipo.tono === "fuerte" ? (
+        <View style={styles.iconoFuerte}>
+          <Ionicons name={tipo.icono} size={18} color={colors.sobreAcento} />
+        </View>
+      ) : (
+        <IconoCirculo nombre={tipo.icono} tamano={36} tamanoIcono={18} />
+      )}
 
-      <View style={[styles.texto, divisor && styles.divisor]}>
+      <View style={styles.texto}>
         <View style={styles.encabezado}>
           <Text
             // Sin límite de líneas: si el título y la hora no entran juntos
@@ -218,19 +220,19 @@ function FilaAviso({
         </View>
         <Text style={[body(14, aviso.leida ? colors.neutral700 : colors.text), styles.mensaje]}>{aviso.cuerpo}</Text>
         {conOferta ? (
-          <Pressable
+          <Presionable
             onPress={onVerOferta}
             hitSlop={8}
             accessibilityRole="link"
             accessibilityLabel={t("oferta.verOferta")}
-            style={({ pressed }) => [styles.verOferta, pressed && styles.presionado]}
+            style={styles.verOferta}
           >
             <Text style={styles.verOfertaTexto}>{t("oferta.verOferta")}</Text>
             <Ionicons name="arrow-forward" size={14} color={colors.icono} />
-          </Pressable>
+          </Presionable>
         ) : null}
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -243,10 +245,7 @@ const crearStyles = (colors: Paleta) =>
     paddingHorizontal: 20,
     paddingTop: 6,
     paddingBottom: 28,
-    gap: 20,
-  },
-  presionado: {
-    opacity: 0.6,
+    gap: 10,
   },
   marcarTodas: {
     fontFamily: fonts.bodyMedium,
@@ -278,43 +277,36 @@ const crearStyles = (colors: Paleta) =>
   filtroTextoActivo: {
     color: colors.sobreCampo,
   },
-  // Bandeja (una Card de vidrio)
+  // Cada aviso en su card compacta; los grupos (Hoy, Ayer…) como títulos de sección.
   grupo: {
-    gap: 8,
+    marginTop: 4,
+  },
+  grupoSeparado: {
+    marginTop: 14,
   },
   fila: {
     flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
-    paddingLeft: 14,
+    padding: 14,
   },
-  filaPresionada: {
-    backgroundColor: colors.neutral100,
-  },
-  icono: {
+  // Cupo disponible: círculo sólido con brillo de IA.
+  iconoFuerte: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    marginTop: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.accent100,
-  },
-  iconoFuerte: {
     backgroundColor: colors.accent,
-  },
-  iconoApagado: {
-    backgroundColor: colors.neutral100,
+    shadowColor: colors.brilloIA,
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
   },
   texto: {
     flex: 1,
     minWidth: 0,
     gap: 2,
-    paddingVertical: 12,
-    paddingRight: 14,
-  },
-  divisor: {
-    borderTopWidth: 1,
-    borderTopColor: colors.borde,
   },
   encabezado: {
     flexDirection: "row",

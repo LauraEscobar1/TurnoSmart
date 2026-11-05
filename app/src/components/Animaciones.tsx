@@ -8,6 +8,7 @@ import Animated, {
   interpolate,
   LinearTransition,
   ReduceMotion,
+  SharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useReducedMotion,
@@ -19,6 +20,7 @@ import Animated, {
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { CapaVidrio } from "@/components/Vidrio";
+import { heading } from "@/theme/typography";
 
 /**
  * Animaciones de la app (react-native-reanimated). Todas respetan la opción
@@ -69,7 +71,49 @@ export function useEncabezadoAlDesplazar() {
     opacity: interpolate(desplazamiento.value, [0, 32], [0, 1], Extrapolation.CLAMP),
   }));
 
-  return { onScroll, estiloVidrio };
+  return { onScroll, estiloVidrio, desplazamiento };
+}
+
+/**
+ * Encabezado de sección que se compacta al bajar: el título pasa de 28 a
+ * 20 px, se acerca al borde y gana el fondo de vidrio. Va ligado al
+ * desplazamiento (no es una animación por tiempo).
+ */
+export function EncabezadoCompacto({
+  titulo,
+  accion,
+  desplazamiento,
+}: {
+  titulo: string;
+  accion?: React.ReactNode;
+  desplazamiento: SharedValue<number>;
+}) {
+  const { colors } = useTema();
+  const styles = useEstilos(crearStyles);
+  const estiloVidrio = useAnimatedStyle(() => ({
+    opacity: interpolate(desplazamiento.value, [0, 32], [0, 1], Extrapolation.CLAMP),
+  }));
+  const estiloFila = useAnimatedStyle(() => ({
+    paddingTop: interpolate(desplazamiento.value, [0, 56], [14, 8], Extrapolation.CLAMP),
+    paddingBottom: interpolate(desplazamiento.value, [0, 56], [6, 8], Extrapolation.CLAMP),
+  }));
+  const estiloTitulo = useAnimatedStyle(() => ({
+    fontSize: interpolate(desplazamiento.value, [0, 56], [28, 20], Extrapolation.CLAMP),
+    lineHeight: interpolate(desplazamiento.value, [0, 56], [31, 23], Extrapolation.CLAMP),
+  }));
+  return (
+    <View style={styles.encabezado}>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.vidrioEncabezado, estiloVidrio]}>
+        <CapaVidrio variante="barra" />
+      </Animated.View>
+      <Animated.View style={[styles.filaEncabezado, estiloFila]}>
+        <Animated.Text style={[heading(28, colors.textoSobreFondo), styles.flex, estiloTitulo]} accessibilityRole="header">
+          {titulo}
+        </Animated.Text>
+        {accion}
+      </Animated.View>
+    </View>
+  );
 }
 
 export function EncabezadoConVidrio({
@@ -152,6 +196,16 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
     encabezado: {
       zIndex: 1,
+    },
+    filaEncabezado: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      paddingHorizontal: 18,
+    },
+    flex: {
+      flex: 1,
     },
     vidrioEncabezado: {
       borderBottomWidth: 1,
