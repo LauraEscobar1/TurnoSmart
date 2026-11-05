@@ -1102,6 +1102,8 @@ interface CanalFalso {
   nombre: string;
   filtro: string | null;
   callback: ((cambio: CambioRealtime) => void) | null;
+  suscrito: boolean;
+  api: object;
 }
 /** Canales suscritos desde la app, para revisar en las pruebas. */
 export let canalesRealtime: CanalFalso[] = [];
@@ -1113,10 +1115,20 @@ function emitirRealtime(pacienteId: unknown, cambio: CambioRealtime = { eventTyp
   if (destinos.length) void Promise.resolve().then(() => destinos.forEach((c) => c.callback?.(cambio)));
 }
 
+/**
+ * Como supabase-js: si ya hay un canal con ese nombre se devuelve el mismo,
+ * y agregar `postgres_changes` a un canal ya suscrito lanza el mismo error
+ * que realtime-js (RealtimeChannel.on).
+ */
 function channel(nombre: string) {
-  const canal: CanalFalso = { nombre, filtro: null, callback: null };
+  const existente = canalesRealtime.find((c) => c.nombre === nombre);
+  if (existente) return existente.api;
+  const canal = { nombre, filtro: null, callback: null, suscrito: false } as CanalFalso;
   const api = {
     on(_tipo: string, opciones: { table?: string; filter?: string }, callback: (cambio: CambioRealtime) => void) {
+      if (canal.suscrito) {
+        throw new Error(`cannot add \`postgres_changes\` callbacks for realtime:${nombre} after \`subscribe()\`.`);
+      }
       if (opciones.table === "notificaciones") {
         canal.filtro = opciones.filter ?? null;
         canal.callback = callback;
@@ -1124,10 +1136,12 @@ function channel(nombre: string) {
       return api;
     },
     subscribe() {
+      canal.suscrito = true;
       canalesRealtime.push(canal);
       return api;
     },
   };
+  canal.api = api;
   canalDeApi.set(api, canal);
   return api;
 }

@@ -38,12 +38,14 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
     getOfertaPorId(ofertaId).then(setOferta);
   }, [ofertaId]);
 
+  // navigate (no replace): «Tabs» ya está debajo en la pila; replace montaba
+  // un segundo TabNavigator con sus pestañas y su suscripción a Realtime.
   const irAMisCitas = () =>
-    navigation.replace("Tabs", {
+    navigation.navigate("Tabs", {
       screen: "MisCitas",
       params: { screen: "AppointmentsList", params: { tab: "proximas" } },
     });
-  const irAInicio = () => navigation.replace("Tabs", { screen: "Inicio" });
+  const irAInicio = () => navigation.navigate("Tabs", { screen: "Inicio" });
 
   useEffect(() => {
     if (!esAceptada) return;
