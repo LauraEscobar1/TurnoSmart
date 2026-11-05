@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { useNavigation } from "@react-navigation/native";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { AvisoEstado } from "@/components/AvisoEstado";
 import { Pantalla } from "@/components/Vidrio";
 import { body, label } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -155,9 +156,9 @@ export function PersonalDataScreen() {
 
         <View style={styles.footer}>
           {guardado && !cambios ? (
-            <Text style={[body(13, colors.exitoSobreFondo), styles.centrado]} accessibilityLiveRegion="polite">
+            <AvisoEstado tipo="exito" style={styles.guardado}>
               {t("datos.guardado")}
-            </Text>
+            </AvisoEstado>
           ) : null}
           <PrimaryButton label={t("comun.guardar")} onPress={guardar} disabled={!cambios || guardando} />
         </View>
@@ -176,6 +177,9 @@ const crearStyles = (colors: Paleta) =>
   },
   centrado: {
     textAlign: "center",
+  },
+  guardado: {
+    alignSelf: "center",
   },
   content: {
     padding: 18,

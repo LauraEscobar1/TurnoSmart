@@ -46,8 +46,8 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer theme={temaNavegacion(colors, oscuro)}>
-      {/* El lienzo es azul (claro) o casi negro (oscuro): la barra de estado va clara en los dos. */}
-      <StatusBar style="light" />
+      {/* Claro: celeste con texto oscuro. Oscuro: azul Venice con texto claro. */}
+      <StatusBar style={colors.barraEstado} />
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}>
         {paciente ? (
           <>

@@ -15,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0E3D57"
+        "backgroundColor": "#0250A9"
       },
       "package": "com.turnosmart.app"
     },
@@ -24,7 +24,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0E3D57"
+          "backgroundColor": "#0250A9"
         }
       ],
       "expo-asset",

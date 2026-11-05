@@ -33,7 +33,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
       <View style={styles.grupo}>
         <View style={styles.fila}>
           <View style={styles.icono}>
-            <Ionicons name={ajustes.modoOscuro ? "moon" : "moon-outline"} size={18} color={colors.accent700} />
+            <Ionicons name={ajustes.modoOscuro ? "moon" : "moon-outline"} size={18} color={colors.icono} />
           </View>
           <Text style={[body(15, colors.text), styles.etiqueta]}>{t("ajustes.modoOscuro")}</Text>
           <Switch
@@ -49,7 +49,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
         <View style={[styles.fila, styles.filaIdioma, styles.divisor]}>
           <View style={styles.cabecera}>
             <View style={styles.icono}>
-              <Ionicons name="language-outline" size={18} color={colors.accent700} />
+              <Ionicons name="language-outline" size={18} color={colors.icono} />
             </View>
             <Text style={[body(15, colors.text), styles.etiqueta]}>{t("ajustes.idioma")}</Text>
           </View>

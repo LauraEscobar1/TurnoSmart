@@ -31,9 +31,8 @@ export type TabBadges = Partial<Record<keyof RootTabParamList, number>>;
 
 /**
  * Navegación primaria deslizable — "TabBar.dc.html" / "NavDeslizable.dc.html".
- * Barra de vidrio sobre el degradado; un bloque redondeado (Rock Blue en
- * claro, Light Blue en oscuro) sigue al dedo mientras se arrastra el
- * contenido. La sección actual lleva el ícono ampliado y la etiqueta en negrita.
+ * Barra de vidrio sobre el degradado; un bloque redondeado y tenue sigue
+ * al dedo mientras se arrastra el contenido. La sección actual lleva el ícono ampliado y la etiqueta en negrita.
  *
  * Todo lo que se mueve con el arrastre (bloque, ícono, etiqueta) se anima
  * solo con transform y opacity, para correr en el hilo nativo.
@@ -103,10 +102,10 @@ export function TabBar({
             >
               <Animated.View style={[styles.iconBox, { transform: [{ translateY: lift }, { scale }] }]}>
                 <Animated.View style={[styles.layer, { opacity: off }]}>
-                  <Ionicons name={icon} size={ICON_SIZE} color={colors.neutral600} />
+                  <Ionicons name={icon} size={ICON_SIZE} color={colors.iconoTabInactivo} />
                 </Animated.View>
                 <Animated.View style={[styles.layer, { opacity: on }]}>
-                  <Ionicons name={icon} size={ICON_SIZE} color={colors.sobreCampo} />
+                  <Ionicons name={icon} size={ICON_SIZE} color={colors.iconoTabActivo} />
                 </Animated.View>
               </Animated.View>
               <View style={styles.labelBox}>
@@ -164,7 +163,7 @@ const crearStyles = (colors: Paleta) =>
     left: 6,
     right: 6,
     borderRadius: radius.md + 2,
-    backgroundColor: colors.campo,
+    backgroundColor: colors.indicadorTab,
   },
   cell: {
     flex: 1,
@@ -206,11 +205,11 @@ const crearStyles = (colors: Paleta) =>
   },
   labelOff: {
     fontFamily: fonts.bodyMedium,
-    color: colors.neutral600,
+    color: colors.textoTabInactivo,
   },
   labelOn: {
     fontFamily: fonts.bodyBold,
-    color: colors.sobreCampo,
+    color: colors.textoTabActivo,
   },
   badge: {
     position: "absolute",

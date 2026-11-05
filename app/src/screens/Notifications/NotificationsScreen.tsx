@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,6 +7,8 @@ import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { usePaciente } from "@/auth/AuthContext";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import Animated from "react-native-reanimated";
+import { EncabezadoConVidrio, EntradaEscalonada, useEncabezadoAlDesplazar } from "@/components/Animaciones";
 import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, label } from "@/theme/typography";
@@ -52,11 +54,21 @@ export function NotificationsScreen() {
 
   const { nombre } = usePaciente();
 
-  const cargar = useCallback(() => {
-    getNotificaciones(nombre, idioma).then(setItems);
-  }, [nombre, idioma]);
+  const cargar = useCallback(() => getNotificaciones(nombre, idioma).then(setItems), [nombre, idioma]);
 
   useCargarDatos(cargar);
+
+  // Deslizar hacia abajo vuelve a leer los avisos; al terminar, las cards entran de nuevo.
+  const [refrescando, setRefrescando] = useState(false);
+  const [ronda, setRonda] = useState(0);
+  const refrescar = useCallback(() => {
+    setRefrescando(true);
+    cargar().finally(() => {
+      setRefrescando(false);
+      setRonda((r) => r + 1);
+    });
+  }, [cargar]);
+  const { onScroll, estiloVidrio } = useEncabezadoAlDesplazar();
 
   const hayNoLeidas = items.some((n) => !n.leida);
 
@@ -95,23 +107,33 @@ export function NotificationsScreen() {
 
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
-      <ScreenHeader
-        title={t("notificaciones.titulo")}
-        accion={
-          hayNoLeidas ? (
-            <Pressable
-              onPress={handleMarcarTodas}
-              hitSlop={10}
-              accessibilityRole="button"
-              style={({ pressed }) => pressed && styles.presionado}
-            >
-              <Text style={styles.marcarTodas}>{t("notificaciones.marcarTodo")}</Text>
-            </Pressable>
-          ) : null
-        }
-      />
+      <EncabezadoConVidrio estilo={estiloVidrio}>
+        <ScreenHeader
+          title={t("notificaciones.titulo")}
+          accion={
+            hayNoLeidas ? (
+              <Pressable
+                onPress={handleMarcarTodas}
+                hitSlop={10}
+                accessibilityRole="button"
+                style={({ pressed }) => pressed && styles.presionado}
+              >
+                <Text style={styles.marcarTodas}>{t("notificaciones.marcarTodo")}</Text>
+              </Pressable>
+            ) : null
+          }
+        />
+      </EncabezadoConVidrio>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <Animated.ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl refreshing={refrescando} onRefresh={refrescar} tintColor={colors.textoSobreFondo} />
+        }
+      >
         <View style={styles.filtros}>
           <View accessibilityState={{ selected: true }} style={[styles.filtro, styles.filtroActivo]}>
             <Text style={[styles.filtroTexto, styles.filtroTextoActivo]}>{t("notificaciones.todas")}</Text>
@@ -121,8 +143,8 @@ export function NotificationsScreen() {
         {items.length === 0 ? (
           <EmptyState title={t("notificaciones.vacio")} />
         ) : (
-          grupos.map(([grupo, avisos]) => (
-            <View key={grupo} style={styles.grupo}>
+          grupos.map(([grupo, avisos], indice) => (
+            <EntradaEscalonada key={`${ronda}-${grupo}`} indice={indice} style={styles.grupo}>
               <Text style={label(10, colors.textoTenueSobreFondo)}>{grupo}</Text>
               <Card>
                 {avisos.map((n, i) => (
@@ -135,10 +157,10 @@ export function NotificationsScreen() {
                   />
                 ))}
               </Card>
-            </View>
+            </EntradaEscalonada>
           ))
         )}
-      </ScrollView>
+      </Animated.ScrollView>
     </Pantalla>
   );
 }
@@ -178,7 +200,7 @@ function FilaAviso({
         <Ionicons
           name={tipo.icono}
           size={18}
-          color={tipo.tono === "fuerte" ? colors.sobreAcento : tipo.tono === "apagado" ? colors.neutral600 : colors.accent700}
+          color={tipo.tono === "fuerte" ? colors.sobreAcento : tipo.tono === "apagado" ? colors.icono : colors.icono}
         />
       </View>
 
@@ -204,7 +226,7 @@ function FilaAviso({
             style={({ pressed }) => [styles.verOferta, pressed && styles.presionado]}
           >
             <Text style={styles.verOfertaTexto}>{t("oferta.verOferta")}</Text>
-            <Ionicons name="arrow-forward" size={14} color={colors.accent700} />
+            <Ionicons name="arrow-forward" size={14} color={colors.icono} />
           </Pressable>
         ) : null}
       </View>

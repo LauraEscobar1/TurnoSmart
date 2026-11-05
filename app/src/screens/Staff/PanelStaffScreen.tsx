@@ -278,7 +278,7 @@ export function PanelStaffScreen() {
               accessibilityRole="button"
               accessibilityLabel={t("staff.ajustes")}
             >
-              <Ionicons name="settings-outline" size={18} color={colors.text} />
+              <Ionicons name="settings-outline" size={18} color={colors.icono} />
             </Pressable>
             <Pressable
               onPress={cerrarSesion}
@@ -287,7 +287,7 @@ export function PanelStaffScreen() {
               accessibilityRole="button"
               accessibilityLabel={t("staff.cerrarSesion")}
             >
-              <Ionicons name="log-out-outline" size={18} color={colors.text} />
+              <Ionicons name="log-out-outline" size={18} color={colors.icono} />
             </Pressable>
           </View>
         }

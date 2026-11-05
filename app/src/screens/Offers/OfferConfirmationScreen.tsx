@@ -57,13 +57,14 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
 
   const fg = esAceptada ? colors.sobreCampoPantalla : colors.textoSobreFondo;
   const rule = esAceptada ? colors.dividerOnField : colors.divisorSobreFondo;
+  const suave = esAceptada ? colors.suaveSobreCampoPantalla : colors.textoSuaveSobreFondo;
   // Aceptada: campo sólido a pantalla completa. Rechazada: el degradado de siempre.
   const Raiz = esAceptada ? SafeAreaView : Pantalla;
 
   return (
     <Raiz edges={["top", "bottom"]} style={[styles.safe, esAceptada && { backgroundColor: colors.campoPantalla }]}>
-      {/* El campo y el degradado son oscuros en los dos modos: la barra de estado va clara. */}
-      <StatusBar style="light" />
+      {/* El campo sólido es oscuro en los dos modos; sobre el degradado, la del tema. */}
+      <StatusBar style={esAceptada ? "light" : colors.barraEstado} />
       <View style={styles.body}>
         <View style={[styles.halo, { backgroundColor: colors.haloCampo }]}>
           <View style={[styles.mark, { borderColor: fg }]}>
@@ -72,7 +73,7 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
         </View>
         <Text style={[heading(34, fg), styles.center]}>{t(esAceptada ? "confirmacion.confirmado" : "confirmacion.rechazada")}</Text>
         {oferta && (
-          <Text style={[body(14, colors.textoSuaveSobreFondo), styles.center]}>
+          <Text style={[body(14, suave), styles.center]}>
             {dato("especialidades", oferta.especialidad)} ·{" "}
             {esDiaCercano(oferta.fechaHoraISO)
               ? diaRelativo(oferta.fechaHoraISO).toLowerCase()
@@ -83,7 +84,7 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
           </Text>
         )}
         <View style={[styles.note, { borderTopColor: rule }]}>
-          <Text style={[body(12, colors.textoTenueSobreFondo), styles.center]}>
+          <Text style={[body(12, suave), styles.center]}>
             {esAceptada
               ? t("confirmacion.confirmadoTexto")
               : t("confirmacion.rechazadaTexto")}
@@ -95,7 +96,7 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
           <>
             {/* En oscuro el campo ya es tenue: el botón vuelve al primario Rock Blue. */}
             <PrimaryButton label={t("confirmacion.verCita")} variant={oscuro ? "primary" : "inverse"} onPress={irAMisCitas} />
-            <Text style={[label(10, colors.textoTenueSobreFondo), styles.center]}>{t("confirmacion.volviendo")}</Text>
+            <Text style={[label(10, colors.suaveSobreCampoPantalla), styles.center]}>{t("confirmacion.volviendo")}</Text>
           </>
         ) : (
           <PrimaryButton label={t("confirmacion.volverInicio")} variant="secondary" onPress={irAInicio} />

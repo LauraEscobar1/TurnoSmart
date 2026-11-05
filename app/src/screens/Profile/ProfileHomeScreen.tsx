@@ -82,7 +82,9 @@ export function ProfileHomeScreen() {
           />
 
           <View style={styles.barra}>
-            <BotonRedondo icono="settings-outline" etiqueta={t("preferencias.titulo")} onPress={irAPreferencias} />
+            {/* Mismo ancho que el lápiz, para que el nombre quede centrado. Las preferencias
+                se editan solo desde «Editar preferencias», en la card de la lista de espera. */}
+            <View style={styles.redondoVacio} />
             <View style={styles.identidad}>
               <Text style={[heading(30, colors.textoSobreFondo), styles.centrado]} numberOfLines={1}>
                 {paciente.nombre} {paciente.apellido}
@@ -115,7 +117,7 @@ export function ProfileHomeScreen() {
               <Text style={body(14, colors.neutral700)}>{t("perfil.completar")}</Text>
               <View style={styles.separador} />
               <View style={styles.progresoFila}>
-                <Ionicons name="person-circle-outline" size={22} color={colors.accent600} />
+                <Ionicons name="person-circle-outline" size={22} color={colors.icono} />
                 <Text style={styles.progresoEtiqueta}>{t("nav.perfil")}</Text>
                 <View style={styles.pista}>
                   <View style={[styles.relleno, { width: `${completo}%` }]} />
@@ -129,7 +131,7 @@ export function ProfileHomeScreen() {
           <Card tono="acento" style={styles.espera}>
             <View style={styles.esperaFila}>
               <View style={styles.reloj}>
-                <Ionicons name="hourglass-outline" size={30} color={colors.accent600} />
+                <Ionicons name="hourglass-outline" size={30} color={colors.icono} />
               </View>
               <View style={styles.flex}>
                 <Text style={heading(21, colors.accent900)}>{t("perfil.esperando")}</Text>
@@ -160,13 +162,11 @@ export function ProfileHomeScreen() {
               icono="medkit-outline"
               valor={String(especialidades.length)}
               etiqueta={t("preferencias.especialidades")}
-              onPress={irAPreferencias}
             />
             <Indicador
               icono="time-outline"
               valor={dato("franjas", paciente.franjaPreferida)}
               etiqueta={t("perfil.franjaPreferida")}
-              onPress={irAPreferencias}
             />
           </View>
 
@@ -178,7 +178,7 @@ export function ProfileHomeScreen() {
               accessibilityLabel={`${t("notificaciones.titulo")}: ${t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}`}
               style={({ pressed }) => [styles.fila, pressed && styles.presionado]}
             >
-              <Ionicons name="notifications-outline" size={20} color={colors.accent700} />
+              <Ionicons name="notifications-outline" size={20} color={colors.icono} />
               <Text style={[body(15, colors.text), styles.flex]}>{t("notificaciones.titulo")}</Text>
               <Text style={body(14, colors.neutral600)}>
                 {pidiendo ? "…" : t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}
@@ -189,7 +189,7 @@ export function ProfileHomeScreen() {
               accessibilityRole="button"
               style={({ pressed }) => [styles.fila, styles.divisor, pressed && styles.presionado]}
             >
-              <Ionicons name="log-out-outline" size={20} color={colors.accent700} />
+              <Ionicons name="log-out-outline" size={20} color={colors.icono} />
               <Text style={[body(15, colors.accent700), styles.flex]}>{t("perfil.cerrarSesion")}</Text>
             </Pressable>
           </Card>
@@ -218,7 +218,7 @@ function BotonRedondo({
       accessibilityLabel={etiqueta}
       style={({ pressed }) => [styles.redondo, pressed && styles.presionado]}
     >
-      <Ionicons name={icono} size={22} color={colors.neutral700} />
+      <Ionicons name={icono} size={22} color={colors.icono} />
     </Pressable>
   );
 }
@@ -243,7 +243,7 @@ function Indicador({
       accessibilityLabel={`${etiqueta}: ${valor}`}
       style={styles.indicador}
     >
-      <Ionicons name={icono} size={20} color={colors.accent600} style={styles.indicadorIcono} />
+      <Ionicons name={icono} size={20} color={colors.icono} style={styles.indicadorIcono} />
       <View style={styles.flex}>
         <Text style={heading(22, colors.accent900)}>{valor}</Text>
         <Text style={body(13, colors.neutral600)}>{etiqueta}</Text>
@@ -309,6 +309,10 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "center",
     justifyContent: "center",
     ...sombra.sm,
+  },
+  redondoVacio: {
+    width: 46,
+    height: 46,
   },
   personaje: {
     marginTop: 26,

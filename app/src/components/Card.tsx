@@ -23,8 +23,9 @@ interface CardProps {
 }
 
 /**
- * Card de vidrio de TurnoSmart: radio 20, borde sutil y, detrás del
- * contenido, el desenfoque del degradado con el color translúcido encima.
+ * Card de vidrio de TurnoSmart: radio 20, borde sutil, sombra suave
+ * azulada y, detrás del contenido, el desenfoque del degradado con el color
+ * translúcido encima.
  */
 export function Card({
   children,
@@ -37,7 +38,7 @@ export function Card({
 }: CardProps) {
   const styles = useEstilos(crearStyles);
   const cardStyle = [styles.base, styles[tono], style];
-  const vidrio = <CapaVidrio variante={tono === "acento" ? "acento" : "card"} />;
+  const vidrio = <CapaVidrio variante={tono === "acento" ? "acento" : "card"} radio={radius.card} />;
 
   if (onPress) {
     return (
@@ -56,7 +57,7 @@ export function Card({
   }
 
   return (
-    <View style={cardStyle}>
+    <View style={cardStyle} accessible={accessibilityLabel ? true : undefined} accessibilityLabel={accessibilityLabel}>
       {vidrio}
       {children}
     </View>
@@ -68,7 +69,10 @@ const crearStyles = (colors: Paleta) =>
     base: {
       borderRadius: radius.card,
       borderWidth: 1,
-      overflow: "hidden",
+      shadowColor: colors.sombraCard,
+      shadowOpacity: colors.opacidadSombraCard,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
     },
     superficie: {
       borderColor: colors.bordeCard,
@@ -78,6 +82,7 @@ const crearStyles = (colors: Paleta) =>
     },
     plana: {
       borderColor: colors.borde,
+      shadowOpacity: 0,
     },
     pressed: {
       opacity: 0.9,

@@ -239,7 +239,8 @@ describe("Secciones", () => {
     expect(screen.getByDisplayValue("Sura EPS")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Volver"));
 
-    await fireEvent.press(await screen.findByText("Franja preferida"));
+    // Las preferencias se editan solo desde «Editar preferencias» (card de la lista de espera).
+    await fireEvent.press(await screen.findByRole("button", { name: "Editar preferencias" }));
     await fireEvent.press(await screen.findByRole("radio", { name: "Mañana" }));
     await fireEvent.press(screen.getByRole("checkbox", { name: "Nutrición" }));
     await fireEvent.press(screen.getByText("Guardar"));
@@ -402,7 +403,7 @@ describe("Modo oscuro", () => {
 
     // Otras pestañas y pantallas de detalle también.
     await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
-    expect(await screen.findByText("Marcar todo como leído")).toHaveStyle({ color: paletaOscura.accent700 });
+    expect(await screen.findByText("Marcar todo como leído")).toHaveStyle({ color: paletaOscura.acentoSobreFondo });
     await fireEvent.press(screen.getByRole("tab", { name: "Inicio" }));
     await fireEvent.press((await screen.findAllByText("Ver oferta"))[0]);
     expect(await screen.findByText("Aceptar cupo")).toHaveStyle({ color: paletaOscura.sobreAcento });
@@ -463,6 +464,25 @@ describe("Inicio: acciones de cada sección", () => {
     await fireEvent.press(await screen.findByRole("tab", { name: "Perfil" }));
     // Especialidades en espera: 2 → 3.
     expect(await screen.findByText("3")).toBeTruthy();
+  });
+
+  it("la lista de espera muestra cada solicitud y sacar una pide confirmación", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("button", { name: "Ver lista de espera" }));
+    expect(await screen.findByText("Tu lista de espera")).toBeTruthy();
+    const salir = await screen.findAllByRole("button", { name: /^Salir de la lista de / });
+    expect(salir).toHaveLength(2);
+
+    // Cancelar no cambia nada.
+    await fireEvent.press(salir[0]);
+    await fireEvent.press(await screen.findByRole("button", { name: "Seguir esperando" }));
+    expect(screen.getAllByRole("button", { name: /^Salir de la lista de / })).toHaveLength(2);
+
+    // Confirmar la saca de la lista y lo avisa.
+    await fireEvent.press(screen.getAllByRole("button", { name: /^Salir de la lista de / })[0]);
+    await fireEvent.press(await screen.findByRole("button", { name: "Sí, salir de la lista" }));
+    expect(await screen.findByText(/^Saliste de la lista de /)).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /^Salir de la lista de / })).toHaveLength(1);
   });
 
   it("sin oferta ni avisos nuevos muestra «Sin ofertas por ahora» y «Todo al día»", async () => {

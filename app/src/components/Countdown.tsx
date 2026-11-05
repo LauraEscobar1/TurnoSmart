@@ -38,11 +38,11 @@ interface CountdownProps {
 
 /**
  * Contador de expiración de la oferta. Es el ÚNICO elemento animado del
- * sistema: pulsa la opacidad 1 → 0,9 en un ciclo de 2 s, un latido sereno
+ * sistema: pulsa la opacidad 1 → 0,94 en un ciclo de 2 s, un latido sereno
  * que nunca baja el texto del contraste AA (verificado en contraste.test).
  */
 /** Opacidad mínima del pulso. */
-export const OPACIDAD_PULSO = 0.9;
+export const OPACIDAD_PULSO = 0.94;
 
 export function Countdown({ segundos, size, caption, align = "right", hideCaption, color, captionStyle, style }: CountdownProps) {
   const { colors } = useTema();

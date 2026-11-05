@@ -1,16 +1,16 @@
 /**
  * Paleta de TurnoSmart — azules + glass.
  *
- * Base: Merino #F5EEDD, Rock Blue #84B3CE y Venice Blue #16587B; en oscuro
- * se suman Jet Black #0D0D0D y Light Blue #67BAF4.
- *
- * El lienzo de cada pantalla es un degradado azul (claro) o negro → azul
- * noche (oscuro). Sobre él van las cards de vidrio: crema translúcida en
- * claro y Venice translúcido en oscuro, con desenfoque detrás.
+ * Claro: celestes Tractor Beam #05BFFD → Perivinkle #028EF3 de lienzo, cards
+ * de vidrio blanco y texto Subnautical #011E50 (nunca blanco sobre celeste).
+ * Oscuro: el degradado Venice Blue #16587B → azul profundo #0E3D57, cards de
+ * vidrio azul claro translúcido y texto Merino #F5EEDD.
+ * Ningún fondo, card ni barra es negro o casi negro.
  *
  * Dos familias de texto, que nunca se mezclan:
  * - «…SobreFondo»: texto e íconos directamente sobre el degradado.
  * - text / neutral* / accent700-900: texto dentro de cards, hojas, inputs.
+ * Los íconos de contenido usan un único token por modo: `icono`.
  *
  * Cada par texto/fondo está verificado contra WCAG AA en
  * `src/__tests__/contraste.test.ts` (en las cards, contra su color efectivo).
@@ -18,17 +18,40 @@
 
 /** Colores de marca. Las pantallas nunca los usan directo: usan los tokens de abajo. */
 export const BASE = {
+  // Claro
+  tractorBeam: "#05BFFD",
+  perivinkle: "#028EF3",
+  wizardBlue: "#036CD2",
+  blueLobster: "#0250A9",
+  cobalt: "#02357B",
+  subnautical: "#011E50",
+  blanco: "#FFFFFF",
+  // Oscuro
   merino: "#F5EEDD",
   rockBlue: "#84B3CE",
   veniceBlue: "#16587B",
-  jetBlack: "#0D0D0D",
   lightBlue: "#67BAF4",
-  /** Azul marino casi negro: texto principal en claro. */
-  marino: "#0F2A3A",
-  /** Azul profundo del final del degradado claro. */
+  /** Azul profundo del final del degradado oscuro. */
   veniceProfundo: "#0E3D57",
-  /** Azul noche del final del degradado oscuro. */
-  azulNoche: "#0B1E2B",
+  /** Azul oscuro del texto sobre Rock Blue. */
+  azulTinta: "#0E2A3D",
+};
+
+/** Estados sólidos e intensos, con texto blanco: iguales en los dos modos. */
+const ESTADOS_SOLIDOS = {
+  exitoSolido: "#1E7A4F",
+  advertenciaSolido: "#B45309",
+  errorSolido: "#B42318",
+  infoSolido: BASE.wizardBlue,
+  sobreEstado: BASE.blanco,
+};
+
+/** Splash: fijo, sigue al splash nativo de app.json. */
+const SPLASH = {
+  splashFondo: BASE.blueLobster,
+  splashLogo: BASE.blanco,
+  splashAcento: BASE.tractorBeam,
+  splashTexto: BASE.blanco,
 };
 
 export type TintaBlur = "light" | "dark";
@@ -38,252 +61,276 @@ export type Degradado = readonly [string, string, ...string[]];
 export const paletaClara = {
   // ── Lienzo ────────────────────────────────────────────────────────────
   /** Degradado vertical del fondo de pantalla (arriba → abajo). */
-  degradadoFondo: [BASE.veniceBlue, BASE.veniceProfundo] as Degradado,
+  degradadoFondo: [BASE.tractorBeam, BASE.perivinkle] as Degradado,
   /** Color sólido del lienzo (navegadores, transiciones): el final del degradado. */
-  fondoPantalla: BASE.veniceProfundo,
+  fondoPantalla: BASE.perivinkle,
+  /** Barra de estado del sistema sobre el lienzo. */
+  barraEstado: "dark" as "dark" | "light",
 
   // ── Vidrio ────────────────────────────────────────────────────────────
-  /** Card de vidrio: Merino al 88 % con desenfoque detrás. */
-  fondoCard: "rgba(245,238,221,0.88)",
+  /** Card de vidrio: blanco al 88 % con desenfoque detrás. */
+  fondoCard: "rgba(255,255,255,0.88)",
   /** Android: sin desenfoque, el mismo color un poco más opaco. */
-  fondoCardAndroid: "rgba(245,238,221,0.94)",
-  bordeCard: "rgba(255,255,255,0.55)",
-  /** Card de acento (hay un reloj corriendo): vidrio con tinte Rock Blue. */
-  fondoCardAcento: "rgba(220,233,240,0.92)",
-  fondoCardAcentoAndroid: "rgba(220,233,240,0.96)",
-  bordeCardAcento: "rgba(132,179,206,0.65)",
+  fondoCardAndroid: "rgba(255,255,255,0.94)",
+  bordeCard: "rgba(255,255,255,0.95)",
+  /** Card de acento (hay un reloj corriendo): vidrio con tinte celeste. */
+  fondoCardAcento: "rgba(236,247,255,0.92)",
+  fondoCardAcentoAndroid: "rgba(236,247,255,0.96)",
+  bordeCardAcento: "rgba(3,108,210,0.30)",
   /** Barra de pestañas y barras de acciones al pie. */
-  fondoBarra: "rgba(245,238,221,0.90)",
-  fondoBarraAndroid: "rgba(245,238,221,0.96)",
+  fondoBarra: "rgba(255,255,255,0.90)",
+  fondoBarraAndroid: "rgba(255,255,255,0.96)",
   tintaBlur: "light" as TintaBlur,
   intensidadBlur: 30,
+  /** Sombra suave azulada de las cards. */
+  sombraCard: BASE.blueLobster,
+  opacidadSombraCard: 0.16,
 
   // ── Superficies sólidas (inputs, hojas, botones redondos) ─────────────
-  superficie: BASE.merino,
+  superficie: BASE.blanco,
   /** Panel dentro de una card (grilla de datos, horarios). */
-  fondo: "#ECE3CC",
-  borde: "rgba(15,42,58,0.12)",
+  fondo: "#EEF7FE",
+  borde: "rgba(2,53,123,0.14)",
 
-  // ── Texto e íconos sobre el degradado ─────────────────────────────────
-  textoSobreFondo: BASE.merino,
-  textoSuaveSobreFondo: "#DCE7EC",
-  textoTenueSobreFondo: "#C5D9E5",
-  acentoSobreFondo: "#BFE0F5",
-  etiquetaCampoSobreFondo: "#DCE7EC",
-  ayudaSobreFondo: "#C5D9E5",
-  errorSobreFondo: "#FFD3C9",
-  exitoSobreFondo: "#C4EBD5",
+  // ── Texto e íconos sobre el degradado: siempre Subnautical ────────────
+  textoSobreFondo: BASE.subnautical,
+  textoSuaveSobreFondo: BASE.subnautical,
+  textoTenueSobreFondo: BASE.subnautical,
+  acentoSobreFondo: BASE.subnautical,
+  etiquetaCampoSobreFondo: BASE.subnautical,
+  ayudaSobreFondo: BASE.subnautical,
   /** Puntos y barras de progreso sobre el fondo. */
-  puntoSobreFondo: "rgba(245,238,221,0.35)",
-  puntoActivoSobreFondo: BASE.merino,
-  divisorSobreFondo: "rgba(245,238,221,0.18)",
-  /** Bienvenida: líneas de pulso sobre la zona azul y zona crema inferior. */
-  trazoSobreFondo: BASE.merino,
-  fondoBienvenida: BASE.merino,
-  logoSobreFondo: BASE.merino,
-  logoAcentoSobreFondo: BASE.rockBlue,
-  botonBienvenida: BASE.veniceBlue,
-  textoBotonBienvenida: BASE.merino,
+  puntoSobreFondo: "rgba(1,30,80,0.28)",
+  puntoActivoSobreFondo: BASE.subnautical,
+  divisorSobreFondo: "rgba(1,30,80,0.16)",
+  /** Bienvenida: líneas de pulso (decorativas) y zona blanca inferior. */
+  trazoSobreFondo: BASE.blanco,
+  fondoBienvenida: BASE.blanco,
+  logoSobreFondo: BASE.subnautical,
+  logoAcentoSobreFondo: BASE.cobalt,
+  botonBienvenida: BASE.blueLobster,
+  textoBotonBienvenida: BASE.blanco,
   /** Arco detrás del avatar en Perfil. */
-  arcoPerfil: "rgba(245,238,221,0.10)",
+  arcoPerfil: "rgba(255,255,255,0.22)",
 
   // ── Roles ─────────────────────────────────────────────────────────────
-  text: BASE.marino,
+  text: BASE.subnautical,
   /** Relleno del botón primario y de los acentos sólidos. */
-  accent: BASE.veniceBlue,
-  acentoPresionado: "#0F4563",
-  /** Borde del botón primario: lo separa del degradado azul cuando va sobre el fondo. */
-  bordePrimario: "rgba(245,238,221,0.55)",
+  accent: BASE.blueLobster,
+  acentoPresionado: BASE.cobalt,
+  /** Borde del botón primario: lo separa del celeste cuando va sobre el fondo. */
+  bordePrimario: BASE.cobalt,
   /** Texto e íconos sobre `accent`. */
-  sobreAcento: BASE.merino,
-  /** Pestaña activa, filtro elegido, chips: Rock Blue con texto marino. */
-  campo: BASE.rockBlue,
-  sobreCampo: BASE.marino,
+  sobreAcento: BASE.blanco,
+  /** Filtro elegido, chips elegidos. */
+  campo: BASE.blueLobster,
+  sobreCampo: BASE.blanco,
   /** Campo que ocupa toda la pantalla (cupo confirmado). */
-  campoPantalla: BASE.marino,
-  sobreCampoPantalla: BASE.merino,
-  divider: "rgba(15,42,58,0.14)",
-  dividerOnField: "rgba(245,238,221,0.22)",
-  velo: "rgba(9,30,43,0.55)",
-  bordeCampo: "rgba(15,42,58,0.24)",
-  etiquetaCampo: "#3D5A6C",
-  haloCampo: "rgba(245,238,221,0.10)",
-  colorSombra: BASE.azulNoche,
-  pulgarSwitch: "#FFFDF7",
-
+  campoPantalla: BASE.blueLobster,
+  sobreCampoPantalla: BASE.blanco,
+  suaveSobreCampoPantalla: "#E3F2FE",
+  divider: "rgba(2,53,123,0.14)",
+  dividerOnField: "rgba(255,255,255,0.25)",
+  velo: "rgba(1,30,80,0.45)",
+  /** Borde de inputs y casilleros: Cobalt, para que se distingan también sobre el celeste. */
+  bordeCampo: BASE.cobalt,
+  etiquetaCampo: BASE.cobalt,
+  haloCampo: "rgba(255,255,255,0.14)",
+  colorSombra: BASE.blueLobster,
+  pulgarSwitch: BASE.blanco,
   /** Número del contador de la oferta. */
-  contador: "#123F58",
+  contador: BASE.blueLobster,
 
-  // ── Escala neutra (crema → marino) ────────────────────────────────────
-  neutral100: "#ECE4CF",
-  neutral200: "#E1D8C1",
-  neutral300: "#B8B09A",
-  neutral600: "#3D5A6C",
-  neutral700: "#34505F",
-  neutral800: "#233E4E",
+  // ── Íconos ────────────────────────────────────────────────────────────
+  /** Único color de ícono dentro de cards, hojas, inputs y tintes. */
+  icono: BASE.wizardBlue,
+  /** Barra de pestañas. */
+  iconoTabActivo: BASE.blueLobster,
+  iconoTabInactivo: "rgba(2,53,123,0.6)",
+  textoTabActivo: BASE.blueLobster,
+  textoTabInactivo: BASE.cobalt,
+  indicadorTab: "#E3F2FE",
 
-  // ── Escala de acento (Rock Blue → Venice → marino) ────────────────────
-  accent100: "#DCE8EE",
-  accent200: "#C3D9E5",
-  accent300: "#A3C6DA",
-  accent400: BASE.rockBlue,
-  accent600: "#1F6A91",
-  accent700: BASE.veniceBlue,
-  accent800: "#123F58",
-  accent900: BASE.marino,
+  // ── Escala neutra ─────────────────────────────────────────────────────
+  neutral100: "#EEF3F9",
+  neutral200: "#DCE6F2",
+  neutral300: "#A9BCD3",
+  neutral600: BASE.cobalt,
+  neutral700: BASE.cobalt,
+  neutral800: BASE.subnautical,
+
+  // ── Escala de acento ──────────────────────────────────────────────────
+  accent100: "#E3F2FE",
+  accent200: "#C6E5FD",
+  accent300: "#8ECFFB",
+  accent400: BASE.tractorBeam,
+  accent600: BASE.wizardBlue,
+  accent700: BASE.blueLobster,
+  accent800: BASE.cobalt,
+  accent900: BASE.subnautical,
 
   // ── Estados ───────────────────────────────────────────────────────────
-  exito: "#1D6B4E",
-  exitoFondo: "#D7EBDF",
-  advertencia: "#7A4500",
-  advertenciaFondo: "#F5E2BC",
-  error: "#A63A2E",
-  errorFondo: "#F6DAD3",
-  info: BASE.veniceBlue,
-  infoFondo: "#DCE8EE",
+  /** Texto de estado dentro de cards y su tinte. */
+  exito: "#17643F",
+  exitoFondo: "#E2F3EA",
+  advertencia: "#8A4B00",
+  advertenciaFondo: "#FDEFD9",
+  error: "#A4161A",
+  errorFondo: "#FCE4E2",
+  info: BASE.blueLobster,
+  infoFondo: "#E3F2FE",
+  ...ESTADOS_SOLIDOS,
 
   // ── IA ────────────────────────────────────────────────────────────────
-  /** Aro de la insignia «Recomendado por IA»: Venice → Light Blue. */
-  degradadoIA: [BASE.veniceBlue, BASE.lightBlue] as Degradado,
-  fondoInsigniaIA: "#E6F0F5",
-  textoInsigniaIA: "#123F58",
+  /** Insignia «Recomendado por IA»: Wizard Blue → Tractor Beam. */
+  degradadoIA: [BASE.wizardBlue, BASE.tractorBeam] as Degradado,
+  fondoInsigniaIA: BASE.blanco,
+  textoInsigniaIA: BASE.blueLobster,
   /** Círculos e íconos del asistente IA. */
-  acentoIA: BASE.veniceBlue,
-  sobreAcentoIA: BASE.merino,
+  acentoIA: BASE.wizardBlue,
+  sobreAcentoIA: BASE.blanco,
+  /** Anillos animados del asistente. */
+  anilloIA: BASE.wizardBlue,
 
-  // ── Splash (sigue al splash nativo de app.json) ───────────────────────
-  splashFondo: BASE.veniceProfundo,
-  splashLogo: BASE.merino,
-  splashAcento: BASE.rockBlue,
-  splashTexto: "#DCE7EC",
+  ...SPLASH,
 
   // ── Ilustración de la doctora: arco detrás ────────────────────────────
-  arcoIlustracionInicio: "#C3D9E5",
-  arcoIlustracionFin: "#E9EFEF",
+  arcoIlustracionInicio: "#C6E5FD",
+  arcoIlustracionFin: "#EEF7FE",
 };
 
 export type Paleta = typeof paletaClara;
 
 /**
- * Modo oscuro: degradado Jet Black → azul noche, vidrio Venice translúcido
- * con borde Rock Blue tenue, texto Merino y secundario Rock Blue claro. El
- * botón primario es Rock Blue con texto oscuro; acentos e IA en Light Blue.
+ * Modo oscuro: el degradado Venice → azul profundo, vidrio Rock Blue
+ * translúcido (más luminoso que el fondo, para que se distinga) con borde
+ * Rock Blue, texto Merino y secundario claro. Botón primario Rock Blue con
+ * texto azul oscuro; acentos e IA en Light Blue.
  */
 export const paletaOscura: Paleta = {
-  degradadoFondo: [BASE.jetBlack, BASE.azulNoche],
-  fondoPantalla: BASE.azulNoche,
+  degradadoFondo: [BASE.veniceBlue, BASE.veniceProfundo],
+  fondoPantalla: BASE.veniceProfundo,
+  barraEstado: "light",
 
-  fondoCard: "rgba(22,88,123,0.35)",
-  fondoCardAndroid: "rgba(22,88,123,0.45)",
-  bordeCard: "rgba(132,179,206,0.24)",
-  fondoCardAcento: "rgba(22,88,123,0.55)",
-  fondoCardAcentoAndroid: "rgba(22,88,123,0.62)",
-  bordeCardAcento: "rgba(103,186,244,0.35)",
-  fondoBarra: "rgba(22,88,123,0.30)",
-  fondoBarraAndroid: "rgba(22,88,123,0.40)",
+  fondoCard: "rgba(132,179,206,0.20)",
+  fondoCardAndroid: "rgba(132,179,206,0.22)",
+  bordeCard: "rgba(132,179,206,0.45)",
+  fondoCardAcento: "rgba(103,186,244,0.18)",
+  fondoCardAcentoAndroid: "rgba(103,186,244,0.20)",
+  bordeCardAcento: "rgba(103,186,244,0.55)",
+  fondoBarra: "rgba(132,179,206,0.18)",
+  fondoBarraAndroid: "rgba(132,179,206,0.20)",
   tintaBlur: "dark",
-  intensidadBlur: 40,
+  intensidadBlur: 15,
+  sombraCard: "#082638",
+  opacidadSombraCard: 0.25,
 
-  superficie: "#11283A",
-  fondo: "#0F2C3E",
-  borde: "rgba(132,179,206,0.20)",
+  superficie: "#174B69",
+  fondo: "#1B5577",
+  borde: "rgba(132,179,206,0.30)",
 
   textoSobreFondo: BASE.merino,
-  textoSuaveSobreFondo: "#BCD5E4",
-  textoTenueSobreFondo: "#A8C9DD",
-  acentoSobreFondo: BASE.lightBlue,
-  etiquetaCampoSobreFondo: "#BCD5E4",
-  ayudaSobreFondo: "#A8C9DD",
-  errorSobreFondo: "#F4A99F",
-  exitoSobreFondo: "#86D4AE",
-  puntoSobreFondo: "rgba(132,179,206,0.35)",
-  puntoActivoSobreFondo: BASE.lightBlue,
-  divisorSobreFondo: "rgba(132,179,206,0.18)",
+  textoSuaveSobreFondo: "#E6EEF2",
+  textoTenueSobreFondo: "#DDE8EE",
+  acentoSobreFondo: "#CFE8FC",
+  etiquetaCampoSobreFondo: "#E6EEF2",
+  ayudaSobreFondo: "#DDE8EE",
+  puntoSobreFondo: "rgba(245,238,221,0.30)",
+  puntoActivoSobreFondo: BASE.merino,
+  divisorSobreFondo: "rgba(245,238,221,0.16)",
   trazoSobreFondo: BASE.merino,
-  fondoBienvenida: BASE.azulNoche,
+  fondoBienvenida: BASE.veniceProfundo,
   logoSobreFondo: BASE.merino,
-  logoAcentoSobreFondo: BASE.lightBlue,
+  logoAcentoSobreFondo: BASE.rockBlue,
   botonBienvenida: BASE.rockBlue,
-  textoBotonBienvenida: BASE.azulNoche,
-  arcoPerfil: "rgba(103,186,244,0.06)",
+  textoBotonBienvenida: BASE.azulTinta,
+  arcoPerfil: "rgba(132,179,206,0.12)",
 
   text: BASE.merino,
   accent: BASE.rockBlue,
   acentoPresionado: "#A3C8DE",
   bordePrimario: BASE.rockBlue,
-  sobreAcento: BASE.azulNoche,
-  campo: BASE.lightBlue,
-  sobreCampo: BASE.azulNoche,
-  campoPantalla: "#12344A",
+  sobreAcento: BASE.azulTinta,
+  campo: BASE.rockBlue,
+  sobreCampo: BASE.azulTinta,
+  campoPantalla: "#12476A",
   sobreCampoPantalla: BASE.merino,
-  divider: "rgba(132,179,206,0.18)",
+  suaveSobreCampoPantalla: "#E6EEF2",
+  divider: "rgba(245,238,221,0.16)",
   dividerOnField: "rgba(245,238,221,0.16)",
-  velo: "rgba(0,0,0,0.6)",
-  bordeCampo: "rgba(132,179,206,0.5)",
-  etiquetaCampo: "#BCD5E4",
-  haloCampo: "rgba(245,238,221,0.06)",
-  colorSombra: "#000000",
+  velo: "rgba(8,38,56,0.6)",
+  bordeCampo: BASE.rockBlue,
+  etiquetaCampo: "#E6EEF2",
+  haloCampo: "rgba(245,238,221,0.08)",
+  colorSombra: "#082638",
   pulgarSwitch: BASE.merino,
-  contador: "#86C9F7",
+  contador: BASE.merino,
 
-  neutral100: "#163447",
-  neutral200: "#1D4258",
-  neutral300: "#3A6580",
-  neutral600: "#A8C9DD",
-  neutral700: "#BCD5E4",
-  neutral800: "#DCE7EC",
+  icono: BASE.merino,
+  iconoTabActivo: BASE.merino,
+  iconoTabInactivo: "rgba(245,238,221,0.7)",
+  textoTabActivo: BASE.merino,
+  textoTabInactivo: "#E6EEF2",
+  /** Píldora azul profundo detrás de la pestaña activa. */
+  indicadorTab: "rgba(14,61,87,0.55)",
 
-  accent100: "#12374D",
-  accent200: "#1A4A66",
-  accent300: "#2B6A8F",
-  accent400: "#4F95BF",
-  accent600: "#7CC4F6",
-  accent700: BASE.lightBlue,
-  accent800: "#CDE6F8",
+  neutral100: "#1F5C80",
+  neutral200: "#24678C",
+  neutral300: "#4F86A8",
+  neutral600: "#E6EEF2",
+  neutral700: "#E6EEF2",
+  neutral800: BASE.merino,
+
+  accent100: "#1D5A7E",
+  accent200: "#24688F",
+  accent300: "#3C82AA",
+  accent400: BASE.lightBlue,
+  accent600: BASE.merino,
+  accent700: "#DCEFFD",
+  accent800: "#E3F1FB",
   accent900: BASE.merino,
 
-  exito: "#86D4AE",
-  exitoFondo: "#123A30",
-  advertencia: "#F2C46B",
-  advertenciaFondo: "#3A2F16",
-  error: "#F4A99F",
-  errorFondo: "#3F1F1D",
-  info: BASE.lightBlue,
-  infoFondo: "#12374D",
+  exito: "#C4F5DA",
+  exitoFondo: "#1B5A4C",
+  advertencia: "#FFF0CF",
+  advertenciaFondo: "#5A4A22",
+  error: "#FFE1DC",
+  errorFondo: "#5E2E35",
+  info: "#DCEFFD",
+  infoFondo: "#1D5A7E",
+  ...ESTADOS_SOLIDOS,
 
   degradadoIA: [BASE.veniceBlue, BASE.lightBlue],
-  fondoInsigniaIA: "#0B2536",
-  textoInsigniaIA: BASE.lightBlue,
+  fondoInsigniaIA: BASE.veniceProfundo,
+  textoInsigniaIA: "#8FCCF7",
   acentoIA: BASE.lightBlue,
-  sobreAcentoIA: BASE.azulNoche,
+  sobreAcentoIA: BASE.azulTinta,
+  anilloIA: BASE.lightBlue,
 
-  splashFondo: BASE.veniceProfundo,
-  splashLogo: BASE.merino,
-  splashAcento: BASE.rockBlue,
-  splashTexto: "#DCE7EC",
+  ...SPLASH,
 
-  arcoIlustracionInicio: "#1A4A66",
-  arcoIlustracionFin: "#12374D",
+  arcoIlustracionInicio: "#24688F",
+  arcoIlustracionFin: "#1D5A7E",
 };
 
 /**
  * Colores de la ilustración de la doctora (iguales en los dos modos): ropa
- * en la gama Rock Blue / Venice, piel y pelo naturales.
+ * en la gama de azules, piel y pelo naturales.
  */
 export const paletaIlustracion = {
-  bata: "#FFFDF7",
-  pliegue: "#D5DEE2",
-  camisa: "#BFD8E6",
-  camisaSombra: "#8DB4CC",
-  corbata: BASE.veniceBlue,
-  corbataNudo: "#124A68",
-  estetoscopio: BASE.marino,
-  estetoscopioCampana: "#B4C6D1",
-  estetoscopioBrillo: "#E3EAEE",
-  lineaCara: "#A9BBC7",
-  tablilla: "#3F7DA3",
-  tablillaPapel: "#FFFDF7",
-  tablillaLinea: "#D3E5EF",
+  bata: "#FFFFFF",
+  pliegue: "#D3E1EE",
+  camisa: "#BFE3FC",
+  camisaSombra: "#7FC4F2",
+  corbata: BASE.blueLobster,
+  corbataNudo: BASE.cobalt,
+  estetoscopio: BASE.subnautical,
+  estetoscopioCampana: "#B4C6D8",
+  estetoscopioBrillo: "#E3ECF5",
+  lineaCara: "#A9BBCD",
+  tablilla: BASE.wizardBlue,
+  tablillaPapel: "#FFFFFF",
+  tablillaLinea: "#C6E5FD",
   piel: "#F7C7A5",
   pielCuello: "#F5BF9B",
   pielSombra: "#EA9870",

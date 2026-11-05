@@ -4,6 +4,7 @@ import type { TextInputInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { AvisoEstado } from "@/components/AvisoEstado";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -68,12 +69,18 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
             accessibilityRole="button"
             accessibilityLabel={t(visible ? "comun.ocultarPassword" : "comun.mostrarPassword")}
           >
-            <Ionicons name={visible ? "eye-off-outline" : "eye-outline"} size={18} color={colors.accent700} />
+            <Ionicons name={visible ? "eye-off-outline" : "eye-outline"} size={18} color={colors.icono} />
           </Pressable>
         ) : null}
       </View>
       {error ? (
-        <Text style={[styles.error, sobreFondo && styles.errorSobreFondo]}>{error}</Text>
+        sobreFondo ? (
+          <AvisoEstado tipo="error" style={styles.avisoError}>
+            {error}
+          </AvisoEstado>
+        ) : (
+          <Text style={styles.error}>{error}</Text>
+        )
       ) : hint ? (
         <Text style={[styles.hint, sobreFondo && styles.hintSobreFondo]}>{hint}</Text>
       ) : null}
@@ -194,7 +201,15 @@ export function ChipSelect({ label, options, value, onChange, error, etiqueta = 
           );
         })}
       </View>
-      {error ? <Text style={[styles.error, sobreFondo && styles.errorSobreFondo]}>{error}</Text> : null}
+      {error ? (
+        sobreFondo ? (
+          <AvisoEstado tipo="error" style={styles.avisoError}>
+            {error}
+          </AvisoEstado>
+        ) : (
+          <Text style={styles.error}>{error}</Text>
+        )
+      ) : null}
     </View>
   );
 }
@@ -276,8 +291,8 @@ const crearStyles = (colors: Paleta) =>
     color: colors.error,
     marginTop: 4,
   },
-  errorSobreFondo: {
-    color: colors.errorSobreFondo,
+  avisoError: {
+    marginTop: 6,
   },
   hint: {
     fontFamily: fonts.body,
