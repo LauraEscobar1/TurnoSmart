@@ -69,11 +69,14 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
     case "circuloIcono":
       // Círculo metalizado: cada parada del degradado plata.
       return [...p.metalCirculo];
-    case "bannerPerfil":
-      return [p.bannerPerfil];
+    case "bannerPerfil": {
+      // Va arriba en la pantalla: se compone sobre el degradado entre el 0 y el 20 % de su alto.
+      const [arriba, abajo] = p.degradadoFondo;
+      return Array.from({ length: 11 }, (_, i) => componer(p.bannerPerfil, componer(abajo, arriba, (i * 0.2) / 10)));
+    }
     case "botonBannerPerfil":
       // Botón redondo (lápiz) sobre el banner.
-      return [componer(p.botonBannerPerfil, p.bannerPerfil)];
+      return efectivos(p, oscuro, "bannerPerfil").map((f) => componer(p.botonBannerPerfil, f));
     case "panelIA":
       return panelesIA(p);
     case "chip":

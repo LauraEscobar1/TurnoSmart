@@ -7,7 +7,8 @@ import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { IconoCirculo } from "@/components/Adornos";
 import { Presionable } from "@/components/Presionable";
-import { Pantalla } from "@/components/Vidrio";
+import { CON_DESENFOQUE, Pantalla } from "@/components/Vidrio";
+import { BlurView } from "expo-blur";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
@@ -81,7 +82,15 @@ export function ProfileHomeScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Cabecera: banner sólido de ancho completo y, montado sobre su borde inferior, el avatar. */}
         <View style={styles.hero}>
-          <View pointerEvents="none" style={styles.banner} />
+          <View pointerEvents="none" style={styles.banner}>
+            {/* Vidrio (modo claro): desenfoque recortado a la forma y el azul translúcido encima. */}
+            <View style={[StyleSheet.absoluteFill, styles.bannerRecorte]}>
+              {CON_DESENFOQUE && colors.desenfoqueBanner ? (
+                <BlurView intensity={colors.intensidadBlur} tint={colors.tintaBlur} style={StyleSheet.absoluteFill} />
+              ) : null}
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bannerPerfil }]} />
+            </View>
+          </View>
 
           <View style={styles.barra}>
             {/* Mismo ancho que el lápiz, para que el nombre quede centrado. Las preferencias
@@ -283,7 +292,8 @@ const crearStyles = (colors: Paleta) =>
     paddingHorizontal: 20,
     paddingTop: 10,
   },
-  // Banner rectangular sólido: ancho completo, esquinas inferiores redondeadas y sombra suave.
+  // Banner rectangular: ancho completo, esquinas inferiores redondeadas y sombra suave
+  // (vidrio azul en claro, Rock Blue sólido en oscuro).
   // Termina a media altura del avatar, que queda montado sobre su borde.
   banner: {
     position: "absolute",
@@ -293,7 +303,8 @@ const crearStyles = (colors: Paleta) =>
     bottom: MITAD_AVATAR,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
-    backgroundColor: colors.bannerPerfil,
+    borderTopWidth: 1,
+    borderTopColor: colors.bordeSuperiorBanner,
     shadowColor: colors.sombraCard,
     shadowOpacity: 0.22,
     shadowRadius: 14,
@@ -321,6 +332,11 @@ const crearStyles = (colors: Paleta) =>
     backgroundColor: colors.botonBannerPerfil,
     alignItems: "center",
     justifyContent: "center",
+  },
+  bannerRecorte: {
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "hidden",
   },
   redondoVacio: {
     width: 46,
