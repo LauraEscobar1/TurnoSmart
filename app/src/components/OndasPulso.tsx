@@ -37,7 +37,7 @@ function linea(width: number, y0: number, fase: number, xPulso: number): string 
 }
 
 /**
- * Bienvenida (modo claro): líneas de pulso sobre el azul y, abajo, la curva
+ * Bienvenida: líneas de pulso (en el color exacto que se pide, sin opacidad) y, abajo, la curva
  * que da paso a la zona clara del texto.
  */
 export function OndasPulso({ width, height, color, colorCurva }: OndasPulsoProps) {
@@ -58,7 +58,7 @@ export function OndasPulso({ width, height, color, colorCurva }: OndasPulsoProps
   return (
     <Svg width={width} height={abajo} style={{ position: "absolute", top: 0, left: 0 }} pointerEvents="none">
       {lineas.map((d, i) => (
-        <Path key={i} d={d} stroke={color} strokeOpacity={0.7} strokeWidth={1.3} fill="none" strokeLinejoin="round" />
+        <Path key={i} d={d} stroke={color} strokeWidth={1.3} fill="none" strokeLinejoin="round" />
       ))}
       <Path d={curva} fill={colorCurva} />
     </Svg>

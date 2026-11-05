@@ -160,10 +160,10 @@ export const paletaClara = {
   textoPanelIA: BASE.blanco,
   textoSuavePanelIA: "#E3F2FE",
   tiradorPanelIA: "rgba(255,255,255,0.45)",
-  /** Cabecera de Perfil: arco Merino sólido (igual en los dos modos), su texto y la línea de pulso tenue. */
-  arcoPerfil: BASE.merino,
-  textoCabeceraPerfil: BASE.subnautical,
-  trazoArcoPerfil: "rgba(2,80,169,0.22)",
+  /** Cabecera de Perfil: banner sólido detrás del avatar, su texto e íconos y el botón redondo encima. */
+  bannerPerfil: BASE.blueLobster,
+  textoBannerPerfil: BASE.blanco,
+  botonBannerPerfil: "rgba(255,255,255,0.16)",
   /** Anillo metalizado del avatar. */
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"] as Degradado,
   /** Chips de vidrio dentro de cards (lista de espera de Inicio). */
@@ -235,9 +235,6 @@ export const paletaClara = {
 
   ...SPLASH,
 
-  // ── Ilustración de la doctora: arco detrás ────────────────────────────
-  arcoIlustracionInicio: "#C6E5FD",
-  arcoIlustracionFin: "#EEF7FE",
 };
 
 export type Paleta = typeof paletaClara;
@@ -286,7 +283,7 @@ export const paletaOscura: Paleta = {
   logoSobreFondo: BASE.merino,
   logoAcentoSobreFondo: BASE.rockBlue,
   botonBienvenida: BASE.rockBlue,
-  textoBotonBienvenida: BASE.azulTinta,
+  textoBotonBienvenida: "#0F2A3A",
 
   text: "#0F2A3A",
   accent: BASE.veniceBlue,
@@ -321,9 +318,10 @@ export const paletaOscura: Paleta = {
   textoPanelIA: BASE.merino,
   textoSuavePanelIA: "#F2F1EA",
   tiradorPanelIA: "rgba(245,238,221,0.4)",
-  arcoPerfil: BASE.merino,
-  textoCabeceraPerfil: "#0F2A3A",
-  trazoArcoPerfil: "rgba(22,88,123,0.25)",
+  // El mismo Rock Blue de las cards, con texto e íconos marino.
+  bannerPerfil: BASE.rockBlue,
+  textoBannerPerfil: "#0F2A3A",
+  botonBannerPerfil: "rgba(15,42,58,0.10)",
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"],
   // Chip más claro que la card: el texto marino llega a AA.
   fondoChip: "rgba(255,255,255,0.30)",
@@ -383,40 +381,6 @@ export const paletaOscura: Paleta = {
 
   ...SPLASH,
 
-  arcoIlustracionInicio: "#24688F",
-  arcoIlustracionFin: "#1D5A7E",
-};
-
-/**
- * Colores de la ilustración de la doctora (iguales en los dos modos): ropa
- * en la gama de azules, piel y pelo naturales.
- */
-export const paletaIlustracion = {
-  bata: "#FFFFFF",
-  pliegue: "#D3E1EE",
-  camisa: "#BFE3FC",
-  camisaSombra: "#7FC4F2",
-  corbata: BASE.blueLobster,
-  corbataNudo: BASE.cobalt,
-  estetoscopio: BASE.subnautical,
-  estetoscopioCampana: "#B4C6D8",
-  estetoscopioBrillo: "#E3ECF5",
-  lineaCara: "#A9BBCD",
-  tablilla: BASE.wizardBlue,
-  tablillaPapel: "#FFFFFF",
-  tablillaLinea: "#C6E5FD",
-  piel: "#F7C7A5",
-  pielCuello: "#F5BF9B",
-  pielSombra: "#EA9870",
-  pielOreja: "#F2B08A",
-  pielTrazo: "#E39A78",
-  pielOrejaTrazo: "#DC8A62",
-  pelo: "#6B3F2A",
-  peloSombra: "#54301F",
-  peloOscuro: "#4A291B",
-  peloBrillo: "#8A5638",
-  ojos: "#3A2A24",
-  boca: "#D27150",
 };
 
 /**

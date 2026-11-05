@@ -34,7 +34,8 @@ type Superficie =
   | "indicadorSobreBarra"
   | `badge:${Estado}`
   | "circuloIcono"
-  | "arcoPerfil"
+  | "bannerPerfil"
+  | "botonBannerPerfil"
   | "panelIA"
   | "estadoInactivo"
   | "chip"
@@ -68,9 +69,11 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
     case "circuloIcono":
       // Círculo metalizado: cada parada del degradado plata.
       return [...p.metalCirculo];
-    case "arcoPerfil":
-      // Arco Merino de Perfil, con la línea de pulso tenue encima (peor caso para el texto).
-      return [p.arcoPerfil, componer(p.trazoArcoPerfil, p.arcoPerfil)];
+    case "bannerPerfil":
+      return [p.bannerPerfil];
+    case "botonBannerPerfil":
+      // Botón redondo (lápiz) sobre el banner.
+      return [componer(p.botonBannerPerfil, p.bannerPerfil)];
     case "panelIA":
       return panelesIA(p);
     case "chip":
@@ -82,8 +85,8 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
       // «Cancelar cita» va al final del contenido, sobre el fondo.
       return efectivos(p, oscuro, "degradado").map((f) => componer(p.botonDestructivoFondo, f));
     case "bienvenida":
-      // Claro: zona blanca inferior. Oscuro: el texto usa los tokens «sobre fondo» (ya medidos).
-      return oscuro ? [] : [p.fondoBienvenida];
+      // Zona inferior de la Bienvenida: blanca en claro, azul profundo en oscuro.
+      return [p.fondoBienvenida];
     default: {
       if (s.startsWith("badge:")) {
         const e = s.slice(6) as Estado;
@@ -196,8 +199,9 @@ const PARES: Par[] = [
   par("icono", "circuloIcono", "icono"),
   // El robot de IA en su insignia y la cabecera de Perfil.
   par("textoInsigniaIA", "fondoInsigniaIA", "icono"),
-  // Perfil: nombre y correo sobre el arco Merino.
-  par("textoCabeceraPerfil", "arcoPerfil"),
+  // Perfil: nombre y correo sobre el banner, y el ícono del lápiz en su botón.
+  par("textoBannerPerfil", "bannerPerfil"),
+  par("textoBannerPerfil", "botonBannerPerfil", "icono"),
   // Panel del asistente IA: su texto.
   par("textoPanelIA", "panelIA"),
   par("textoSuavePanelIA", "panelIA"),
@@ -227,9 +231,21 @@ const PARES: Par[] = [
   par("sobreAcentoIA", "acentoIA", "icono"),
   par("textoBotonBienvenida", "botonBienvenida"),
   // Insignia IA y aviso de la Bienvenida en su propio contexto.
-  par("text", "bienvenida"),
-  par("neutral700", "bienvenida"),
-  par("accent700", "bienvenida"),
+  // Texto de la Bienvenida: de card en claro (zona blanca), «sobre fondo» en oscuro.
+  ...(
+    [
+      ["text", "textoSobreFondo"],
+      ["neutral700", "textoSuaveSobreFondo"],
+      ["accent700", "acentoSobreFondo"],
+      ["botonBienvenida", "botonBienvenida"],
+    ] as const
+  ).map(
+    ([claro, oscuro]): Par => ({
+      texto: (p) => (p === paletaOscura ? p[oscuro] : p[claro]),
+      nombre: `${claro} / ${oscuro}`,
+      sobre: "bienvenida",
+    })
+  ),
   par("botonBienvenida", "bienvenida", "icono"),
   // Splash.
   par("splashTexto", "splashFondo"),

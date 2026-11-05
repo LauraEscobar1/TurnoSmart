@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,8 +8,7 @@ import { useEstilos, useTema } from "@/theme/Tema";
 import { IconoCirculo } from "@/components/Adornos";
 import { Presionable } from "@/components/Presionable";
 import { Pantalla } from "@/components/Vidrio";
-import { OndasPulso } from "@/components/OndasPulso";
-import { radius, sombra } from "@/theme/spacing";
+import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
@@ -35,13 +34,13 @@ function listaO(items: string[], idioma: Idioma) {
  * Perfil — Nivel 1 ("NavDeslizable.dc.html", sección 5 / 5).
  * Una ficha amable del paciente: el nombre centrado con accesos redondos a
  * Preferencias y Datos personales, su círculo (foto o iniciales, con la
- * cámara para subirla) sobre el arco Merino, el aviso de perfil incompleto
+ * cámara para subirla) sobre el banner de la cabecera, el aviso de perfil incompleto
  * (solo mientras falten datos opcionales), el estado de la lista de espera
  * y tres indicadores. Todo sale de los datos del paciente.
  */
-/** Alto de la franja donde se dibuja la línea de pulso, y distancia del borde del arco al pie de la cabecera. */
-const ALTO_ONDAS = 120;
-const BORDE_ARCO = 44;
+/** Avatar de la cabecera y la mitad de su alto con el anillo: lo que asoma bajo el banner. */
+const TAMANO_AVATAR = 132;
+const MITAD_AVATAR = (TAMANO_AVATAR + 2 * Math.max(3, Math.round(TAMANO_AVATAR * 0.035))) / 2;
 
 export function ProfileHomeScreen() {
   const { colors } = useTema();
@@ -53,8 +52,6 @@ export function ProfileHomeScreen() {
   const paciente = usePaciente();
   const { actualizar, cerrarSesion } = useAuth();
   const [pidiendo, setPidiendo] = useState(false);
-  const [altoCabecera, setAltoCabecera] = useState(0);
-  const { width } = useWindowDimensions();
 
   const completo = perfilCompleto(paciente);
   const dias = diasEnEspera(paciente.registradoEnISO);
@@ -82,29 +79,19 @@ export function ProfileHomeScreen() {
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Cabecera: medio círculo Merino detrás del avatar, con la línea de pulso tenue de la Bienvenida. */}
-        <View style={styles.hero} onLayout={(e) => setAltoCabecera(e.nativeEvent.layout.height)}>
-          <View
-            pointerEvents="none"
-            style={[styles.arco, { width: width * 3, height: width * 3, borderRadius: width * 1.5, left: -width }]}
-          >
-            {/* Las ondas van en la franja de arriba de la cabecera y el círculo las recorta. */}
-            {altoCabecera > 0 ? (
-              <View style={[styles.ondas, { left: width, width, top: width * 3 - (altoCabecera - BORDE_ARCO) }]}>
-                <OndasPulso width={width} height={ALTO_ONDAS} color={colors.trazoArcoPerfil} colorCurva={colors.arcoPerfil} />
-              </View>
-            ) : null}
-          </View>
+        {/* Cabecera: banner sólido de ancho completo y, montado sobre su borde inferior, el avatar. */}
+        <View style={styles.hero}>
+          <View pointerEvents="none" style={styles.banner} />
 
           <View style={styles.barra}>
             {/* Mismo ancho que el lápiz, para que el nombre quede centrado. Las preferencias
                 se editan solo desde «Editar preferencias», en la card de la lista de espera. */}
             <View style={styles.redondoVacio} />
             <View style={styles.identidad}>
-              <Text style={[heading(30, colors.textoCabeceraPerfil), styles.centrado]} numberOfLines={1}>
+              <Text style={[heading(30, colors.textoBannerPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.nombre} {paciente.apellido}
               </Text>
-              <Text style={[body(14, colors.textoCabeceraPerfil), styles.centrado]} numberOfLines={1}>
+              <Text style={[body(14, colors.textoBannerPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.email}
               </Text>
             </View>
@@ -116,7 +103,7 @@ export function ProfileHomeScreen() {
           </View>
 
           <View style={styles.personaje}>
-            <AvatarPaciente paciente={paciente} size={132} onPress={cambiarFoto} anillo />
+            <AvatarPaciente paciente={paciente} size={TAMANO_AVATAR} onPress={cambiarFoto} anillo />
           </View>
         </View>
 
@@ -233,7 +220,7 @@ function BotonRedondo({
       accessibilityLabel={etiqueta}
       style={({ pressed }) => [styles.redondo, pressed && styles.presionado]}
     >
-      <Ionicons name={icono} size={22} color={colors.icono} />
+      <Ionicons name={icono} size={22} color={colors.textoBannerPerfil} />
     </Presionable>
   );
 }
@@ -296,16 +283,22 @@ const crearStyles = (colors: Paleta) =>
     paddingHorizontal: 20,
     paddingTop: 10,
   },
-  // Medio círculo Merino sólido: su borde cruza el tercio inferior del avatar.
-  arco: {
+  // Banner rectangular sólido: ancho completo, esquinas inferiores redondeadas y sombra suave.
+  // Termina a media altura del avatar, que queda montado sobre su borde.
+  banner: {
     position: "absolute",
-    bottom: BORDE_ARCO,
-    backgroundColor: colors.arcoPerfil,
-    overflow: "hidden",
-  },
-  ondas: {
-    position: "absolute",
-    height: ALTO_ONDAS,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: MITAD_AVATAR,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    backgroundColor: colors.bannerPerfil,
+    shadowColor: colors.sombraCard,
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   barra: {
     flexDirection: "row",
@@ -320,14 +313,14 @@ const crearStyles = (colors: Paleta) =>
     paddingTop: 12,
     gap: 2,
   },
+  // Sobre el banner: un círculo del mismo tono, apenas aclarado u oscurecido, con el ícono del banner.
   redondo: {
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: colors.superficie,
+    backgroundColor: colors.botonBannerPerfil,
     alignItems: "center",
     justifyContent: "center",
-    ...sombra.sm,
   },
   redondoVacio: {
     width: 46,
