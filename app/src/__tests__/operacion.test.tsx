@@ -2,6 +2,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import * as offers from "@/services/offersService";
 import { CUENTA_DEMO } from "@/data/mockData";
 import { montarApp, reiniciarDatos } from "@/test-utils/app";
+import { escucharCambios } from "@/services/cambiosService";
 import {
   abrirSesionFalsa,
   agregarSolicitudFalsa,
@@ -100,6 +101,34 @@ describe("Actualización en vivo", () => {
     expect(canalesRealtime.map((c) => c.filtro)).toEqual([`paciente_id=eq.${demo}`]);
     await unmount();
     expect(canalesRealtime).toHaveLength(0);
+  });
+
+  it("dos suscripciones a la vez (doble montaje) no comparten canal ni lanzan error", () => {
+    const demo = entrarComoDemo();
+    const dejar1 = escucharCambios(demo);
+    const dejar2 = escucharCambios(demo);
+    expect(canalesRealtime).toHaveLength(2);
+    expect(new Set(canalesRealtime.map((c) => c.nombre)).size).toBe(2);
+    dejar1();
+    dejar1(); // idempotente
+    expect(canalesRealtime).toHaveLength(1);
+    dejar2();
+    expect(canalesRealtime).toHaveLength(0);
+  });
+
+  it("regresión: aceptar una oferta y tocar «Ver cita» abre Mis citas › Próximas sin error de Realtime", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByText("Ver oferta"));
+    await fireEvent.press(await screen.findByText("Aceptar cupo"));
+    expect(await screen.findByText("Cupo confirmado")).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Ver cita" }));
+
+    expect(await screen.findByText("Cardiología")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Mis citas", selected: true })).toBeTruthy();
+    expect(screen.queryByText("Cupo confirmado")).toBeNull();
+    // Un solo TabNavigator montado: una sola suscripción del paciente.
+    expect(canalesRealtime).toHaveLength(1);
   });
 
   it("una oferta nueva aparece en Ofertas sin cambiar de pantalla", async () => {
