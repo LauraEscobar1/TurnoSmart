@@ -1,5 +1,6 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { montarApp, reiniciarDatos } from "@/test-utils/app";
+import { tablaFalsa } from "@/test-utils/supabaseFalso";
 import * as fotoService from "@/services/fotoService";
 import { getAjustes } from "@/services/ajustesService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -559,5 +560,68 @@ describe("Detalle de cita", () => {
     expect(await screen.findByText("Cancelada")).toBeTruthy();
     expect(screen.getByText(/Cancelaste esta cita/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reprogramar" })).toBeNull();
+  });
+});
+
+describe("Inicio › panel del asistente IA", () => {
+  /** La oferta aceptada de la cuenta demo (Nutrición). */
+  const ofertaAceptada = () => tablaFalsa("ofertas").find((o) => o.estado === "aceptada")!;
+
+  async function abrirPanel() {
+    await montarApp();
+    await fireEvent.press((await screen.findAllByRole("button", { name: "Abrir el panel de tu asistente IA" }))[0]);
+  }
+
+  it("lista las ofertas pendientes y el cupo reasignado; sin IA de por medio, no la menciona", async () => {
+    await abrirPanel();
+    // El único cupo reasignado lo eligió el respaldo determinista.
+    expect(await screen.findByText("Reasignado por TurnoSmart")).toBeTruthy();
+    expect(screen.getByText("TurnoSmart ha trabajado para ti")).toBeTruthy();
+    expect(screen.getByText("Este cupo se liberó por una cancelación y TurnoSmart te lo asignó.")).toBeTruthy();
+    expect(screen.getByText("Nutrición")).toBeTruthy();
+    expect(screen.queryByText("Reasignado por IA")).toBeNull();
+    expect(screen.queryByText(/La IA ha recuperado/)).toBeNull();
+    expect(await screen.findByText("TurnoSmart ha recuperado 1 cita para ti")).toBeTruthy();
+
+    // Arriba, lo que espera respuesta, con «Ver oferta» que lleva al detalle.
+    expect(screen.getByText("Esperan tu respuesta")).toBeTruthy();
+    const verOferta = screen.getAllByRole("button", { name: "Ver oferta" });
+    await fireEvent.press(verOferta[verOferta.length - 1]);
+    expect(await screen.findByText("Aceptar cupo")).toBeTruthy();
+  });
+
+  it("si la IA reasignó el cupo, lo dice y cuenta las citas recuperadas", async () => {
+    ofertaAceptada().estrategia = "ai";
+    await abrirPanel();
+    expect(await screen.findByText("Reasignado por IA")).toBeTruthy();
+    expect(screen.getByText("Tu asistente IA ha trabajado para ti")).toBeTruthy();
+    expect(screen.getByText("Este cupo se liberó por una cancelación y tu asistente te lo asignó.")).toBeTruthy();
+    expect(await screen.findByText("La IA ha recuperado 1 cita para ti")).toBeTruthy();
+    expect(screen.queryByText("Reasignado por TurnoSmart")).toBeNull();
+  });
+
+  it("al aceptar una oferta, el cupo aparece con su cita de cupo recuperado y «Ver cita»", async () => {
+    await montarApp();
+    await fireEvent.press((await screen.findAllByText("Ver oferta"))[0]);
+    await fireEvent.press(await screen.findByText("Aceptar cupo"));
+    await fireEvent.press(await screen.findByText("Ver cita"));
+    await fireEvent.press(await screen.findByRole("tab", { name: "Inicio" }));
+    await fireEvent.press((await screen.findAllByRole("button", { name: "Abrir el panel de tu asistente IA" }))[0]);
+    // Dos cupos reasignados: el de la demo (sin cita enlazada) y el recién aceptado, con su cita.
+    expect(await screen.findAllByText(/^Reasignado por /)).toHaveLength(2);
+    await fireEvent.press(await screen.findByRole("button", { name: "Ver cita" }));
+    expect(await screen.findByText("Información de la reserva")).toBeTruthy();
+  });
+
+  it("sin cupos reasignados muestra el estado vacío del asistente", async () => {
+    ofertaAceptada().estado = "rechazada";
+    await abrirPanel();
+    expect(
+      await screen.findByText(
+        "Aún no tienes cupos reasignados. Tu asistente sigue atento y te avisará apenas se libere uno compatible."
+      )
+    ).toBeTruthy();
+    expect(screen.getByText("Tu asistente IA ha trabajado para ti")).toBeTruthy();
+    expect(screen.queryByText(/Reasignado por/)).toBeNull();
   });
 });

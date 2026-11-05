@@ -155,9 +155,15 @@ export const paletaClara = {
   metalCirculo: ["#FFFFFF", "#EEF4FA", "#D7E6F4"] as Degradado,
   /** Brillo (sombra clara) que da relieve metálico al ícono. */
   brilloIcono: "rgba(255,255,255,0.9)",
-  /** Cabecera de Perfil: degradado que se funde con el fondo, y su texto. */
-  degradadoCabeceraPerfil: ["rgba(5,191,253,0)", BASE.wizardBlue, BASE.wizardBlue, BASE.tractorBeam, "rgba(5,191,253,0)"] as Degradado,
-  textoCabeceraPerfil: BASE.blanco,
+  /** Panel del asistente IA (hoja que sube desde abajo): un tono más oscuro del tema, con su texto claro. */
+  fondoPanelIA: "rgba(2,53,123,0.96)",
+  textoPanelIA: BASE.blanco,
+  textoSuavePanelIA: "#E3F2FE",
+  tiradorPanelIA: "rgba(255,255,255,0.45)",
+  /** Cabecera de Perfil: arco Merino sólido (igual en los dos modos), su texto y la línea de pulso tenue. */
+  arcoPerfil: BASE.merino,
+  textoCabeceraPerfil: BASE.subnautical,
+  trazoArcoPerfil: "rgba(2,80,169,0.22)",
   /** Anillo metalizado del avatar. */
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"] as Degradado,
   /** Chips de vidrio dentro de cards (lista de espera de Inicio). */
@@ -199,7 +205,7 @@ export const paletaClara = {
   /** Badges de vidrio: tinte del color (~20 %), borde al 50 % y texto intenso. */
   exitoTinte: "rgba(30,158,90,0.20)",
   exitoBorde: "rgba(30,158,90,0.50)",
-  exitoTexto: "#0F6A3C",
+  exitoTexto: "#0B5A32",
   advertenciaTinte: "rgba(234,140,0,0.22)",
   advertenciaBorde: "rgba(234,140,0,0.55)",
   advertenciaTexto: "#8A4B00",
@@ -296,13 +302,13 @@ export const paletaOscura: Paleta = {
   dividerOnField: "rgba(245,238,221,0.16)",
   velo: "rgba(8,38,56,0.6)",
   bordeCampo: "rgba(15,42,58,0.35)",
-  etiquetaCampo: "#1E4A63",
+  etiquetaCampo: "#1B4359",
   haloCampo: "rgba(245,238,221,0.08)",
   colorSombra: "#082638",
   pulgarSwitch: BASE.merino,
   contador: "#0F2A3A",
 
-  icono: "#1E4A63",
+  icono: "#1B4359",
   iconoTabActivo: BASE.merino,
   iconoTabInactivo: "rgba(245,238,221,0.7)",
   textoTabActivo: BASE.merino,
@@ -311,9 +317,13 @@ export const paletaOscura: Paleta = {
   indicadorTab: "rgba(14,61,87,0.55)",
   metalCirculo: ["#F7FAFC", "#DCE8F0", "#BCD2E0"],
   brilloIcono: "rgba(255,255,255,0.85)",
-  // Venice arriba (texto Merino), Rock Blue al medio y se funde con el fondo.
-  degradadoCabeceraPerfil: ["rgba(22,88,123,0)", BASE.veniceBlue, BASE.veniceBlue, BASE.rockBlue, "rgba(22,88,123,0)"],
-  textoCabeceraPerfil: BASE.merino,
+  fondoPanelIA: "rgba(14,61,87,0.97)",
+  textoPanelIA: BASE.merino,
+  textoSuavePanelIA: "#F2F1EA",
+  tiradorPanelIA: "rgba(245,238,221,0.4)",
+  arcoPerfil: BASE.merino,
+  textoCabeceraPerfil: "#0F2A3A",
+  trazoArcoPerfil: "rgba(22,88,123,0.25)",
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"],
   // Chip más claro que la card: el texto marino llega a AA.
   fondoChip: "rgba(255,255,255,0.30)",
@@ -323,8 +333,8 @@ export const paletaOscura: Paleta = {
   neutral100: "#C3D9E7",
   neutral200: "#ADCADB",
   neutral300: "#7FA6BE",
-  neutral600: "#1E4A63",
-  neutral700: "#1E4A63",
+  neutral600: "#1B4359",
+  neutral700: "#1B4359",
   neutral800: "#0F2A3A",
 
   accent100: "#C9DFEC",

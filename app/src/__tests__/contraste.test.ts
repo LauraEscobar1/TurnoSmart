@@ -34,25 +34,33 @@ type Superficie =
   | "indicadorSobreBarra"
   | `badge:${Estado}`
   | "circuloIcono"
-  | "cabeceraPerfil"
-  | "cabeceraPerfilEntrada"
+  | "arcoPerfil"
+  | "panelIA"
   | "estadoInactivo"
   | "chip"
   | "botonDestructivo"
   | "bienvenida"
   | keyof Paleta;
 
+/** Panel del asistente: su relleno sobre la pantalla oscurecida por el velo (cada punta del degradado). */
+function panelesIA(p: Paleta): string[] {
+  return p.degradadoFondo.map((f) => componer(p.fondoPanelIA, componer(p.velo, f)));
+}
+
 /** Colores efectivos de una superficie (se toma el peor). */
 function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
   const puntas = [...p.degradadoFondo];
-  const vidrio = (ios: string, android: string) => puntas.flatMap((f) => [componer(ios, f), componer(android, f)]);
+  const vidrio = (ios: string, android: string, fondos = puntas) =>
+    fondos.flatMap((f) => [componer(ios, f), componer(android, f)]);
+  // Las cards van sobre el degradado o dentro del panel del asistente IA.
+  const fondosCard = [...puntas, ...panelesIA(p)];
   switch (s) {
     case "degradado":
       return [...puntas, p.fondoPantalla];
     case "card":
-      return vidrio(p.fondoCard, p.fondoCardAndroid);
+      return vidrio(p.fondoCard, p.fondoCardAndroid, fondosCard);
     case "cardAcento":
-      return vidrio(p.fondoCardAcento, p.fondoCardAcentoAndroid);
+      return vidrio(p.fondoCardAcento, p.fondoCardAcentoAndroid, fondosCard);
     case "barra":
       return vidrio(p.fondoBarra, p.fondoBarraAndroid);
     case "indicadorSobreBarra":
@@ -60,12 +68,11 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
     case "circuloIcono":
       // Círculo metalizado: cada parada del degradado plata.
       return [...p.metalCirculo];
-    case "cabeceraPerfil":
-      // Tramo del nombre y el correo: color sólido del degradado de la cabecera.
-      return [p.degradadoCabeceraPerfil[1], p.degradadoCabeceraPerfil[2]];
-    case "cabeceraPerfilEntrada":
-      // Donde empieza el nombre (~10 % de la cabecera), el degradado todavía se funde con el fondo.
-      return p.degradadoFondo.map((f) => componer(p.degradadoCabeceraPerfil[1], f, 0.1 / 0.12));
+    case "arcoPerfil":
+      // Arco Merino de Perfil, con la línea de pulso tenue encima (peor caso para el texto).
+      return [p.arcoPerfil, componer(p.trazoArcoPerfil, p.arcoPerfil)];
+    case "panelIA":
+      return panelesIA(p);
     case "chip":
       return [...efectivos(p, oscuro, "card"), ...efectivos(p, oscuro, "cardAcento")].map((f) => componer(p.fondoChip, f));
     case "estadoInactivo":
@@ -189,8 +196,11 @@ const PARES: Par[] = [
   par("icono", "circuloIcono", "icono"),
   // El robot de IA en su insignia y la cabecera de Perfil.
   par("textoInsigniaIA", "fondoInsigniaIA", "icono"),
-  par("textoCabeceraPerfil", "cabeceraPerfil"),
-  par("textoCabeceraPerfil", "cabeceraPerfilEntrada", "grande"),
+  // Perfil: nombre y correo sobre el arco Merino.
+  par("textoCabeceraPerfil", "arcoPerfil"),
+  // Panel del asistente IA: su texto.
+  par("textoPanelIA", "panelIA"),
+  par("textoSuavePanelIA", "panelIA"),
   // Chips de la lista de espera y su texto de «buscando cupo».
   par("accent900", "chip"),
   par("neutral600", "chip"),
