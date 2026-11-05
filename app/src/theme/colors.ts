@@ -160,9 +160,16 @@ export const paletaClara = {
   textoPanelIA: BASE.blanco,
   textoSuavePanelIA: "#E3F2FE",
   tiradorPanelIA: "rgba(255,255,255,0.45)",
-  /** Cabecera de Perfil: banner sólido detrás del avatar, su texto e íconos y el botón redondo encima. */
-  bannerPerfil: BASE.blueLobster,
-  textoBannerPerfil: BASE.blanco,
+  /**
+   * Cabecera de Perfil: banner de vidrio Blue Lobster al 38 % con desenfoque y
+   * borde superior iluminado. Sobre el celeste de arriba de la pantalla su
+   * color efectivo pide texto marino (4,58:1 en el peor punto); el blanco
+   * recién pasaría con un 62 % de opacidad.
+   */
+  bannerPerfil: "rgba(2,80,169,0.38)",
+  desenfoqueBanner: true,
+  bordeSuperiorBanner: "rgba(255,255,255,0.25)",
+  textoBannerPerfil: BASE.subnautical,
   botonBannerPerfil: "rgba(255,255,255,0.16)",
   /** Anillo metalizado del avatar. */
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"] as Degradado,
@@ -318,8 +325,10 @@ export const paletaOscura: Paleta = {
   textoPanelIA: BASE.merino,
   textoSuavePanelIA: "#F2F1EA",
   tiradorPanelIA: "rgba(245,238,221,0.4)",
-  // El mismo Rock Blue de las cards, con texto e íconos marino.
+  // El mismo Rock Blue de las cards, sólido, con texto e íconos marino.
   bannerPerfil: BASE.rockBlue,
+  desenfoqueBanner: false,
+  bordeSuperiorBanner: "transparent",
   textoBannerPerfil: "#0F2A3A",
   botonBannerPerfil: "rgba(15,42,58,0.10)",
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"],
