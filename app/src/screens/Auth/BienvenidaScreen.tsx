@@ -70,11 +70,11 @@ export function BienvenidaScreen({ navigation }: Props) {
       )}
 
       <View style={styles.texto}>
-        <Text style={styles.titular} accessibilityRole="header">
+        <Text style={[styles.titular, oscuro && styles.sobreFondo]} accessibilityRole="header">
           {t("bienvenida.titular")}
-          <Text style={styles.punto}>.</Text>
+          <Text style={[styles.punto, oscuro && styles.linkSobreFondo]}>.</Text>
         </Text>
-        <Text style={[body(15, colors.neutral700), styles.bajada]}>
+        <Text style={[body(15, oscuro ? colors.textoSuaveSobreFondo : colors.neutral700), styles.bajada]}>
           {t("bienvenida.bajada")}
         </Text>
       </View>
@@ -89,14 +89,14 @@ export function BienvenidaScreen({ navigation }: Props) {
           <Text style={styles.botonTexto}>{t("intro.empezar")}</Text>
         </Pressable>
         <View style={styles.ingresar}>
-          <Text style={body(14, colors.neutral700)}>{t("bienvenida.yaTenesCuenta")} </Text>
+          <Text style={body(14, oscuro ? colors.textoSuaveSobreFondo : colors.neutral700)}>{t("bienvenida.yaTenesCuenta")} </Text>
           <Pressable
             onPress={() => navigation.navigate("Login")}
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel={t("login.iniciarSesion")}
           >
-            <Text style={styles.link}>{t("bienvenida.iniciaSesion")}</Text>
+            <Text style={[styles.link, oscuro && styles.linkSobreFondo]}>{t("bienvenida.iniciaSesion")}</Text>
           </Pressable>
         </View>
       </View>
@@ -142,6 +142,13 @@ const crearStyles = (colors: Paleta) =>
   },
   punto: {
     color: colors.accent,
+  },
+  // En oscuro el texto va directo sobre el degradado (en claro, sobre la zona blanca).
+  sobreFondo: {
+    color: colors.textoSobreFondo,
+  },
+  linkSobreFondo: {
+    color: colors.acentoSobreFondo,
   },
   bajada: {
     marginTop: 12,

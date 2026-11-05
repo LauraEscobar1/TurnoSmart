@@ -1,40 +1,72 @@
 import React from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { heading, label } from "@/theme/typography";
 
+/** El asistente de IA: un robot (reemplaza a las estrellitas en toda la app). */
+export const ICONO_IA = "robot-happy-outline" as const;
+
 /**
- * Ícono dentro de un círculo de vidrio: tinte suave, borde y un brillo en la
- * mitad superior. El ícono usa el único token de ícono del modo.
+ * Ícono metalizado: el color de ícono del modo con un brillo claro debajo,
+ * que le da relieve de metal pulido. `ia` dibuja el robot del asistente.
+ */
+export function IconoMetal({
+  nombre,
+  ia = false,
+  tamano,
+  color,
+}: {
+  nombre?: keyof typeof Ionicons.glyphMap;
+  ia?: boolean;
+  tamano: number;
+  /** Por defecto, el único color de ícono del modo. */
+  color?: string;
+}) {
+  const { colors } = useTema();
+  const relieve = {
+    textShadowColor: colors.brilloIcono,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 0.5,
+  };
+  const c = color ?? colors.icono;
+  return ia ? (
+    <MaterialCommunityIcons name={ICONO_IA} size={tamano} color={c} style={relieve} />
+  ) : (
+    <Ionicons name={nombre ?? "ellipse-outline"} size={tamano} color={c} style={relieve} />
+  );
+}
+
+/**
+ * Ícono dentro de un círculo metalizado (degradado plata con brillo arriba),
+ * igual en los dos modos. Una sola capa: sin borde.
  */
 export function IconoCirculo({
   nombre,
+  ia = false,
   tamano = 38,
   tamanoIcono = Math.round(tamano * 0.47),
   style,
 }: {
-  nombre: keyof typeof Ionicons.glyphMap;
+  nombre?: keyof typeof Ionicons.glyphMap;
+  ia?: boolean;
   tamano?: number;
   tamanoIcono?: number;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
-  const forma = { width: tamano, height: tamano, borderRadius: tamano / 2 };
   return (
-    <View style={[styles.circulo, forma, style]}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={[colors.brilloCirculoIcono, "transparent"]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 0.6 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: tamano / 2 }]}
-      />
-      <Ionicons name={nombre} size={tamanoIcono} color={colors.icono} />
-    </View>
+    <LinearGradient
+      colors={colors.metalCirculo}
+      start={{ x: 0.2, y: 0 }}
+      end={{ x: 0.8, y: 1 }}
+      style={[styles.circulo, { width: tamano, height: tamano, borderRadius: tamano / 2 }, style]}
+    >
+      <IconoMetal nombre={nombre} ia={ia} tamano={tamanoIcono} />
+    </LinearGradient>
   );
 }
 
@@ -74,10 +106,6 @@ const crearStyles = (colors: Paleta) =>
     circulo: {
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: colors.circuloIcono,
-      borderWidth: 1,
-      borderColor: colors.bordeCirculoIcono,
-      borderTopColor: colors.bordeSuperiorCard,
       overflow: "hidden",
     },
     titulo: {

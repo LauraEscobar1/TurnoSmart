@@ -34,6 +34,8 @@ type Superficie =
   | "indicadorSobreBarra"
   | `badge:${Estado}`
   | "circuloIcono"
+  | "cabeceraPerfil"
+  | "cabeceraPerfilEntrada"
   | "estadoInactivo"
   | "chip"
   | "botonDestructivo"
@@ -56,23 +58,25 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
     case "indicadorSobreBarra":
       return efectivos(p, oscuro, "barra").map((f) => componer(p.indicadorTab, f));
     case "circuloIcono":
-      // Círculo de vidrio sobre cualquier card, con su brillo encima (el peor caso para el ícono).
-      return [...efectivos(p, oscuro, "card"), ...efectivos(p, oscuro, "cardAcento")].flatMap((f) => {
-        const circulo = componer(p.circuloIcono, f);
-        return [circulo, componer(p.brilloCirculoIcono, circulo)];
-      });
+      // Círculo metalizado: cada parada del degradado plata.
+      return [...p.metalCirculo];
+    case "cabeceraPerfil":
+      // Tramo del nombre y el correo: color sólido del degradado de la cabecera.
+      return [p.degradadoCabeceraPerfil[1], p.degradadoCabeceraPerfil[2]];
+    case "cabeceraPerfilEntrada":
+      // Donde empieza el nombre (~10 % de la cabecera), el degradado todavía se funde con el fondo.
+      return p.degradadoFondo.map((f) => componer(p.degradadoCabeceraPerfil[1], f, 0.1 / 0.12));
     case "chip":
       return [...efectivos(p, oscuro, "card"), ...efectivos(p, oscuro, "cardAcento")].map((f) => componer(p.fondoChip, f));
     case "estadoInactivo":
       // Píldora de estado de una cita inactiva, sobre la ficha (superficie).
       return [componer(p.neutralTinte, p.superficie)];
     case "botonDestructivo":
-      return [...efectivos(p, oscuro, "degradado"), ...efectivos(p, oscuro, "card")].map((f) =>
-        componer(p.botonDestructivoFondo, f)
-      );
+      // «Cancelar cita» va al final del contenido, sobre el fondo.
+      return efectivos(p, oscuro, "degradado").map((f) => componer(p.botonDestructivoFondo, f));
     case "bienvenida":
-      // Claro: zona crema inferior. Oscuro: toda la pantalla es el degradado.
-      return oscuro ? efectivos(p, oscuro, "degradado") : [p.fondoBienvenida];
+      // Claro: zona blanca inferior. Oscuro: el texto usa los tokens «sobre fondo» (ya medidos).
+      return oscuro ? [] : [p.fondoBienvenida];
     default: {
       if (s.startsWith("badge:")) {
         const e = s.slice(6) as Estado;
@@ -111,7 +115,7 @@ const TEXTO_DE_CONTENIDO: (keyof Paleta)[] = [
   "info",
   "contador",
 ];
-const SUPERFICIES_DE_CONTENIDO: Superficie[] = ["card", "cardAcento", "barra", "superficie", "fondo", "accent100"];
+const SUPERFICIES_DE_CONTENIDO: Superficie[] = ["card", "cardAcento", "superficie", "fondo", "accent100"];
 
 const PARES: Par[] = [
   // Texto e íconos directamente sobre el degradado.
@@ -124,11 +128,7 @@ const PARES: Par[] = [
       "etiquetaCampoSobreFondo",
       "ayudaSobreFondo",
     ] as const
-  ).flatMap((k) => [
-    par(k, "degradado"),
-    // El encabezado gana un fondo de vidrio (barra) al desplazar el contenido.
-    par(k, "barra"),
-  ]),
+  ).map((k) => par(k, "degradado")),
   par("logoSobreFondo", "degradado", "icono"),
   par("logoAcentoSobreFondo", "degradado", "icono"),
   par("puntoActivoSobreFondo", "degradado", "icono"),
@@ -187,6 +187,10 @@ const PARES: Par[] = [
   ...ESTADOS.map((e) => par(`${e}Texto` as keyof Paleta, `badge:${e}`)),
   // Íconos dentro de su círculo de vidrio con brillo.
   par("icono", "circuloIcono", "icono"),
+  // El robot de IA en su insignia y la cabecera de Perfil.
+  par("textoInsigniaIA", "fondoInsigniaIA", "icono"),
+  par("textoCabeceraPerfil", "cabeceraPerfil"),
+  par("textoCabeceraPerfil", "cabeceraPerfilEntrada", "grande"),
   // Chips de la lista de espera y su texto de «buscando cupo».
   par("accent900", "chip"),
   par("neutral600", "chip"),
@@ -263,14 +267,15 @@ describe("Contraste WCAG AA", () => {
   it.each([
     ["claro", paletaClara],
     ["oscuro", paletaOscura],
-  ] as const)("modo %s: las cards de vidrio se distinguen del fondo (luminancia ≥ 1,4:1)", (_, p) => {
+  ] as const)("modo %s: las cards de vidrio se distinguen del fondo (luminancia ≥ 1,4:1; en oscuro ≥ 2:1)", (_, p) => {
+    const minimo = p === paletaOscura ? 2 : 1.4;
     const separacion: string[] = [];
     for (const fondo of p.degradadoFondo) {
       for (const relleno of [p.fondoCard, p.fondoCardAndroid, p.fondoCardAcento, p.fondoCardAcentoAndroid]) {
         const card = componer(relleno, fondo);
         const r = contraste(card, fondo);
         // Y siempre más clara que el fondo.
-        if (r < 1.4 || luminancia(card) <= luminancia(fondo)) separacion.push(`${relleno} sobre ${fondo}: ${r.toFixed(2)}`);
+        if (r < minimo || luminancia(card) <= luminancia(fondo)) separacion.push(`${relleno} sobre ${fondo}: ${r.toFixed(2)}`);
       }
     }
     expect(separacion).toEqual([]);

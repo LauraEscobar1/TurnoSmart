@@ -124,8 +124,7 @@ export function HomeScreen() {
             // Sin oferta: el asistente IA queda atento (describe el sistema, no una priorización).
             <Card tono="acento" style={styles.sinOferta}>
               <View style={styles.radar}>
-                <View style={styles.radarAnillo} />
-                <Ionicons name="sparkles" size={20} color={colors.sobreAcentoIA} />
+                <IconoCirculo ia tamano={44} tamanoIcono={24} />
               </View>
               <View style={styles.flex} accessible accessibilityLabel={`${t("asistenteIA.atentoTitulo")}. ${t("asistenteIA.atentoTexto")}`}>
                 <Text style={label(9, colors.accent700)}>{t("inicio.sinOfertas")}</Text>
@@ -314,24 +313,12 @@ const crearStyles = (colors: Paleta) =>
   },
   // Brillo suave de IA.
   radar: {
-    width: 44,
-    height: 44,
     borderRadius: 22,
-    backgroundColor: colors.acentoIA,
+    alignSelf: "flex-start",
     shadowColor: colors.brilloIA,
     shadowOpacity: 0.55,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radarAnillo: {
-    position: "absolute",
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    borderWidth: 1.5,
-    borderColor: colors.accent300,
   },
   estadoAlertas: {
     flexDirection: "row",

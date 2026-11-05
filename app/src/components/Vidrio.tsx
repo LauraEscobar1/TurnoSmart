@@ -50,18 +50,10 @@ export function useFondoVidrio(variante: VarianteVidrio): string {
  * Desenfoca lo que hay detrás y encima pinta el color translúcido del tema,
  * que es el color efectivo contra el que se mide el contraste del texto.
  * Se recorta sola con `radio`, así el contenedor no necesita
- * `overflow: "hidden"` y conserva su sombra.
+ * `overflow: "hidden"` y conserva su sombra. Es una sola capa: sin bordes
+ * ni líneas de luz que dibujen un marco.
  */
-export function CapaVidrio({
-  variante = "card",
-  radio = 0,
-  brillo = false,
-}: {
-  variante?: VarianteVidrio;
-  radio?: number;
-  /** Línea de luz en el borde superior (degradado horizontal). */
-  brillo?: boolean;
-}) {
+export function CapaVidrio({ variante = "card", radio = 0 }: { variante?: VarianteVidrio; radio?: number }) {
   const { colors } = useTema();
   const fondo = useFondoVidrio(variante);
   const recorte = { borderRadius: radio, overflow: "hidden" as const };
@@ -71,14 +63,6 @@ export function CapaVidrio({
         <BlurView intensity={colors.intensidadBlur} tint={colors.tintaBlur} style={StyleSheet.absoluteFill} />
       ) : null}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: fondo }]} />
-      {brillo ? (
-        <LinearGradient
-          colors={["transparent", colors.bordeSuperiorCard, "transparent"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.brillo}
-        />
-      ) : null}
     </View>
   );
 }
@@ -90,11 +74,5 @@ const styles = StyleSheet.create({
   transparente: {
     backgroundColor: "transparent",
   },
-  brillo: {
-    position: "absolute",
-    top: 0,
-    left: 12,
-    right: 12,
-    height: 1.5,
-  },
+
 });

@@ -1,7 +1,6 @@
 import React from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { EstrategiaOferta } from "@/types/domain";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
@@ -9,6 +8,7 @@ import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { Card } from "@/components/Card";
+import { IconoCirculo, IconoMetal } from "@/components/Adornos";
 
 /**
  * Cómo se le cuenta al paciente quién le recomendó un cupo.
@@ -21,9 +21,9 @@ import { Card } from "@/components/Card";
 
 /**
  * Píldora «Recomendado por IA» (destello) o «Recomendado por TurnoSmart» (check).
- * La de IA lleva un aro en degradado Venice → Light Blue y el texto sobre un
- * relleno propio, así se lee igual sobre cards, sobre el degradado y en los
- * dos modos (ningún color de texto contrasta con las dos puntas del degradado).
+ * La de IA es una sola capa: relleno claro propio, el robot del asistente
+ * metalizado y un brillo suave; se lee igual sobre cards, sobre el degradado
+ * y en los dos modos.
  */
 export function InsigniaRecomendacion({
   estrategia,
@@ -43,20 +43,15 @@ export function InsigniaRecomendacion({
   const texto = t(ia ? "oferta.recomendacion.ia" : "oferta.recomendacion.turnoSmart");
   if (ia) {
     return (
-      <LinearGradient
-        colors={colors.degradadoIA}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={[styles.aroIA, style]}
+      <View
+        style={[styles.insignia, styles.insigniaIA, style]}
         accessible
         accessibilityRole="text"
         accessibilityLabel={t("oferta.recomendacion.iaAccesible")}
       >
-        <View style={[styles.insignia, styles.insigniaIA]}>
-          <Ionicons name="sparkles" size={12} color={colors.textoInsigniaIA} />
-          <Text style={[styles.insigniaTexto, styles.insigniaTextoIA]}>{texto}</Text>
-        </View>
-      </LinearGradient>
+        <IconoMetal ia tamano={14} color={colors.textoInsigniaIA} />
+        <Text style={[styles.insigniaTexto, styles.insigniaTextoIA]}>{texto}</Text>
+      </View>
     );
   }
   return (
@@ -97,7 +92,7 @@ export function AsistenteAtento({ style }: { style?: StyleProp<ViewStyle> }) {
     <Card tono="acento" style={style}>
       <View style={styles.atento} accessible accessibilityLabel={`${titulo}. ${texto}`}>
         <View style={styles.atentoIcono}>
-          <Ionicons name="sparkles" size={16} color={colors.sobreAcentoIA} />
+          <IconoCirculo ia tamano={36} tamanoIcono={20} />
         </View>
         <View style={styles.flex}>
           <Text style={heading(16, colors.accent900)}>{titulo}</Text>
@@ -121,8 +116,6 @@ const crearStyles = (colors: Paleta) =>
     },
     insigniaTinte: {
       backgroundColor: colors.accent100,
-      borderWidth: 1,
-      borderColor: colors.accent200,
     },
     insigniaAcento: {
       backgroundColor: colors.accent,
@@ -133,20 +126,13 @@ const crearStyles = (colors: Paleta) =>
       letterSpacing: 0.2,
     },
     // Aro en degradado con un brillo suave de IA alrededor.
-    aroIA: {
-      alignSelf: "flex-start",
-      padding: 1.5,
-      borderRadius: radius.pill,
+    // Una sola capa, con un brillo suave de IA.
+    insigniaIA: {
+      backgroundColor: colors.fondoInsigniaIA,
       shadowColor: colors.brilloIA,
-      shadowOpacity: 0.5,
+      shadowOpacity: 0.45,
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 0 },
-    },
-    insigniaIA: {
-      alignSelf: "auto",
-      paddingHorizontal: 9,
-      paddingVertical: 3,
-      backgroundColor: colors.fondoInsigniaIA,
     },
     insigniaTextoIA: {
       fontFamily: fonts.bodyBold,
@@ -159,10 +145,7 @@ const crearStyles = (colors: Paleta) =>
       padding: 14,
     },
     atentoIcono: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.acentoIA,
+      borderRadius: 18,
       shadowColor: colors.brilloIA,
       shadowOpacity: 0.55,
       shadowRadius: 9,

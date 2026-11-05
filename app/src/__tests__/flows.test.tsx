@@ -397,8 +397,8 @@ describe("Modo oscuro", () => {
     await fireEvent(screen.getByLabelText("Modo oscuro"), "valueChange", true);
     await fireEvent.press(screen.getByLabelText("Cerrar", { includeHiddenElements: true }));
 
-    // Títulos en tinta clara y textos y secciones sin cambios.
-    expect(screen.getByText("Ofertas de cupo")).toHaveStyle({ color: paletaOscura.accent900 });
+    // Títulos sobre el fondo en Merino y textos y secciones sin cambios.
+    expect(screen.getByText("Ofertas de cupo")).toHaveStyle({ color: paletaOscura.textoSobreFondo });
     expect(screen.getByText("Próxima cita")).toBeTruthy();
 
     // Otras pestañas y pantallas de detalle también.
@@ -412,7 +412,7 @@ describe("Modo oscuro", () => {
   it("el modo oscuro se guarda y se usa al volver a abrir la app", async () => {
     await AsyncStorage.setItem("ts.ajustes", JSON.stringify({ modoOscuro: true, idioma: "es" }));
     await montarApp({ sesion: false });
-    expect(await screen.findByText("Empezar")).toHaveStyle({ color: paletaOscura.sobreAcento });
+    expect(await screen.findByText("Empezar")).toHaveStyle({ color: paletaOscura.textoBotonBienvenida });
   });
 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,6 +8,7 @@ import { useEstilos, useTema } from "@/theme/Tema";
 import { IconoCirculo } from "@/components/Adornos";
 import { Presionable } from "@/components/Presionable";
 import { Pantalla } from "@/components/Vidrio";
+import { LinearGradient } from "expo-linear-gradient";
 import { radius, sombra } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
@@ -34,10 +35,17 @@ function listaO(items: string[], idioma: Idioma) {
  * Perfil — Nivel 1 ("NavDeslizable.dc.html", sección 5 / 5).
  * Una ficha amable del paciente: el nombre centrado con accesos redondos a
  * Preferencias y Datos personales, su círculo (foto o iniciales, con la
- * cámara para subirla) sobre el arco celeste, el aviso de perfil incompleto
+ * cámara para subirla) sobre la cabecera en degradado, el aviso de perfil incompleto
  * (solo mientras falten datos opcionales), el estado de la lista de espera
  * y tres indicadores. Todo sale de los datos del paciente.
  */
+/**
+ * Paradas del degradado de la cabecera: entra desde el fondo, el tramo del
+ * nombre y el correo es de un solo color (contraste AA del texto), y se
+ * funde otra vez con el fondo debajo del avatar.
+ */
+export const UBICACIONES_CABECERA = [0, 0.12, 0.42, 0.8, 1] as const;
+
 export function ProfileHomeScreen() {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
@@ -48,7 +56,6 @@ export function ProfileHomeScreen() {
   const paciente = usePaciente();
   const { actualizar, cerrarSesion } = useAuth();
   const [pidiendo, setPidiendo] = useState(false);
-  const { width } = useWindowDimensions();
 
   const completo = perfilCompleto(paciente);
   const dias = diasEnEspera(paciente.registradoEnISO);
@@ -76,22 +83,22 @@ export function ProfileHomeScreen() {
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Encabezado sobre el arco celeste */}
-        <View style={styles.hero}>
-          <View
-            pointerEvents="none"
-            style={[styles.arco, { width: width * 3, height: width * 3, borderRadius: width * 1.5, left: -width }]}
-          />
+        {/* Cabecera: un degradado del tema que nace y se funde con el fondo, sin corte. */}
+        <LinearGradient
+          colors={colors.degradadoCabeceraPerfil}
+          locations={UBICACIONES_CABECERA}
+          style={styles.hero}
+        >
 
           <View style={styles.barra}>
             {/* Mismo ancho que el lápiz, para que el nombre quede centrado. Las preferencias
                 se editan solo desde «Editar preferencias», en la card de la lista de espera. */}
             <View style={styles.redondoVacio} />
             <View style={styles.identidad}>
-              <Text style={[heading(30, colors.textoSobreFondo), styles.centrado]} numberOfLines={1}>
+              <Text style={[heading(30, colors.textoCabeceraPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.nombre} {paciente.apellido}
               </Text>
-              <Text style={[body(14, colors.textoTenueSobreFondo), styles.centrado]} numberOfLines={1}>
+              <Text style={[body(14, colors.textoCabeceraPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.email}
               </Text>
             </View>
@@ -103,9 +110,9 @@ export function ProfileHomeScreen() {
           </View>
 
           <View style={styles.personaje}>
-            <AvatarPaciente paciente={paciente} size={132} onPress={cambiarFoto} />
+            <AvatarPaciente paciente={paciente} size={132} onPress={cambiarFoto} anillo />
           </View>
-        </View>
+        </LinearGradient>
 
         <View style={styles.cuerpo}>
           {/* Perfil por completar: desaparece cuando ya no falta nada */}
@@ -259,7 +266,7 @@ const crearStyles = (colors: Paleta) =>
   safe: {
     flex: 1,
   },
-  // El degradado de la pantalla queda visible detrás del scroll; el arco es un halo tenue.
+  // El degradado de la pantalla queda visible detrás del scroll (también en el rebote).
   scroll: {
     backgroundColor: "transparent",
   },
@@ -282,13 +289,7 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 10,
-  },
-  // El borde del arco cruza el tercio inferior del círculo, como el personaje
-  // de la referencia sobre la curva.
-  arco: {
-    position: "absolute",
-    bottom: 44,
-    backgroundColor: colors.arcoPerfil,
+    paddingBottom: 28,
   },
   barra: {
     flexDirection: "row",
@@ -347,7 +348,7 @@ const crearStyles = (colors: Paleta) =>
     flex: 1,
     height: 10,
     borderRadius: radius.pill,
-    backgroundColor: colors.circuloIcono,
+    backgroundColor: colors.fondoChip,
     overflow: "hidden",
   },
   relleno: {
@@ -365,13 +366,8 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "center",
     gap: 14,
   },
-  // Brillo suave alrededor del reloj de la lista de espera.
   reloj: {
     borderRadius: 32,
-    shadowColor: colors.brilloIA,
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
   },
   par: {
     flexDirection: "row",

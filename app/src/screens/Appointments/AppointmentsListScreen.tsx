@@ -5,14 +5,13 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import Animated from "react-native-reanimated";
-import { EncabezadoConVidrio, EntradaEscalonada, useEncabezadoAlDesplazar } from "@/components/Animaciones";
+import { EncabezadoCompacto, EntradaEscalonada, useEncabezadoAlDesplazar } from "@/components/Animaciones";
 import { Pantalla } from "@/components/Vidrio";
 import { body, heading } from "@/theme/typography";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { CalendarioHorizontal } from "@/components/CalendarioHorizontal";
 import { EmptyState } from "@/components/EmptyState";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { ScreenHeader } from "@/components/ScreenHeader";
 import { Segmented } from "@/components/forms";
 import { Cita } from "@/types/domain";
 import { getCitasPasadas, getCitasProximas } from "@/services/appointmentsService";
@@ -65,7 +64,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
       setRonda((r) => r + 1);
     });
   }, [cargar]);
-  const { onScroll, estiloVidrio } = useEncabezadoAlDesplazar();
+  const { onScroll, desplazamiento } = useEncabezadoAlDesplazar();
 
   const esPasada = tab === "pasadas";
   const citas = esPasada ? pasadas : proximas;
@@ -108,9 +107,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
 
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
-      <EncabezadoConVidrio estilo={estiloVidrio}>
-        <ScreenHeader title={t("nav.citas")} />
-      </EncabezadoConVidrio>
+      <EncabezadoCompacto titulo={t("nav.citas")} desplazamiento={desplazamiento} />
       <Animated.FlatList
         contentContainerStyle={styles.content}
         onScroll={onScroll}
