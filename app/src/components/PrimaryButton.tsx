@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
+import { Presionable } from "@/components/Presionable";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { radius, sombra } from "@/theme/spacing";
@@ -15,8 +16,10 @@ interface PrimaryButtonProps {
    * ghost:     terciario, solo texto de acento.
    * inverse:   sólido claro sobre el campo de pantalla completa (estado terminal).
    * destructive: sólido de error con texto blanco (confirmar que se borra algo).
+   * peligro:   destructivo de vidrio: rojo translúcido con borde y texto rojo intenso
+   *            (acción destructiva que convive con un primario, p. ej. «Cancelar cita»).
    */
-  variant?: "primary" | "secondary" | "ghost" | "inverse" | "destructive";
+  variant?: "primary" | "secondary" | "ghost" | "inverse" | "destructive" | "peligro";
   /** El botón (ghost) está directamente sobre el degradado: texto en su color «sobre fondo». */
   sobreFondo?: boolean;
   disabled?: boolean;
@@ -31,6 +34,7 @@ const crearTextColor = (colors: Paleta): Record<NonNullable<PrimaryButtonProps["
   ghost: colors.accent700,
   inverse: colors.campoPantalla,
   destructive: colors.sobreEstado,
+  peligro: colors.botonDestructivoTexto,
 });
 
 export function PrimaryButton({
@@ -48,7 +52,7 @@ export function PrimaryButton({
   const textColor = useEstilos(crearTextColor);
   const fantasmaSobreFondo = sobreFondo && variant === "ghost";
   return (
-    <Pressable
+    <Presionable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -64,7 +68,7 @@ export function PrimaryButton({
       ]}
     >
       <Text style={[styles.text, { color: fantasmaSobreFondo ? colors.acentoSobreFondo : textColor[variant] }]}>{label}</Text>
-    </Pressable>
+    </Presionable>
   );
 }
 
@@ -97,6 +101,11 @@ const crearStyles = (colors: Paleta) =>
     backgroundColor: colors.errorSolido,
     borderColor: colors.errorSolido,
   },
+  peligro: {
+    backgroundColor: colors.botonDestructivoFondo,
+    borderColor: colors.botonDestructivoBorde,
+    borderWidth: 1.5,
+  },
   ghost: {
     backgroundColor: "transparent",
     borderColor: "transparent",
@@ -119,4 +128,5 @@ const crearPressedStyle = (colors: Paleta) =>
   ghost: { backgroundColor: colors.accent100 },
   ghostSobreFondo: { backgroundColor: colors.divisorSobreFondo },
   destructive: { opacity: 0.85 },
+  peligro: { opacity: 0.85 },
 });

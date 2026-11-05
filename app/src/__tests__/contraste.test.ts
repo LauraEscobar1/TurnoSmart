@@ -15,6 +15,8 @@ import { OPACIDAD_PULSO } from "@/components/Countdown";
  */
 
 type Tipo = keyof typeof MINIMO_AA;
+type Estado = "exito" | "advertencia" | "error" | "info" | "neutral";
+const ESTADOS: Estado[] = ["exito", "advertencia", "error", "info", "neutral"];
 interface Par {
   /** Color del texto (o del borde / relleno, en los pares de interfaz); recibe el fondo efectivo. */
   texto: (p: Paleta, fondo: string) => string;
@@ -30,6 +32,11 @@ type Superficie =
   | "cardAcento"
   | "barra"
   | "indicadorSobreBarra"
+  | `badge:${Estado}`
+  | "circuloIcono"
+  | "estadoInactivo"
+  | "chip"
+  | "botonDestructivo"
   | "bienvenida"
   | keyof Paleta;
 
@@ -48,11 +55,32 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
       return vidrio(p.fondoBarra, p.fondoBarraAndroid);
     case "indicadorSobreBarra":
       return efectivos(p, oscuro, "barra").map((f) => componer(p.indicadorTab, f));
+    case "circuloIcono":
+      // Círculo de vidrio sobre cualquier card, con su brillo encima (el peor caso para el ícono).
+      return [...efectivos(p, oscuro, "card"), ...efectivos(p, oscuro, "cardAcento")].flatMap((f) => {
+        const circulo = componer(p.circuloIcono, f);
+        return [circulo, componer(p.brilloCirculoIcono, circulo)];
+      });
+    case "chip":
+      return [...efectivos(p, oscuro, "card"), ...efectivos(p, oscuro, "cardAcento")].map((f) => componer(p.fondoChip, f));
+    case "estadoInactivo":
+      // Píldora de estado de una cita inactiva, sobre la ficha (superficie).
+      return [componer(p.neutralTinte, p.superficie)];
+    case "botonDestructivo":
+      return [...efectivos(p, oscuro, "degradado"), ...efectivos(p, oscuro, "card")].map((f) =>
+        componer(p.botonDestructivoFondo, f)
+      );
     case "bienvenida":
       // Claro: zona crema inferior. Oscuro: toda la pantalla es el degradado.
       return oscuro ? efectivos(p, oscuro, "degradado") : [p.fondoBienvenida];
     default: {
-      const v = p[s];
+      if (s.startsWith("badge:")) {
+        const e = s.slice(6) as Estado;
+        const tinte = p[`${e}Tinte` as keyof Paleta] as string;
+        // El badge va sobre cards (normal o de acento): tinte compuesto sobre su color efectivo.
+        return [...efectivos(p, oscuro, "card"), ...efectivos(p, oscuro, "cardAcento")].map((f) => componer(tinte, f));
+      }
+      const v = p[s as keyof Paleta];
       if (typeof v !== "string") throw new Error(`${String(s)} no es un color`);
       return [v];
     }
@@ -155,7 +183,28 @@ const PARES: Par[] = [
   par("exito", "exitoFondo"),
   par("advertencia", "advertenciaFondo"),
   par("error", "errorFondo"),
-  // Badges y avisos sólidos (texto blanco).
+  // Badges de vidrio: texto intenso del mismo color sobre su tinte.
+  ...ESTADOS.map((e) => par(`${e}Texto` as keyof Paleta, `badge:${e}`)),
+  // Íconos dentro de su círculo de vidrio con brillo.
+  par("icono", "circuloIcono", "icono"),
+  // Chips de la lista de espera y su texto de «buscando cupo».
+  par("accent900", "chip"),
+  par("neutral600", "chip"),
+  par("accent700", "card"),
+  par("neutralTexto", "estadoInactivo"),
+  // Botón destructivo de vidrio (Cancelar cita), sobre el fondo o en una card.
+  par("botonDestructivoTexto", "botonDestructivo"),
+  // El botón destructivo se distingue del fondo por su relleno (claro) o por su borde (oscuro).
+  {
+    texto: (p, fondo) => {
+      const relleno = componer(p.botonDestructivoFondo, fondo);
+      return contraste(relleno, fondo) >= contraste(p.botonDestructivoBorde, fondo) ? relleno : p.botonDestructivoBorde;
+    },
+    nombre: "límite del botón destructivo",
+    sobre: "degradado",
+    tipo: "icono",
+  },
+  // Avisos sólidos sobre el fondo (texto blanco).
   par("sobreEstado", "exitoSolido"),
   par("sobreEstado", "advertenciaSolido"),
   par("sobreEstado", "errorSolido"),
@@ -211,13 +260,20 @@ describe("Contraste WCAG AA", () => {
     }
   });
 
-  it("en oscuro las cards de vidrio son más luminosas que el fondo, para distinguirse", () => {
-    const p = paletaOscura;
-    for (const [i, fondo] of p.degradadoFondo.entries()) {
-      const card = componer(p.fondoCard, fondo);
-      expect(luminancia(card)).toBeGreaterThan(luminancia(fondo) * 1.25);
-      expect(i).toBeGreaterThanOrEqual(0);
+  it.each([
+    ["claro", paletaClara],
+    ["oscuro", paletaOscura],
+  ] as const)("modo %s: las cards de vidrio se distinguen del fondo (luminancia ≥ 1,4:1)", (_, p) => {
+    const separacion: string[] = [];
+    for (const fondo of p.degradadoFondo) {
+      for (const relleno of [p.fondoCard, p.fondoCardAndroid, p.fondoCardAcento, p.fondoCardAcentoAndroid]) {
+        const card = componer(relleno, fondo);
+        const r = contraste(card, fondo);
+        // Y siempre más clara que el fondo.
+        if (r < 1.4 || luminancia(card) <= luminancia(fondo)) separacion.push(`${relleno} sobre ${fondo}: ${r.toFixed(2)}`);
+      }
     }
+    expect(separacion).toEqual([]);
   });
 
   it("ningún texto del tema es gris claro sobre blanco: el secundario en cards es azul oscuro", () => {

@@ -1,8 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
 import { sombra } from "@/theme/spacing";
 import { heading, label } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -26,9 +27,9 @@ export function ScreenHeader({ title, onBack, accion }: ScreenHeaderProps) {
   if (onBack) {
     return (
       <View style={[styles.bar, styles.backBar]}>
-        <Pressable onPress={onBack} hitSlop={12} style={styles.backButton} accessibilityLabel={t("comun.volver")}>
+        <Presionable onPress={onBack} hitSlop={12} style={styles.backButton} accessibilityLabel={t("comun.volver")}>
           <Ionicons name="arrow-back" size={18} color={colors.icono} />
-        </Pressable>
+        </Presionable>
         <Text style={label(11, colors.textoSobreFondo)}>{title}</Text>
       </View>
     );

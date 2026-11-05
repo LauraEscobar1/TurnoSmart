@@ -305,6 +305,7 @@ export const en: Diccionario = {
     todoAlDia: "All caught up",
     sinNotificaciones: "You have no new notifications.",
     verListaEspera: "View waitlist",
+    buscandoCupo: "Looking for a slot for you",
     puesto: "Position",
     enEspera: "Waiting",
     personasAntes: "{count} people ahead of you",

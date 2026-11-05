@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { IconoCirculo } from "@/components/Adornos";
 import { AvisoEstado } from "@/components/AvisoEstado";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
@@ -88,7 +88,7 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
       <ReenviarCodigo restante={envio.restante} codigoPrueba={envio.codigoPrueba} onReenviar={envio.reenviar} />
 
       <Card style={styles.notice}>
-        <Ionicons name="notifications-outline" size={18} color={colors.icono} style={{ marginTop: 1 }} />
+        <IconoCirculo nombre="notifications-outline" tamano={34} tamanoIcono={17} />
         <Text style={[body(13, colors.neutral700), { flex: 1 }]}>
           <Text style={styles.strong}>{t("registro.activaNotificaciones")}</Text> {t("registro.activaNotificacionesTexto")}
         </Text>

@@ -1,8 +1,8 @@
 import React from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { IconoCirculo } from "@/components/Adornos";
 import { radius } from "@/theme/spacing";
 import { body, fonts } from "@/theme/typography";
 import { HojaInferior } from "@/components/HojaInferior";
@@ -32,9 +32,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
     <HojaInferior visible={visible} onCerrar={onCerrar} titulo={t("ajustes.titulo")}>
       <View style={styles.grupo}>
         <View style={styles.fila}>
-          <View style={styles.icono}>
-            <Ionicons name={ajustes.modoOscuro ? "moon" : "moon-outline"} size={18} color={colors.icono} />
-          </View>
+          <IconoCirculo nombre={ajustes.modoOscuro ? "moon" : "moon-outline"} tamano={34} tamanoIcono={18} />
           <Text style={[body(15, colors.text), styles.etiqueta]}>{t("ajustes.modoOscuro")}</Text>
           <Switch
             value={ajustes.modoOscuro}
@@ -48,9 +46,7 @@ export function MenuAjustes({ visible, onCerrar }: { visible: boolean; onCerrar:
 
         <View style={[styles.fila, styles.filaIdioma, styles.divisor]}>
           <View style={styles.cabecera}>
-            <View style={styles.icono}>
-              <Ionicons name="language-outline" size={18} color={colors.icono} />
-            </View>
+            <IconoCirculo nombre="language-outline" tamano={34} tamanoIcono={18} />
             <Text style={[body(15, colors.text), styles.etiqueta]}>{t("ajustes.idioma")}</Text>
           </View>
           <Segmented options={IDIOMAS} value={ajustes.idioma} onChange={(idioma) => cambiar({ idioma })} variante="pildora" />

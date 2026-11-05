@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { useNavigation } from "@react-navigation/native";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { TituloSeccion } from "@/components/Adornos";
 import { AvisoEstado } from "@/components/AvisoEstado";
 import { Pantalla } from "@/components/Vidrio";
 import { body, label } from "@/theme/typography";
@@ -101,7 +102,7 @@ export function PersonalDataScreen() {
           </View>
 
           <View style={styles.seccion}>
-            <Text style={label(10, colors.textoTenueSobreFondo)}>{t("datos.cuenta")}</Text>
+            <TituloSeccion titulo={t("datos.cuenta")} />
             <Card>
               {cuenta.map((c, i) => (
                 <View key={c.label} style={[styles.row, i > 0 && styles.rowDivider]}>
@@ -113,7 +114,7 @@ export function PersonalDataScreen() {
           </View>
 
           <View style={styles.seccion}>
-            <Text style={label(10, colors.textoTenueSobreFondo)}>{t("datos.adicional")}</Text>
+            <TituloSeccion titulo={t("datos.adicional")} />
             <Card style={styles.formulario}>
               <TextField
                 label={t("datos.nacimiento")}

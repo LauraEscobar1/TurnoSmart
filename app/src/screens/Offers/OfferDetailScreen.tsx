@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
@@ -121,7 +122,13 @@ function OfertaVigente({
 
   return (
     <>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Carga → contenido: la oferta aparece con un fundido suave. */}
+      <Animated.ScrollView
+        entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)}
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Card tono="acento" style={styles.timer}>
           <Countdown segundos={segundos} size={52} caption={t("oferta.tiempoParaResponder")} align="center" />
         </Card>
@@ -138,7 +145,7 @@ function OfertaVigente({
           <View style={styles.divisor} />
           <ExplainabilityPanel factores={oferta.factores} estrategia={oferta.estrategia} fechaHoraISO={oferta.fechaHoraISO} />
         </Card>
-      </ScrollView>
+      </Animated.ScrollView>
       {/* La barra llega al borde inferior y absorbe el inset (indicador de inicio). */}
       <View style={[styles.barra, { paddingBottom: Math.max(insets.bottom, 14) }]}>
         <CapaVidrio variante="barra" />

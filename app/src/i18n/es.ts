@@ -307,6 +307,7 @@ export const es = {
     todoAlDia: "Todo al día",
     sinNotificaciones: "No tienes notificaciones nuevas.",
     verListaEspera: "Ver lista de espera",
+    buscandoCupo: "Buscando un cupo para ti",
     puesto: "Puesto",
     enEspera: "En espera",
     personasAntes: "{count} personas antes que tú",

@@ -57,7 +57,7 @@ function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress
     <Card tono="acento" style={styles.home}>
       <View style={styles.topRow}>
         {expirada ? (
-          <Badge label={t("oferta.expirada")} variant="lost" />
+          <Badge label={t("oferta.expirada")} variant="advertencia" />
         ) : (
           <InsigniaRecomendacion estrategia={oferta.estrategia} sobreAcento />
         )}
@@ -95,7 +95,7 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
     <Card style={styles.full}>
       <View style={styles.topRow}>
         {expirada ? (
-          <Badge label={t("oferta.expirada")} variant="lost" />
+          <Badge label={t("oferta.expirada")} variant="advertencia" />
         ) : (
           <InsigniaRecomendacion estrategia={oferta.estrategia} />
         )}

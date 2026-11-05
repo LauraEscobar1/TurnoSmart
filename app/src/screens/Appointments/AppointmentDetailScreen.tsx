@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { Pantalla } from "@/components/Vidrio";
+import { IconoCirculo, TituloSeccion } from "@/components/Adornos";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { radius } from "@/theme/spacing";
-import { body, fonts, heading, label } from "@/theme/typography";
+import { body, fonts, heading } from "@/theme/typography";
 import { AppointmentsStackParamList } from "@/navigation/types";
 import { Cita } from "@/types/domain";
 import {
@@ -163,7 +165,9 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
       <ScreenHeader title={t("citas.detalle")} onBack={volver} />
-      <ScrollView
+      {/* Carga → contenido: la ficha aparece con un fundido suave. */}
+      <Animated.ScrollView
+        entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 28 }]}
         showsVerticalScrollIndicator={false}
       >
@@ -227,9 +231,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Lugar */}
         <Seccion titulo={t("citas.lugar")}>
           <Card style={styles.fila}>
-            <View style={styles.icono}>
-              <Ionicons name="location-outline" size={20} color={colors.icono} />
-            </View>
+            <IconoCirculo nombre="location-outline" tamano={52} tamanoIcono={22} />
             <View style={styles.flex}>
               <Text style={body(12, colors.neutral600)}>{t("comun.consultorio")}</Text>
               <Text style={heading(19, colors.accent900)}>{cita.consultorio}</Text>
@@ -259,17 +261,15 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {editable ? (
           <View style={styles.acciones}>
             <PrimaryButton label={t("citas.reprogramar")} onPress={abrirReprogramar} style={styles.flex} />
-            <Pressable
+            <PrimaryButton
+              label={t("citas.cancelarCita")}
+              variant="peligro"
               onPress={() => setHoja("cancelar")}
-              accessibilityRole="button"
-              accessibilityLabel={t("citas.cancelarCita")}
-              style={({ pressed }) => [styles.cancelar, pressed && styles.presionado]}
-            >
-              <Text style={styles.cancelarTexto}>{t("citas.cancelarCita")}</Text>
-            </Pressable>
+              style={styles.flex}
+            />
           </View>
         ) : null}
-      </ScrollView>
+      </Animated.ScrollView>
 
       <HojaInferior
         visible={hoja === "cancelar"}
@@ -318,11 +318,10 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 }
 
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   return (
     <View style={styles.seccion}>
-      <Text style={label(10, colors.textoTenueSobreFondo)}>{titulo}</Text>
+      <TituloSeccion titulo={titulo} />
       {children}
     </View>
   );
@@ -345,7 +344,7 @@ function Dato({
   const styles = useEstilos(crearStyles);
   return (
     <View style={[styles.dato, divisor && styles.divisor]}>
-      <Ionicons name={icono} size={18} color={colors.icono} />
+      <IconoCirculo nombre={icono} tamano={34} tamanoIcono={17} />
       <View style={styles.flex}>
         <Text style={body(12, colors.neutral600)}>{etiqueta}</Text>
         <Text style={[body(15, colors.text), styles.medio]}>{valor}</Text>
@@ -438,7 +437,9 @@ const crearStyles = (colors: Paleta) =>
     backgroundColor: colors.superficie,
   },
   estadoInactivo: {
-    backgroundColor: colors.neutral100,
+    backgroundColor: colors.neutralTinte,
+    borderWidth: 1,
+    borderColor: colors.neutralBorde,
   },
   estadoPunto: {
     width: 8,
@@ -455,7 +456,7 @@ const crearStyles = (colors: Paleta) =>
     color: colors.accent900,
   },
   estadoTextoInactivo: {
-    color: colors.neutral700,
+    color: colors.neutralTexto,
   },
   tachado: {
     textDecorationLine: "line-through",
@@ -474,14 +475,9 @@ const crearStyles = (colors: Paleta) =>
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colors.accent100,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  icono: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: colors.bordeCirculoIcono,
+    borderTopColor: colors.bordeSuperiorCard,
     backgroundColor: colors.accent100,
     alignItems: "center",
     justifyContent: "center",
@@ -504,20 +500,6 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "center",
     gap: 12,
     marginTop: 4,
-  },
-  cancelar: {
-    minHeight: 50,
-    paddingHorizontal: 16,
-    borderRadius: radius.md + 2,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelarTexto: {
-    fontFamily: fonts.heading,
-    fontSize: 17,
-    color: colors.error,
   },
   // Horarios
   horarios: {

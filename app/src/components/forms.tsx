@@ -1,9 +1,10 @@
 import React, { forwardRef, useState } from "react";
-import { Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
 import type { TextInputInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
 import { AvisoEstado } from "@/components/AvisoEstado";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
@@ -62,7 +63,7 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
           ]}
         />
         {revelable ? (
-          <Pressable
+          <Presionable
             onPress={() => setVisible((v) => !v)}
             hitSlop={8}
             style={styles.ojo}
@@ -70,7 +71,7 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
             accessibilityLabel={t(visible ? "comun.ocultarPassword" : "comun.mostrarPassword")}
           >
             <Ionicons name={visible ? "eye-off-outline" : "eye-outline"} size={18} color={colors.icono} />
-          </Pressable>
+          </Presionable>
         ) : null}
       </View>
       {error ? (
@@ -129,7 +130,7 @@ export function Segmented<T>({
         {options.map((o, i) => {
           const checked = o.value === value;
           return (
-            <Pressable
+            <Presionable
               key={String(o.value)}
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
@@ -153,7 +154,7 @@ export function Segmented<T>({
               >
                 {o.label}
               </Text>
-            </Pressable>
+            </Presionable>
           );
         })}
       </View>
@@ -188,7 +189,7 @@ export function ChipSelect({ label, options, value, onChange, error, etiqueta = 
         {options.map((o) => {
           const on = value.includes(o);
           return (
-            <Pressable
+            <Presionable
               key={o}
               onPress={() => toggle(o)}
               accessibilityRole="checkbox"
@@ -197,7 +198,7 @@ export function ChipSelect({ label, options, value, onChange, error, etiqueta = 
               style={[styles.chip, on ? styles.chipOn : styles.chipOff]}
             >
               <Text style={[styles.chipText, { color: on ? colors.sobreCampo : colors.accent700 }]}>{etiqueta(o)}</Text>
-            </Pressable>
+            </Presionable>
           );
         })}
       </View>
@@ -226,7 +227,7 @@ interface CheckRowProps {
 export function CheckRow({ checked, onChange, children, sobreFondo }: CheckRowProps) {
   const styles = useEstilos(crearStyles);
   return (
-    <Pressable
+    <Presionable
       onPress={() => onChange(!checked)}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
@@ -236,7 +237,7 @@ export function CheckRow({ checked, onChange, children, sobreFondo }: CheckRowPr
         {checked ? <View style={styles.dotInner} /> : null}
       </View>
       <Text style={[styles.checkText, sobreFondo && styles.checkTextSobreFondo]}>{children}</Text>
-    </Pressable>
+    </Presionable>
   );
 }
 

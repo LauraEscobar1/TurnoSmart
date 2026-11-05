@@ -1,13 +1,15 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Animated, { FadeIn, FadeInDown, LinearTransition, ReduceMotion, ZoomOut } from "react-native-reanimated";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { IconoCirculo, TituloSeccion } from "@/components/Adornos";
+import { Presionable } from "@/components/Presionable";
 import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
-import { body, fonts, heading, label } from "@/theme/typography";
+import { body, fonts, heading } from "@/theme/typography";
 import { useDato, useT } from "@/i18n";
 import { RootStackParamList } from "@/navigation/types";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
@@ -105,7 +107,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
             {/* Mientras se escribe solo se muestran los resultados. */}
             {!buscando ? (
               <View style={styles.seccion}>
-                <Text style={label(10, colors.textoTenueSobreFondo)}>{t("buscar.tuLista")}</Text>
+                <TituloSeccion titulo={t("buscar.tuLista")} />
                 {aviso ? (
                   <Animated.View entering={FadeIn.reduceMotion(ReduceMotion.System)}>
                     <AvisoEstado tipo="exito">{aviso}</AvisoEstado>
@@ -117,9 +119,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
                   paciente.especialidadesInteres.map((e) => (
                     <Animated.View key={e} entering={ENTRA} exiting={SALE} layout={ACOMODA}>
                       <Card style={styles.solicitud}>
-                        <View style={styles.icono}>
-                          <Ionicons name="medkit-outline" size={18} color={colors.icono} />
-                        </View>
+                        <IconoCirculo nombre="medkit-outline" />
                         <View style={styles.texto}>
                           <Text style={heading(18, colors.accent900)}>{dato("especialidades", e)}</Text>
                           <View style={styles.espera}>
@@ -127,7 +127,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
                             <Text style={body(12, colors.neutral600)}>{tiempoEsperando(e)}</Text>
                           </View>
                         </View>
-                        <Pressable
+                        <Presionable
                           onPress={() => setPorSalir(e)}
                           accessibilityRole="button"
                           accessibilityLabel={t("buscar.salirDe", { especialidad: dato("especialidades", e) })}
@@ -136,7 +136,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
                         >
                           <Ionicons name="trash-outline" size={15} color={colors.error} />
                           <Text style={styles.salirTexto}>{t("buscar.salir")}</Text>
-                        </Pressable>
+                        </Presionable>
                       </Card>
                     </Animated.View>
                   ))
@@ -145,7 +145,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
             ) : null}
 
             <View style={styles.seccion}>
-              <Text style={label(10, colors.textoTenueSobreFondo)}>{t("buscar.todas")}</Text>
+              <TituloSeccion titulo={t("buscar.todas")} />
               <TextField
                 sobreFondo
                 label={t("buscar.especialidad")}
@@ -165,16 +165,14 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
           const activa = enEspera(item);
           return (
             <Card style={styles.fila}>
-              <View style={styles.icono}>
-                <Ionicons name="medkit-outline" size={18} color={colors.icono} />
-              </View>
+              <IconoCirculo nombre="medkit-outline" />
               <View style={styles.texto}>
                 <Text style={heading(17, colors.accent900)}>{dato("especialidades", item)}</Text>
                 <Text style={body(12, activa ? colors.accent700 : colors.neutral600)}>
                   {t(activa ? "buscar.enTuLista" : "buscar.sinLista")}
                 </Text>
               </View>
-              <Pressable
+              <Presionable
                 onPress={() => (activa ? setPorSalir(item) : sumarme(item))}
                 accessibilityRole="button"
                 accessibilityLabel={t(activa ? "buscar.quitar" : "buscar.sumarmeA", { especialidad: dato("especialidades", item) })}
@@ -188,7 +186,7 @@ export function BuscarEspecialistaScreen({ navigation }: Props) {
                 <Text style={[styles.botonTexto, { color: activa ? colors.accent700 : colors.sobreAcento }]}>
                   {t(activa ? "buscar.enEspera" : "buscar.sumarme")}
                 </Text>
-              </Pressable>
+              </Presionable>
             </Card>
           );
         }}

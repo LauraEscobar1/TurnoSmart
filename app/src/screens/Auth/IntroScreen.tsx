@@ -108,7 +108,7 @@ function FiguraOferta() {
   const dato = useDato();
   return (
     <View style={styles.stack}>
-      <Badge label={t("notificaciones.mensajes.cupo-ultimo-minuto.titulo")} variant="tint" />
+      <Badge label={t("notificaciones.mensajes.cupo-ultimo-minuto.titulo")} variant="accent" />
       <Card tono="acento" style={styles.ofertaCard}>
         <View style={styles.row}>
           <Badge label={t("oferta.paraVos")} variant="accent" />
