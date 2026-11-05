@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,7 +8,7 @@ import { useEstilos, useTema } from "@/theme/Tema";
 import { IconoCirculo } from "@/components/Adornos";
 import { Presionable } from "@/components/Presionable";
 import { Pantalla } from "@/components/Vidrio";
-import { LinearGradient } from "expo-linear-gradient";
+import { OndasPulso } from "@/components/OndasPulso";
 import { radius, sombra } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
@@ -35,16 +35,13 @@ function listaO(items: string[], idioma: Idioma) {
  * Perfil — Nivel 1 ("NavDeslizable.dc.html", sección 5 / 5).
  * Una ficha amable del paciente: el nombre centrado con accesos redondos a
  * Preferencias y Datos personales, su círculo (foto o iniciales, con la
- * cámara para subirla) sobre la cabecera en degradado, el aviso de perfil incompleto
+ * cámara para subirla) sobre el arco Merino, el aviso de perfil incompleto
  * (solo mientras falten datos opcionales), el estado de la lista de espera
  * y tres indicadores. Todo sale de los datos del paciente.
  */
-/**
- * Paradas del degradado de la cabecera: entra desde el fondo, el tramo del
- * nombre y el correo es de un solo color (contraste AA del texto), y se
- * funde otra vez con el fondo debajo del avatar.
- */
-export const UBICACIONES_CABECERA = [0, 0.12, 0.42, 0.8, 1] as const;
+/** Alto de la franja donde se dibuja la línea de pulso, y distancia del borde del arco al pie de la cabecera. */
+const ALTO_ONDAS = 120;
+const BORDE_ARCO = 44;
 
 export function ProfileHomeScreen() {
   const { colors } = useTema();
@@ -56,6 +53,8 @@ export function ProfileHomeScreen() {
   const paciente = usePaciente();
   const { actualizar, cerrarSesion } = useAuth();
   const [pidiendo, setPidiendo] = useState(false);
+  const [altoCabecera, setAltoCabecera] = useState(0);
+  const { width } = useWindowDimensions();
 
   const completo = perfilCompleto(paciente);
   const dias = diasEnEspera(paciente.registradoEnISO);
@@ -83,12 +82,19 @@ export function ProfileHomeScreen() {
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Cabecera: un degradado del tema que nace y se funde con el fondo, sin corte. */}
-        <LinearGradient
-          colors={colors.degradadoCabeceraPerfil}
-          locations={UBICACIONES_CABECERA}
-          style={styles.hero}
-        >
+        {/* Cabecera: medio círculo Merino detrás del avatar, con la línea de pulso tenue de la Bienvenida. */}
+        <View style={styles.hero} onLayout={(e) => setAltoCabecera(e.nativeEvent.layout.height)}>
+          <View
+            pointerEvents="none"
+            style={[styles.arco, { width: width * 3, height: width * 3, borderRadius: width * 1.5, left: -width }]}
+          >
+            {/* Las ondas van en la franja de arriba de la cabecera y el círculo las recorta. */}
+            {altoCabecera > 0 ? (
+              <View style={[styles.ondas, { left: width, width, top: width * 3 - (altoCabecera - BORDE_ARCO) }]}>
+                <OndasPulso width={width} height={ALTO_ONDAS} color={colors.trazoArcoPerfil} colorCurva={colors.arcoPerfil} />
+              </View>
+            ) : null}
+          </View>
 
           <View style={styles.barra}>
             {/* Mismo ancho que el lápiz, para que el nombre quede centrado. Las preferencias
@@ -112,7 +118,7 @@ export function ProfileHomeScreen() {
           <View style={styles.personaje}>
             <AvatarPaciente paciente={paciente} size={132} onPress={cambiarFoto} anillo />
           </View>
-        </LinearGradient>
+        </View>
 
         <View style={styles.cuerpo}>
           {/* Perfil por completar: desaparece cuando ya no falta nada */}
@@ -289,7 +295,17 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 28,
+  },
+  // Medio círculo Merino sólido: su borde cruza el tercio inferior del avatar.
+  arco: {
+    position: "absolute",
+    bottom: BORDE_ARCO,
+    backgroundColor: colors.arcoPerfil,
+    overflow: "hidden",
+  },
+  ondas: {
+    position: "absolute",
+    height: ALTO_ONDAS,
   },
   barra: {
     flexDirection: "row",

@@ -18,6 +18,7 @@ import { OfferCard } from "@/components/OfferCard";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { Card } from "@/components/Card";
 import { MenuAjustes } from "@/components/MenuAjustes";
+import { PanelAsistente } from "@/components/PanelAsistente";
 import { Cita, Notificacion, OfertaCupo } from "@/types/domain";
 import { getOfertaPendiente } from "@/services/offersService";
 import { getCitasProximas } from "@/services/appointmentsService";
@@ -54,6 +55,8 @@ export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const paciente = usePaciente();
   const [ajustesAbiertos, setAjustesAbiertos] = useState(false);
+  /** Panel del asistente IA: lo abre la card de «Ofertas de cupo». */
+  const [panelAbierto, setPanelAbierto] = useState(false);
   const [oferta, setOferta] = useState<OfertaCupo | null>(null);
   const [proximaCita, setProximaCita] = useState<Cita | null>(null);
   const [avisos, setAvisos] = useState<Notificacion[]>([]);
@@ -119,10 +122,17 @@ export function HomeScreen() {
               variant="home"
               oferta={oferta}
               onPress={() => navigation.navigate("OfferDetail", { ofertaId: oferta.id })}
+              onAbrirPanel={() => setPanelAbierto(true)}
             />
           ) : (
             // Sin oferta: el asistente IA queda atento (describe el sistema, no una priorización).
-            <Card tono="acento" style={styles.sinOferta}>
+            <Card
+              tono="acento"
+              style={styles.sinOferta}
+              onPress={() => setPanelAbierto(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t("panelIA.abrir")}
+            >
               <View style={styles.radar}>
                 <IconoCirculo ia tamano={44} tamanoIcono={24} />
               </View>
@@ -222,6 +232,17 @@ export function HomeScreen() {
         </Seccion>
       </ScrollView>
       <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
+      <PanelAsistente
+        visible={panelAbierto}
+        onCerrar={() => setPanelAbierto(false)}
+        onVerOferta={(ofertaId) => navigation.navigate("OfferDetail", { ofertaId })}
+        onVerCita={(citaId) =>
+          navigation.navigate("Tabs", {
+            screen: "MisCitas",
+            params: { screen: "AppointmentDetail", params: { citaId }, initial: false },
+          })
+        }
+      />
     </Pantalla>
   );
 }
