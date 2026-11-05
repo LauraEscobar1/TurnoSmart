@@ -84,7 +84,7 @@ function Dato({
   return (
     <View style={styles.dato}>
       <View style={styles.datoIcono}>
-        <Ionicons name={icono} size={15} color={colors.accent700} />
+        <Ionicons name={icono} size={15} color={colors.icono} />
       </View>
       <View style={styles.flex}>
         <Text style={label(9, colors.neutral600)}>{etiqueta}</Text>

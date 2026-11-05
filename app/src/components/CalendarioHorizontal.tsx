@@ -63,7 +63,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
             accessibilityLabel={t("citas.semanaAnterior")}
             style={({ pressed }) => [styles.flecha, pressed && styles.flechaPresionada]}
           >
-            <Ionicons name="chevron-back" size={16} color={colors.accent700} />
+            <Ionicons name="chevron-back" size={16} color={colors.icono} />
           </Pressable>
           <Pressable
             onPress={() => desplazar(1)}
@@ -72,7 +72,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
             accessibilityLabel={t("citas.semanaSiguiente")}
             style={({ pressed }) => [styles.flecha, pressed && styles.flechaPresionada]}
           >
-            <Ionicons name="chevron-forward" size={16} color={colors.accent700} />
+            <Ionicons name="chevron-forward" size={16} color={colors.icono} />
           </Pressable>
         </View>
       </View>

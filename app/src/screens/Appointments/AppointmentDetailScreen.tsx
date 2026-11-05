@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
-import { CapaVidrio, Pantalla } from "@/components/Vidrio";
+import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { AppointmentsStackParamList } from "@/navigation/types";
@@ -71,6 +72,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   const t = useT();
   const dato = useDato();
   const { idioma, diaSemanaCorto, fechaCorta, fechaLarga } = useFormato();
+  const insets = useSafeAreaInsets();
   const { citaId, accion } = route.params;
   const [cita, setCita] = useState<Cita | null>(null);
   const [confirmando, setConfirmando] = useState(false);
@@ -159,12 +161,15 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   }
 
   return (
-    <Pantalla edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScreenHeader title={t("citas.detalle")} onBack={volver} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 28 }]}
+        showsVerticalScrollIndicator={false}
+      >
         {aviso ? (
           <View style={styles.aviso} accessibilityLiveRegion="polite">
-            <Ionicons name="information-circle-outline" size={18} color={colors.info} />
+            <Ionicons name="information-circle-outline" size={18} color={colors.icono} />
             <Text style={[body(13, colors.info), styles.flex]}>{aviso}</Text>
           </View>
         ) : null}
@@ -193,7 +198,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {editable && !asistenciaConfirmada ? (
           <Card tono="acento" style={styles.confirmar}>
             <View style={styles.confirmarCabecera}>
-              <Ionicons name="checkmark-circle-outline" size={22} color={colors.accent700} />
+              <Ionicons name="checkmark-circle-outline" size={22} color={colors.icono} />
               <Text style={[heading(20, colors.accent900), styles.flex]}>{t("citas.confirmarTitulo")}</Text>
             </View>
             <Text style={body(14, colors.accent800)}>{t("citas.confirmarTexto")}</Text>
@@ -223,7 +228,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         <Seccion titulo={t("citas.lugar")}>
           <Card style={styles.fila}>
             <View style={styles.icono}>
-              <Ionicons name="location-outline" size={20} color={colors.accent700} />
+              <Ionicons name="location-outline" size={20} color={colors.icono} />
             </View>
             <View style={styles.flex}>
               <Text style={body(12, colors.neutral600)}>{t("comun.consultorio")}</Text>
@@ -249,22 +254,22 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             ) : null}
           </Card>
         </Seccion>
-      </ScrollView>
 
-      {editable ? (
-        <View style={styles.acciones}>
-          <CapaVidrio variante="barra" />
-          <PrimaryButton label={t("citas.reprogramar")} onPress={abrirReprogramar} style={styles.flex} />
-          <Pressable
-            onPress={() => setHoja("cancelar")}
-            accessibilityRole="button"
-            accessibilityLabel={t("citas.cancelarCita")}
-            style={({ pressed }) => [styles.cancelar, pressed && styles.presionado]}
-          >
-            <Text style={styles.cancelarTexto}>{t("citas.cancelarCita")}</Text>
-          </Pressable>
-        </View>
-      ) : null}
+        {/* Acciones al final del contenido: se desplazan con la pantalla y nunca tapan la información. */}
+        {editable ? (
+          <View style={styles.acciones}>
+            <PrimaryButton label={t("citas.reprogramar")} onPress={abrirReprogramar} style={styles.flex} />
+            <Pressable
+              onPress={() => setHoja("cancelar")}
+              accessibilityRole="button"
+              accessibilityLabel={t("citas.cancelarCita")}
+              style={({ pressed }) => [styles.cancelar, pressed && styles.presionado]}
+            >
+              <Text style={styles.cancelarTexto}>{t("citas.cancelarCita")}</Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </ScrollView>
 
       <HojaInferior
         visible={hoja === "cancelar"}
@@ -340,7 +345,7 @@ function Dato({
   const styles = useEstilos(crearStyles);
   return (
     <View style={[styles.dato, divisor && styles.divisor]}>
-      <Ionicons name={icono} size={18} color={colors.accent700} />
+      <Ionicons name={icono} size={18} color={colors.icono} />
       <View style={styles.flex}>
         <Text style={body(12, colors.neutral600)}>{etiqueta}</Text>
         <Text style={[body(15, colors.text), styles.medio]}>{valor}</Text>
@@ -498,12 +503,7 @@ const crearStyles = (colors: Paleta) =>
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingTop: 14,
-    paddingBottom: 10,
-    paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: colors.bordeCard,
-    overflow: "hidden",
+    marginTop: 4,
   },
   cancelar: {
     minHeight: 50,

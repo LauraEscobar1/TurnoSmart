@@ -1,3 +1,7 @@
+// Reanimated 4 necesita el hilo de UI nativo: en Jest, componentes de React Native
+// y animaciones que terminan al instante (src/test-utils/reanimadoFalso.js).
+jest.mock("react-native-reanimated", () => require("@/test-utils/reanimadoFalso"));
+
 // Safe area con medidas fijas: en Jest no hay dispositivo real.
 jest.mock("react-native-safe-area-context", () => require("react-native-safe-area-context/jest/mock").default);
 

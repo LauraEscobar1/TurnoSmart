@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import Animated from "react-native-reanimated";
+import { EncabezadoConVidrio, EntradaEscalonada, useEncabezadoAlDesplazar } from "@/components/Animaciones";
 import { Pantalla } from "@/components/Vidrio";
 import { body, heading } from "@/theme/typography";
 import { AppointmentCard } from "@/components/AppointmentCard";
@@ -47,12 +49,23 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
     if (route.params?.tab) setTab(route.params.tab);
   }, [route.params?.tab]);
 
-  useCargarDatos(
-    useCallback(() => {
-      getCitasProximas().then(setProximas);
-      getCitasPasadas().then(setPasadas);
-    }, [])
+  const cargar = useCallback(
+    () => Promise.all([getCitasProximas().then(setProximas), getCitasPasadas().then(setPasadas)]),
+    []
   );
+  useCargarDatos(cargar);
+
+  // Deslizar hacia abajo vuelve a leer las citas; al terminar, las cards entran de nuevo.
+  const [refrescando, setRefrescando] = useState(false);
+  const [ronda, setRonda] = useState(0);
+  const refrescar = useCallback(() => {
+    setRefrescando(true);
+    cargar().finally(() => {
+      setRefrescando(false);
+      setRonda((r) => r + 1);
+    });
+  }, [cargar]);
+  const { onScroll, estiloVidrio } = useEncabezadoAlDesplazar();
 
   const esPasada = tab === "pasadas";
   const citas = esPasada ? pasadas : proximas;
@@ -95,9 +108,16 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
 
   return (
     <Pantalla edges={["top"]} style={styles.safe}>
-      <ScreenHeader title={t("nav.citas")} />
-      <FlatList
+      <EncabezadoConVidrio estilo={estiloVidrio}>
+        <ScreenHeader title={t("nav.citas")} />
+      </EncabezadoConVidrio>
+      <Animated.FlatList
         contentContainerStyle={styles.content}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl refreshing={refrescando} onRefresh={refrescar} tintColor={colors.textoSobreFondo} />
+        }
         ListHeaderComponent={
           <View style={styles.cabecera}>
             <CalendarioHorizontal dias={dias} seleccionado={dia} onSeleccionar={setSeleccionado} citasPorDia={conteo} />
@@ -122,12 +142,15 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
         }
         data={delDia}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <AppointmentCard
-            cita={item}
-            past={esPasada}
-            onPress={() => navigation.navigate("AppointmentDetail", { citaId: item.id })}
-          />
+        renderItem={({ item, index }) => (
+          // La clave cambia con el día y con cada refresco: las cards vuelven a entrar escalonadas.
+          <EntradaEscalonada key={`${ronda}-${claveDia(dia)}-${item.id}`} indice={index}>
+            <AppointmentCard
+              cita={item}
+              past={esPasada}
+              onPress={() => navigation.navigate("AppointmentDetail", { citaId: item.id })}
+            />
+          </EntradaEscalonada>
         )}
         ListEmptyComponent={
           <View style={styles.vacio}>

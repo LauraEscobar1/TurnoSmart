@@ -13,9 +13,10 @@ interface PrimaryButtonProps {
    *            (claro) o Rock Blue con texto oscuro (oscuro).
    * secondary: superficie crema / azul noche con borde de acento.
    * ghost:     terciario, solo texto de acento.
-   * inverse:   sólido Merino sobre el campo de pantalla completa (estado terminal).
+   * inverse:   sólido claro sobre el campo de pantalla completa (estado terminal).
+   * destructive: sólido de error con texto blanco (confirmar que se borra algo).
    */
-  variant?: "primary" | "secondary" | "ghost" | "inverse";
+  variant?: "primary" | "secondary" | "ghost" | "inverse" | "destructive";
   /** El botón (ghost) está directamente sobre el degradado: texto en su color «sobre fondo». */
   sobreFondo?: boolean;
   disabled?: boolean;
@@ -29,6 +30,7 @@ const crearTextColor = (colors: Paleta): Record<NonNullable<PrimaryButtonProps["
   secondary: colors.accent700,
   ghost: colors.accent700,
   inverse: colors.campoPantalla,
+  destructive: colors.sobreEstado,
 });
 
 export function PrimaryButton({
@@ -91,6 +93,10 @@ const crearStyles = (colors: Paleta) =>
     backgroundColor: colors.superficie,
     borderColor: colors.accent,
   },
+  destructive: {
+    backgroundColor: colors.errorSolido,
+    borderColor: colors.errorSolido,
+  },
   ghost: {
     backgroundColor: "transparent",
     borderColor: "transparent",
@@ -112,4 +118,5 @@ const crearPressedStyle = (colors: Paleta) =>
   secondary: { backgroundColor: colors.accent100 },
   ghost: { backgroundColor: colors.accent100 },
   ghostSobreFondo: { backgroundColor: colors.divisorSobreFondo },
+  destructive: { opacity: 0.85 },
 });

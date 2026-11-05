@@ -27,7 +27,7 @@ export function ScreenHeader({ title, onBack, accion }: ScreenHeaderProps) {
     return (
       <View style={[styles.bar, styles.backBar]}>
         <Pressable onPress={onBack} hitSlop={12} style={styles.backButton} accessibilityLabel={t("comun.volver")}>
-          <Ionicons name="arrow-back" size={18} color={colors.text} />
+          <Ionicons name="arrow-back" size={18} color={colors.icono} />
         </Pressable>
         <Text style={label(11, colors.textoSobreFondo)}>{title}</Text>
       </View>

@@ -91,7 +91,7 @@ export function BadgeRiesgo({ riesgo, abierto = false, onPress }: BadgeRiesgoPro
       style={({ pressed }) => [styles.badgeTocable, pressed && styles.presionado]}
     >
       <Badge label={etiqueta} variant="risk" />
-      <Ionicons name={abierto ? "chevron-up" : "information-circle-outline"} size={16} color={colors.neutral600} />
+      <Ionicons name={abierto ? "chevron-up" : "information-circle-outline"} size={16} color={colors.icono} />
     </Pressable>
   );
 }

@@ -66,7 +66,7 @@ export function InsigniaRecomendacion({
       accessibilityRole="text"
       accessibilityLabel={texto}
     >
-      <Ionicons name="checkmark-circle-outline" size={12} color={color} />
+      <Ionicons name="checkmark-circle-outline" size={12} color={sobreAcento ? colors.sobreAcento : colors.icono} />
       <Text style={[styles.insigniaTexto, { color }]}>{texto}</Text>
     </View>
   );

@@ -77,25 +77,25 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
           {especialidad}
         </Text>
         <View style={styles.hora}>
-          <Ionicons name="time-outline" size={14} color={colors.accent700} />
+          <Ionicons name="time-outline" size={14} color={colors.icono} />
           <Text style={heading(16, colors.accent700)}>{hora(cita.fechaHoraISO)}</Text>
         </View>
       </View>
 
       {conFecha ? (
         <View style={styles.dato}>
-          <Ionicons name="calendar-outline" size={15} color={colors.accent700} />
+          <Ionicons name="calendar-outline" size={15} color={colors.icono} />
           <Text style={[body(14, colors.accent700), styles.fecha]}>{fechaCita(cita.fechaHoraISO)}</Text>
         </View>
       ) : null}
       <View style={styles.dato}>
-        <Ionicons name="person-outline" size={15} color={colors.accent700} />
+        <Ionicons name="person-outline" size={15} color={colors.icono} />
         <Text style={[body(14, colors.text), styles.flex]} numberOfLines={1}>
           {cita.profesional}
         </Text>
       </View>
       <View style={styles.dato}>
-        <Ionicons name="location-outline" size={15} color={colors.neutral600} />
+        <Ionicons name="location-outline" size={15} color={colors.icono} />
         <Text style={[body(13, colors.neutral700), styles.flex]} numberOfLines={1}>
           {cita.consultorio}
         </Text>
@@ -106,7 +106,7 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
         {cita.origen === "cupo-recuperado" ? (
           <Text style={body(12, colors.neutral600)}>{t("citas.cupoRecuperado")}</Text>
         ) : null}
-        {accion ? <Ionicons name="chevron-forward" size={18} color={colors.neutral600} style={styles.chevron} /> : null}
+        {accion ? <Ionicons name="chevron-forward" size={18} color={colors.icono} style={styles.chevron} /> : null}
       </View>
     </Card>
   );

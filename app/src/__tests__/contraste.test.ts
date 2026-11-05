@@ -1,10 +1,10 @@
 import { Paleta, paletaClara, paletaOscura } from "@/theme/colors";
-import { componer, contraste, MINIMO_AA } from "@/theme/contraste";
+import { componer, contraste, luminancia, MINIMO_AA } from "@/theme/contraste";
 import { OPACIDAD_PULSO } from "@/components/Countdown";
 
 /**
- * Contraste WCAG AA de todos los pares texto/fondo que usa la app, en los
- * dos modos. Texto normal ≥ 4,5:1; texto grande, íconos y bordes de
+ * Contraste WCAG AA de todos los pares texto/fondo e ícono/fondo que usa
+ * la app, en los dos modos. Texto normal ≥ 4,5:1; texto grande, íconos y bordes de
  * componentes ≥ 3:1.
  *
  * Fondos translúcidos (cards de vidrio, barras): se mide contra su color
@@ -29,6 +29,7 @@ type Superficie =
   | "card"
   | "cardAcento"
   | "barra"
+  | "indicadorSobreBarra"
   | "bienvenida"
   | keyof Paleta;
 
@@ -45,6 +46,8 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
       return vidrio(p.fondoCardAcento, p.fondoCardAcentoAndroid);
     case "barra":
       return vidrio(p.fondoBarra, p.fondoBarraAndroid);
+    case "indicadorSobreBarra":
+      return efectivos(p, oscuro, "barra").map((f) => componer(p.indicadorTab, f));
     case "bienvenida":
       // Claro: zona crema inferior. Oscuro: toda la pantalla es el degradado.
       return oscuro ? efectivos(p, oscuro, "degradado") : [p.fondoBienvenida];
@@ -92,10 +95,12 @@ const PARES: Par[] = [
       "acentoSobreFondo",
       "etiquetaCampoSobreFondo",
       "ayudaSobreFondo",
-      "errorSobreFondo",
-      "exitoSobreFondo",
     ] as const
-  ).map((k) => par(k, "degradado")),
+  ).flatMap((k) => [
+    par(k, "degradado"),
+    // El encabezado gana un fondo de vidrio (barra) al desplazar el contenido.
+    par(k, "barra"),
+  ]),
   par("logoSobreFondo", "degradado", "icono"),
   par("logoAcentoSobreFondo", "degradado", "icono"),
   par("puntoActivoSobreFondo", "degradado", "icono"),
@@ -111,14 +116,24 @@ const PARES: Par[] = [
     sobre: "degradado",
     tipo: "icono",
   },
-  // Rellenos que van sobre el degradado (filtro elegido, chips, aviso de ofertas).
-  par("campo", "degradado", "icono"),
+  // Filtro / chip elegido contra uno sin elegir: el estado se distingue.
+  par("campo", "superficie", "icono"),
 
   // Texto dentro de cards de vidrio, barras, hojas, inputs y tintes.
   ...TEXTO_DE_CONTENIDO.flatMap((k) => SUPERFICIES_DE_CONTENIDO.map((s) => par(k, s))),
-  // Íconos de acento dentro de cards.
-  ...SUPERFICIES_DE_CONTENIDO.map((s) => par("accent600", s, "icono")),
-  ...SUPERFICIES_DE_CONTENIDO.map((s) => par("accent", s, "icono")),
+  // Único token de ícono, en todas las superficies de contenido (y el ícono del aviso de ofertas).
+  ...SUPERFICIES_DE_CONTENIDO.map((s) => par("icono", s, "icono")),
+  par("icono", "accent300", "icono"),
+  // Barra de pestañas: íconos y etiquetas, activos (sobre el indicador) e inactivos.
+  par("iconoTabInactivo", "barra", "icono"),
+  par("textoTabInactivo", "barra"),
+  {
+    texto: (p) => p.iconoTabActivo,
+    nombre: "iconoTabActivo",
+    sobre: "indicadorSobreBarra",
+    tipo: "icono",
+  },
+  { texto: (p) => p.textoTabActivo, nombre: "textoTabActivo", sobre: "indicadorSobreBarra" },
   // El contador pulsa: también en su opacidad mínima (y en urgente, en advertencia).
   ...(["card", "cardAcento"] as const).flatMap((s) => [
     par("contador", s, "texto", OPACIDAD_PULSO),
@@ -131,8 +146,7 @@ const PARES: Par[] = [
   par("sobreCampo", "campo"),
   par("accent900", "accent300", "icono"),
   par("sobreCampoPantalla", "campoPantalla"),
-  par("textoSuaveSobreFondo", "campoPantalla"),
-  par("textoTenueSobreFondo", "campoPantalla"),
+  par("suaveSobreCampoPantalla", "campoPantalla"),
   par("campoPantalla", "sobreCampoPantalla"), // botón inverso
   par("accent700", "accent200", "grande"), // iniciales del avatar (35-47 px)
   par("neutral800", "neutral100"), // badge neutro / perdido
@@ -141,6 +155,11 @@ const PARES: Par[] = [
   par("exito", "exitoFondo"),
   par("advertencia", "advertenciaFondo"),
   par("error", "errorFondo"),
+  // Badges y avisos sólidos (texto blanco).
+  par("sobreEstado", "exitoSolido"),
+  par("sobreEstado", "advertenciaSolido"),
+  par("sobreEstado", "errorSolido"),
+  par("sobreEstado", "infoSolido"),
   par("textoInsigniaIA", "fondoInsigniaIA"),
   par("sobreAcentoIA", "acentoIA", "icono"),
   par("textoBotonBienvenida", "botonBienvenida"),
@@ -183,7 +202,25 @@ describe("Contraste WCAG AA", () => {
     expect(fallas(paletaOscura, true)).toEqual([]);
   });
 
-  it("ningún texto del tema es gris claro sobre crema: el secundario en cards es azul oscuro", () => {
+  it("ningún fondo, card ni barra es negro o casi negro", () => {
+    const casiNegro = (c: string) => contraste(c, "#000000") < 1.5;
+    for (const p of [paletaClara, paletaOscura]) {
+      for (const s of ["degradado", "card", "cardAcento", "barra", "superficie", "fondo"] as const) {
+        expect(efectivos(p, p === paletaOscura, s).filter(casiNegro)).toEqual([]);
+      }
+    }
+  });
+
+  it("en oscuro las cards de vidrio son más luminosas que el fondo, para distinguirse", () => {
+    const p = paletaOscura;
+    for (const [i, fondo] of p.degradadoFondo.entries()) {
+      const card = componer(p.fondoCard, fondo);
+      expect(luminancia(card)).toBeGreaterThan(luminancia(fondo) * 1.25);
+      expect(i).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("ningún texto del tema es gris claro sobre blanco: el secundario en cards es azul oscuro", () => {
     const peorSecundario = Math.min(
       ...efectivos(paletaClara, false, "card").map((f) => contraste(paletaClara.neutral600, f))
     );

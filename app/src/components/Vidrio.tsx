@@ -46,16 +46,18 @@ export function useFondoVidrio(variante: VarianteVidrio): string {
 }
 
 /**
- * Capa de vidrio: se pone como primer hijo de un contenedor con
- * `overflow: "hidden"` y bordes redondeados. Desenfoca lo que hay detrás y
- * encima pinta el color translúcido del tema, que es el color efectivo
- * contra el que se mide el contraste del texto.
+ * Capa de vidrio: primer hijo de un contenedor con bordes redondeados.
+ * Desenfoca lo que hay detrás y encima pinta el color translúcido del tema,
+ * que es el color efectivo contra el que se mide el contraste del texto.
+ * Se recorta sola con `radio`, así el contenedor no necesita
+ * `overflow: "hidden"` y conserva su sombra.
  */
-export function CapaVidrio({ variante = "card" }: { variante?: VarianteVidrio }) {
+export function CapaVidrio({ variante = "card", radio = 0 }: { variante?: VarianteVidrio; radio?: number }) {
   const { colors } = useTema();
   const fondo = useFondoVidrio(variante);
+  const recorte = { borderRadius: radio, overflow: "hidden" as const };
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, recorte]}>
       {CON_DESENFOQUE ? (
         <BlurView intensity={colors.intensidadBlur} tint={colors.tintaBlur} style={StyleSheet.absoluteFill} />
       ) : null}

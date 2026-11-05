@@ -6,8 +6,8 @@ import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 
 /**
- * Etiqueta de estado, con los colores de estado del tema (armonizados con
- * los azules y legibles en los dos modos).
+ * Etiqueta de estado: sólida e intensa, con texto blanco sobre los colores
+ * de estado del tema (iguales y legibles en los dos modos).
  *
  * - outline: disponible, todavía no compromete a nadie.
  * - tint:    hay un reloj corriendo (oferta enviada / pendiente) — info.
@@ -47,7 +47,7 @@ const crearStyles = (colors: Paleta) =>
     borderColor: "transparent",
   },
   text: {
-    fontFamily: fonts.bodyMedium,
+    fontFamily: fonts.bodyBold,
     fontSize: 11,
     letterSpacing: 0.2,
   },
@@ -56,21 +56,21 @@ const crearStyles = (colors: Paleta) =>
 const crearContainerByVariant = (colors: Paleta) =>
   StyleSheet.create({
   outline: { borderColor: colors.accent },
-  tint: { backgroundColor: colors.infoFondo },
+  tint: { backgroundColor: colors.infoSolido },
   accent: { backgroundColor: colors.campo },
-  solid: { backgroundColor: colors.exitoFondo },
+  solid: { backgroundColor: colors.exitoSolido },
   neutral: { backgroundColor: colors.neutral100 },
   lost: { backgroundColor: colors.neutral100 },
-  risk: { backgroundColor: colors.advertenciaFondo, borderColor: colors.advertencia, borderStyle: "dashed" },
+  risk: { backgroundColor: colors.advertenciaSolido, borderColor: colors.sobreEstado, borderStyle: "dashed" },
 });
 
 const crearTextByVariant = (colors: Paleta) =>
   StyleSheet.create({
   outline: { color: colors.accent700 },
-  tint: { color: colors.info },
+  tint: { color: colors.sobreEstado },
   accent: { color: colors.sobreCampo },
-  solid: { color: colors.exito },
+  solid: { color: colors.sobreEstado },
   neutral: { color: colors.neutral800 },
   lost: { color: colors.neutral800, textDecorationLine: "line-through" },
-  risk: { color: colors.advertencia },
+  risk: { color: colors.sobreEstado },
 });

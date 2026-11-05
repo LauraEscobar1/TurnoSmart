@@ -6,6 +6,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { PulsoAsistente } from "@/components/Animaciones";
+import { AvisoEstado } from "@/components/AvisoEstado";
 import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
@@ -98,9 +100,9 @@ export function OffersListScreen() {
         </View>
 
         {errorRespuesta && (
-          <Text style={body(13, colors.errorSobreFondo)} accessibilityRole="alert">
+          <AvisoEstado tipo="error" accessibilityRole="alert">
             {errorRespuesta}
-          </Text>
+          </AvisoEstado>
         )}
 
         {/* 1. Lo que requiere respuesta */}
@@ -108,7 +110,7 @@ export function OffersListScreen() {
           <View style={styles.bloque}>
             <View style={styles.aviso} accessibilityRole="summary">
               <View style={styles.avisoIcono}>
-                <Ionicons name="flash" size={18} color={colors.accent900} />
+                <Ionicons name="flash" size={18} color={colors.icono} />
               </View>
               <Text style={styles.avisoTexto}>{t("ofertas.requierenRespuesta", { count: n })}</Text>
             </View>
@@ -123,7 +125,10 @@ export function OffersListScreen() {
           </View>
         ) : (
           <View style={styles.vacio}>
-            <IlustracionSinOfertas />
+            {/* El asistente IA, atento: respira y emite anillos suaves (quieto con «Reducir movimiento»). */}
+            <PulsoAsistente tamano={168}>
+              <IlustracionSinOfertas />
+            </PulsoAsistente>
             <Text style={[heading(22, colors.textoSobreFondo), styles.centro]}>{t("ofertas.sinNuevas")}</Text>
             <AsistenteAtento style={styles.atento} />
           </View>
@@ -176,7 +181,7 @@ export function OffersListScreen() {
             style={styles.ayudaCabecera}
           >
             <Text style={heading(17, colors.accent900)}>{t("ofertas.comoFuncionan")}</Text>
-            <Ionicons name={ayudaAbierta ? "remove" : "add"} size={20} color={colors.accent700} />
+            <Ionicons name={ayudaAbierta ? "remove" : "add"} size={20} color={colors.icono} />
           </Pressable>
           {ayudaAbierta && (
             <View style={styles.pasos}>
@@ -207,7 +212,7 @@ function FilaHistorial({ oferta, divisor }: { oferta: OfertaCupo; divisor: boole
   return (
     <View style={[styles.fila, divisor && styles.filaDivisor]}>
       <View style={[styles.filaIcono, oferta.estado === "aceptada" && styles.filaIconoAceptada]}>
-        <Ionicons name={e.icono} size={14} color={oferta.estado === "aceptada" ? colors.sobreCampo : colors.neutral600} />
+        <Ionicons name={e.icono} size={14} color={oferta.estado === "aceptada" ? colors.sobreCampo : colors.icono} />
       </View>
       <View style={styles.flex}>
         <Text style={heading(16, colors.accent900)} numberOfLines={1}>

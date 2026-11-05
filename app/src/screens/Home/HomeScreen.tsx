@@ -73,7 +73,8 @@ export function HomeScreen() {
   const irA = {
     buscar: () => navigation.navigate("BuscarEspecialista"),
     citas: () => navigation.navigate("Tabs", { screen: "MisCitas" }),
-    espera: () => navigation.navigate("Tabs", { screen: "Perfil", params: { screen: "Preferences", initial: false } }),
+    // La lista de espera (ver, sumar y sacar especialidades) vive en Buscar especialista.
+    espera: () => navigation.navigate("BuscarEspecialista"),
     avisos: () => navigation.navigate("Tabs", { screen: "Notificaciones" }),
     ofertas: () => navigation.navigate("Tabs", { screen: "Ofertas" }),
   };
@@ -97,7 +98,7 @@ export function HomeScreen() {
             accessibilityLabel={t("ajustes.titulo")}
             style={({ pressed }) => [styles.menu, pressed && styles.presionado]}
           >
-            <Ionicons name="menu-outline" size={24} color={colors.accent900} />
+            <Ionicons name="menu-outline" size={24} color={colors.icono} />
           </Pressable>
         </View>
 
@@ -147,7 +148,7 @@ export function HomeScreen() {
             />
           ) : (
             <Card style={styles.filaSimple}>
-              <Ionicons name="calendar-clear-outline" size={20} color={colors.neutral600} />
+              <Ionicons name="calendar-clear-outline" size={20} color={colors.icono} />
               <Text style={body(14, colors.neutral700)}>{t("inicio.sinCitas")}</Text>
             </Card>
           )}
@@ -198,7 +199,7 @@ export function HomeScreen() {
             ) : (
               <View style={styles.alDia}>
                 <View style={styles.alDiaIcono}>
-                  <Ionicons name="checkmark" size={18} color={colors.exito} />
+                  <Ionicons name="checkmark" size={18} color={colors.sobreEstado} />
                 </View>
                 <View>
                   <Text style={heading(17, colors.accent900)}>{t("inicio.todoAlDia")}</Text>
@@ -470,7 +471,7 @@ const crearStyles = (colors: Paleta) =>
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.exitoFondo,
+    backgroundColor: colors.exitoSolido,
     alignItems: "center",
     justifyContent: "center",
   },

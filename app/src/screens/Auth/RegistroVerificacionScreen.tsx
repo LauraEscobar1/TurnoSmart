@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { AvisoEstado } from "@/components/AvisoEstado";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -83,11 +84,11 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
         }}
         autoFocus
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <AvisoEstado tipo="error" style={styles.error}>{error}</AvisoEstado> : null}
       <ReenviarCodigo restante={envio.restante} codigoPrueba={envio.codigoPrueba} onReenviar={envio.reenviar} />
 
       <Card style={styles.notice}>
-        <Ionicons name="notifications-outline" size={18} color={colors.accent700} style={{ marginTop: 1 }} />
+        <Ionicons name="notifications-outline" size={18} color={colors.icono} style={{ marginTop: 1 }} />
         <Text style={[body(13, colors.neutral700), { flex: 1 }]}>
           <Text style={styles.strong}>{t("registro.activaNotificaciones")}</Text> {t("registro.activaNotificacionesTexto")}
         </Text>
@@ -103,9 +104,6 @@ export function RegistroVerificacionScreen({ navigation }: Props) {
 const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   error: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.errorSobreFondo,
     marginTop: -8,
   },
   notice: {
