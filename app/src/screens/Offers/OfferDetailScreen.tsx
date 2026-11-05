@@ -16,6 +16,7 @@ import { Countdown, useCountdown } from "@/components/Countdown";
 import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { DataRow } from "@/components/OfferCard";
 import { EmptyState } from "@/components/EmptyState";
+import { AvisoEstado } from "@/components/AvisoEstado";
 import { Card } from "@/components/Card";
 import { AnalisisRecomendacion, InsigniaRecomendacion } from "@/components/Recomendacion";
 import { hora, useFormato } from "@/utils/format";
@@ -150,9 +151,9 @@ function OfertaVigente({
       <View style={[styles.barra, { paddingBottom: Math.max(insets.bottom, 14) }]}>
         <CapaVidrio variante="barra" />
         {error && (
-          <Text style={[body(13, colors.error), styles.error]} accessibilityRole="alert">
+          <AvisoEstado tipo="error" accessibilityRole="alert" style={styles.error}>
             {error}
-          </Text>
+          </AvisoEstado>
         )}
         <View style={styles.actions}>
           <PrimaryButton
@@ -232,7 +233,7 @@ const crearStyles = (colors: Paleta) =>
     overflow: "hidden",
   },
   error: {
-    textAlign: "center",
+    alignSelf: "center",
   },
   actions: {
     flexDirection: "row",

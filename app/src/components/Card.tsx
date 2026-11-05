@@ -12,12 +12,12 @@ interface CardProps {
   /**
    * superficie: vidrio crema (claro) o Venice translúcido (oscuro), por defecto.
    * acento: vidrio con tinte Rock Blue, para lo que tiene un reloj corriendo (oferta).
-   * plana: el mismo vidrio sin tinte de acento, con el borde más marcado
-   *        (ayuda, filas secundarias). Nunca transparente: el texto de las
-   *        cards es oscuro en claro y no se lee sobre el degradado.
+   * plana: el mismo vidrio sin sombra (ayuda, filas secundarias). Nunca
+   *        transparente: el texto de las cards es oscuro y no se lee sobre
+   *        el degradado.
    */
   tono?: "superficie" | "acento" | "plana";
-  /** Card principal de la pantalla: sombra más amplia y borde de acento. */
+  /** Card principal de la pantalla: sombra algo más amplia. */
   destacada?: boolean;
   onPress?: () => void;
   disabled?: boolean;
@@ -26,10 +26,9 @@ interface CardProps {
 }
 
 /**
- * Card de vidrio de TurnoSmart: radio 20, borde superior iluminado e
- * inferior más oscuro (profundidad), sombra suave azulada y, detrás del
- * contenido, el vidrio translúcido con una línea de luz arriba. Al tocarla
- * se achica apenas y da un toque háptico.
+ * Card de TurnoSmart: una sola capa de vidrio translúcido con radio 20 y
+ * una sombra suave y difusa, sin borde ni marco. Al tocarla se achica
+ * apenas y da un toque háptico.
  */
 export function Card({
   children,
@@ -43,7 +42,7 @@ export function Card({
 }: CardProps) {
   const styles = useEstilos(crearStyles);
   const cardStyle = [styles.base, styles[tono], destacada && styles.destacada, style];
-  const vidrio = <CapaVidrio variante={tono === "acento" ? "acento" : "card"} radio={radius.card} brillo={tono !== "plana"} />;
+  const vidrio = <CapaVidrio variante={tono === "acento" ? "acento" : "card"} radio={radius.card} />;
 
   if (onPress) {
     return (
@@ -72,33 +71,21 @@ export function Card({
 
 const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
+    // Una sola capa: el vidrio y, como mucho, una sombra suave y difusa. Sin borde visible.
     base: {
       borderRadius: radius.card,
-      borderWidth: 1,
       shadowColor: colors.sombraCard,
       shadowOpacity: colors.opacidadSombraCard,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 6 },
+      shadowRadius: 18,
+      shadowOffset: { width: 0, height: 8 },
     },
-    superficie: {
-      borderColor: colors.bordeCard,
-      borderTopColor: colors.bordeSuperiorCard,
-      borderBottomColor: colors.bordeInferiorCard,
-    },
-    acento: {
-      borderColor: colors.bordeCardAcento,
-      borderTopColor: colors.bordeSuperiorCard,
-      borderBottomColor: colors.bordeInferiorCard,
-    },
+    superficie: {},
+    acento: {},
     destacada: {
-      borderColor: colors.bordeCardAcento,
-      borderTopColor: colors.bordeSuperiorCard,
-      shadowOpacity: colors.opacidadSombraCard * 1.5,
       shadowRadius: 24,
       shadowOffset: { width: 0, height: 10 },
     },
     plana: {
-      borderColor: colors.borde,
       shadowOpacity: 0,
     },
   });

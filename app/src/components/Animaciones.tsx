@@ -19,7 +19,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
-import { CapaVidrio } from "@/components/Vidrio";
 import { heading } from "@/theme/typography";
 
 /**
@@ -57,27 +56,23 @@ export function EntradaEscalonada({
 }
 
 /**
- * Encabezado que gana un fondo de vidrio a medida que el contenido se
- * desplaza por debajo (de 0 a 32 px de desplazamiento). Devuelve el
+ * Desplazamiento de una lista, para animar su encabezado. Devuelve el
  * manejador para el `onScroll` de un Animated.ScrollView / FlatList y el
- * estilo para `<EncabezadoConVidrio>`.
+ * valor compartido con el desplazamiento.
  */
 export function useEncabezadoAlDesplazar() {
   const desplazamiento = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
     desplazamiento.value = e.contentOffset.y;
   });
-  const estiloVidrio = useAnimatedStyle(() => ({
-    opacity: interpolate(desplazamiento.value, [0, 32], [0, 1], Extrapolation.CLAMP),
-  }));
-
-  return { onScroll, estiloVidrio, desplazamiento };
+  return { onScroll, desplazamiento };
 }
 
 /**
  * Encabezado de sección que se compacta al bajar: el título pasa de 28 a
- * 20 px, se acerca al borde y gana el fondo de vidrio. Va ligado al
- * desplazamiento (no es una animación por tiempo).
+ * 20 px y se acerca al borde. Va ligado al desplazamiento (no es una
+ * animación por tiempo) y no tiene fondo propio: detrás siempre se ve el
+ * degradado de la pantalla, también en el rebote y al refrescar.
  */
 export function EncabezadoCompacto({
   titulo,
@@ -90,9 +85,6 @@ export function EncabezadoCompacto({
 }) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
-  const estiloVidrio = useAnimatedStyle(() => ({
-    opacity: interpolate(desplazamiento.value, [0, 32], [0, 1], Extrapolation.CLAMP),
-  }));
   const estiloFila = useAnimatedStyle(() => ({
     paddingTop: interpolate(desplazamiento.value, [0, 56], [14, 8], Extrapolation.CLAMP),
     paddingBottom: interpolate(desplazamiento.value, [0, 56], [6, 8], Extrapolation.CLAMP),
@@ -103,33 +95,12 @@ export function EncabezadoCompacto({
   }));
   return (
     <View style={styles.encabezado}>
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.vidrioEncabezado, estiloVidrio]}>
-        <CapaVidrio variante="barra" />
-      </Animated.View>
       <Animated.View style={[styles.filaEncabezado, estiloFila]}>
         <Animated.Text style={[heading(28, colors.textoSobreFondo), styles.flex, estiloTitulo]} accessibilityRole="header">
           {titulo}
         </Animated.Text>
         {accion}
       </Animated.View>
-    </View>
-  );
-}
-
-export function EncabezadoConVidrio({
-  estilo,
-  children,
-}: {
-  estilo: ReturnType<typeof useAnimatedStyle>;
-  children: React.ReactNode;
-}) {
-  const styles = useEstilos(crearStyles);
-  return (
-    <View style={styles.encabezado}>
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.vidrioEncabezado, estilo]}>
-        <CapaVidrio variante="barra" />
-      </Animated.View>
-      {children}
     </View>
   );
 }
@@ -206,9 +177,5 @@ const crearStyles = (colors: Paleta) =>
     },
     flex: {
       flex: 1,
-    },
-    vidrioEncabezado: {
-      borderBottomWidth: 1,
-      borderBottomColor: colors.bordeCard,
     },
   });

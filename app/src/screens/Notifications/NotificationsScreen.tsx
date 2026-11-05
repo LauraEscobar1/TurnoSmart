@@ -199,8 +199,9 @@ function FilaAviso({
       style={styles.fila}
     >
       {tipo.tono === "fuerte" ? (
+        // Cupo de último minuto: lo ofrece el asistente de IA (robot con brillo suave).
         <View style={styles.iconoFuerte}>
-          <Ionicons name={tipo.icono} size={18} color={colors.sobreAcento} />
+          <IconoCirculo ia tamano={36} tamanoIcono={20} />
         </View>
       ) : (
         <IconoCirculo nombre={tipo.icono} tamano={36} tamanoIcono={18} />
@@ -292,12 +293,7 @@ const crearStyles = (colors: Paleta) =>
   },
   // Cupo disponible: círculo sólido con brillo de IA.
   iconoFuerte: {
-    width: 36,
-    height: 36,
     borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.accent,
     shadowColor: colors.brilloIA,
     shadowOpacity: 0.6,
     shadowRadius: 8,

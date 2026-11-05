@@ -126,13 +126,8 @@ const crearStyles = (colors: Paleta) =>
       alignItems: "center",
       gap: 12,
     },
-    // Brillo suave de IA alrededor del ícono.
     brillo: {
       borderRadius: 24,
-      shadowColor: colors.brilloIA,
-      shadowOpacity: 0.45,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 0 },
     },
     flex: {
       flex: 1,
@@ -159,9 +154,6 @@ const crearStyles = (colors: Paleta) =>
       paddingVertical: 6,
       paddingHorizontal: 12,
       borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.bordeCirculoIcono,
-      borderTopColor: colors.bordeSuperiorCard,
       backgroundColor: colors.fondoChip,
     },
     chipNombre: {

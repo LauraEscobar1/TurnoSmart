@@ -394,20 +394,16 @@ const crearStyles = (colors: Paleta) =>
     padding: 14,
     borderRadius: radius.md,
     backgroundColor: colors.infoFondo,
-    borderWidth: 1,
-    borderColor: colors.accent200,
   },
   // Encabezado
+  // Ficha de la cita: una sola capa, sin borde.
   hero: {
     padding: 22,
     borderRadius: radius.xl,
     backgroundColor: colors.accent100,
-    borderWidth: 1,
-    borderColor: colors.accent200,
   },
   heroInactivo: {
     backgroundColor: colors.superficie,
-    borderColor: colors.borde,
   },
   heroFecha: {
     marginTop: 4,
@@ -438,8 +434,6 @@ const crearStyles = (colors: Paleta) =>
   },
   estadoInactivo: {
     backgroundColor: colors.neutralTinte,
-    borderWidth: 1,
-    borderColor: colors.neutralBorde,
   },
   estadoPunto: {
     width: 8,
@@ -475,9 +469,6 @@ const crearStyles = (colors: Paleta) =>
     width: 52,
     height: 52,
     borderRadius: 26,
-    borderWidth: 1,
-    borderColor: colors.bordeCirculoIcono,
-    borderTopColor: colors.bordeSuperiorCard,
     backgroundColor: colors.accent100,
     alignItems: "center",
     justifyContent: "center",
