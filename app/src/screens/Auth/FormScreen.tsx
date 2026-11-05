@@ -1,8 +1,8 @@
 import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, ViewStyle } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 
 interface FormScreenProps {
   header?: React.ReactNode;
@@ -19,7 +19,7 @@ interface FormScreenProps {
 export function FormScreen({ header, children, footer, contentStyle }: FormScreenProps) {
   const styles = useEstilos(crearStyles);
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top", "bottom"]} style={styles.safe}>
       {header}
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
@@ -31,7 +31,7 @@ export function FormScreen({ header, children, footer, contentStyle }: FormScree
           <View style={styles.footer}>{footer}</View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -39,7 +39,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   flex: {
     flex: 1,

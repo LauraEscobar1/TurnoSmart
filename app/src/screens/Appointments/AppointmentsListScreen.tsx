@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { body, heading } from "@/theme/typography";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { CalendarioHorizontal } from "@/components/CalendarioHorizontal";
@@ -94,7 +94,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
   );
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScreenHeader title={t("nav.citas")} />
       <FlatList
         contentContainerStyle={styles.content}
@@ -145,7 +145,7 @@ export function AppointmentsListScreen({ navigation, route }: Props) {
           </View>
         }
       />
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -153,7 +153,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     padding: 18,

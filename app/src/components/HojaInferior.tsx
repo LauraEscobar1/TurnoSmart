@@ -1,11 +1,13 @@
 import React from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
+import { CON_DESENFOQUE } from "@/components/Vidrio";
 
 interface HojaInferiorProps {
   visible: boolean;
@@ -17,7 +19,8 @@ interface HojaInferiorProps {
 
 /**
  * Hoja que sube desde abajo para decisiones propias de una pantalla
- * (confirmar una cancelación, elegir un horario). Tocar el fondo la cierra.
+ * (confirmar una cancelación, elegir un horario). Detrás, la pantalla
+ * desenfocada bajo un velo; tocar el fondo la cierra.
  */
 export function HojaInferior({ visible, onCerrar, titulo, descripcion, children }: HojaInferiorProps) {
   const { colors } = useTema();
@@ -27,6 +30,7 @@ export function HojaInferior({ visible, onCerrar, titulo, descripcion, children 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCerrar}>
       <View style={styles.contenedor}>
+        {CON_DESENFOQUE ? <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} /> : null}
         <Pressable style={styles.fondo} onPress={onCerrar} accessibilityLabel={t("comun.cerrar")} />
         <View style={[styles.hoja, { paddingBottom: 20 + insets.bottom }]} accessibilityViewIsModal>
           <View style={styles.tirador} />
@@ -55,6 +59,9 @@ const crearStyles = (colors: Paleta) =>
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     backgroundColor: colors.superficie,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: colors.bordeCard,
   },
   tirador: {
     alignSelf: "center",

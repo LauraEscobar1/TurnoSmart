@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
@@ -87,7 +87,7 @@ export function OffersListScreen() {
   const n = pendientes.length;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Encabezado */}
         <View>
@@ -98,7 +98,7 @@ export function OffersListScreen() {
         </View>
 
         {errorRespuesta && (
-          <Text style={body(13, colors.textoSobreFondo)} accessibilityRole="alert">
+          <Text style={body(13, colors.errorSobreFondo)} accessibilityRole="alert">
             {errorRespuesta}
           </Text>
         )}
@@ -192,7 +192,7 @@ export function OffersListScreen() {
           )}
         </Card>
       </ScrollView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -226,7 +226,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,

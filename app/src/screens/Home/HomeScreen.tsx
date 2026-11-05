@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { OfferCard } from "@/components/OfferCard";
@@ -79,7 +79,7 @@ export function HomeScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* 1. Saludo */}
         <View style={styles.saludo}>
@@ -114,7 +114,7 @@ export function HomeScreen() {
             <Card tono="acento" style={styles.sinOferta}>
               <View style={styles.radar}>
                 <View style={styles.radarAnillo} />
-                <Ionicons name="sparkles" size={20} color={colors.sobreAcento} />
+                <Ionicons name="sparkles" size={20} color={colors.sobreAcentoIA} />
               </View>
               <View style={styles.flex} accessible accessibilityLabel={`${t("asistenteIA.atentoTitulo")}. ${t("asistenteIA.atentoTexto")}`}>
                 <Text style={label(9, colors.accent700)}>{t("inicio.sinOfertas")}</Text>
@@ -198,7 +198,7 @@ export function HomeScreen() {
             ) : (
               <View style={styles.alDia}>
                 <View style={styles.alDiaIcono}>
-                  <Ionicons name="checkmark" size={18} color={colors.sobreAcento} />
+                  <Ionicons name="checkmark" size={18} color={colors.exito} />
                 </View>
                 <View>
                   <Text style={heading(17, colors.accent900)}>{t("inicio.todoAlDia")}</Text>
@@ -210,7 +210,7 @@ export function HomeScreen() {
         </Seccion>
       </ScrollView>
       <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -290,7 +290,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: MARGEN,
@@ -348,7 +347,7 @@ const crearStyles = (colors: Paleta) =>
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.acentoIA,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -471,7 +470,7 @@ const crearStyles = (colors: Paleta) =>
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.exitoFondo,
     alignItems: "center",
     justifyContent: "center",
   },

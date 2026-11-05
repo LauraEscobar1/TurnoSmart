@@ -7,18 +7,18 @@ import { useT } from "@/i18n";
 import { Logo } from "@/components/Logo";
 
 /**
- * Splash: campo sólido (Campo, acero 900) con la marca en papel. Es
- * estático a propósito: el único elemento animado del sistema es el
- * contador de expiración. Continúa sin corte el splash nativo, que usa
- * el mismo color de fondo (app.json).
+ * Splash: azul profundo (el final del degradado) con la marca en Merino y
+ * el latido en Rock Blue. Es estático a propósito: el único elemento animado
+ * del sistema es el contador de expiración. Continúa sin corte el splash
+ * nativo, que usa el mismo color de fondo (app.json).
  */
 export function SplashScreen() {
   const t = useT();
   return (
     <View style={styles.field} accessibilityLabel={t("splash.cargando")}>
       <StatusBar style="light" />
-      <Logo size={84} color="#ffffff" acento={colors.accent400} wordmark />
-      <Text style={[label(10, colors.bg), styles.bajada]}>{t("splash.bajada")}</Text>
+      <Logo size={84} color={colors.splashLogo} acento={colors.splashAcento} wordmark />
+      <Text style={[label(10, colors.splashTexto), styles.bajada]}>{t("splash.bajada")}</Text>
     </View>
   );
 }
@@ -26,13 +26,12 @@ export function SplashScreen() {
 const styles = StyleSheet.create({
   field: {
     flex: 1,
-    backgroundColor: colors.accent900,
+    backgroundColor: colors.splashFondo,
     alignItems: "center",
     justifyContent: "center",
   },
   bajada: {
     position: "absolute",
     bottom: 56,
-    opacity: 0.65,
   },
 });

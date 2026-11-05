@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { body } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
@@ -44,7 +44,7 @@ export function PreferencesScreen() {
   }
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top", "bottom"]} style={styles.safe}>
       <ScreenHeader title={t("preferencias.titulo")} onBack={navigation.goBack} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -64,7 +64,7 @@ export function PreferencesScreen() {
           <PrimaryButton label={t("comun.guardar")} onPress={guardar} disabled={guardando} />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -72,7 +72,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     padding: 18,
@@ -82,6 +81,6 @@ const crearStyles = (colors: Paleta) =>
     paddingVertical: 14,
     paddingHorizontal: 18,
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    borderTopColor: colors.divisorSobreFondo,
   },
 });

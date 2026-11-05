@@ -162,7 +162,7 @@ const crearStyles = (colors: Paleta) =>
   error: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    color: colors.text,
+    color: colors.errorSobreFondo,
     marginTop: -8,
   },
 });

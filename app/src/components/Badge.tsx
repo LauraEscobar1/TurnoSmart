@@ -1,21 +1,21 @@
 import React from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { Paleta } from "@/theme/colors";
-import { useEstilos, useTema } from "@/theme/Tema";
+import { useEstilos } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 
 /**
- * Etiqueta de estado. La paleta es mono: el estado se codifica por
- * relleno, nunca por color (docs del sistema §02 Vocabulario y estados).
+ * Etiqueta de estado, con los colores de estado del tema (armonizados con
+ * los azules y legibles en los dos modos).
  *
  * - outline: disponible, todavía no compromete a nadie.
- * - tint:    hay un reloj corriendo (oferta enviada / pendiente).
- * - accent:  tag sólido de acero ("Oferta para vos" en Home).
- * - solid:   estado terminal positivo (confirmada, recuperado).
+ * - tint:    hay un reloj corriendo (oferta enviada / pendiente) — info.
+ * - accent:  chip Rock Blue ("Oferta para vos").
+ * - solid:   estado terminal positivo (confirmada, recuperado) — éxito.
  * - neutral: dato neutro (asistida, preferencias).
- * - lost:    terminal negativo — gris tachado, sin dramatismo.
- * - risk:    hipótesis de la IA — contorno punteado.
+ * - lost:    terminal negativo — neutro tachado, sin dramatismo.
+ * - risk:    hipótesis de la IA (riesgo de inasistencia) — advertencia, contorno punteado.
  */
 export type BadgeVariant = "outline" | "tint" | "accent" | "solid" | "neutral" | "lost" | "risk";
 
@@ -56,21 +56,21 @@ const crearStyles = (colors: Paleta) =>
 const crearContainerByVariant = (colors: Paleta) =>
   StyleSheet.create({
   outline: { borderColor: colors.accent },
-  tint: { backgroundColor: colors.accent100 },
-  accent: { backgroundColor: colors.accent },
-  solid: { backgroundColor: colors.campo },
+  tint: { backgroundColor: colors.infoFondo },
+  accent: { backgroundColor: colors.campo },
+  solid: { backgroundColor: colors.exitoFondo },
   neutral: { backgroundColor: colors.neutral100 },
   lost: { backgroundColor: colors.neutral100 },
-  risk: { borderColor: colors.accent, borderStyle: "dashed" },
+  risk: { backgroundColor: colors.advertenciaFondo, borderColor: colors.advertencia, borderStyle: "dashed" },
 });
 
 const crearTextByVariant = (colors: Paleta) =>
   StyleSheet.create({
   outline: { color: colors.accent700 },
-  tint: { color: colors.accent800 },
-  accent: { color: colors.bg },
-  solid: { color: colors.bg },
+  tint: { color: colors.info },
+  accent: { color: colors.sobreCampo },
+  solid: { color: colors.exito },
   neutral: { color: colors.neutral800 },
   lost: { color: colors.neutral800, textDecorationLine: "line-through" },
-  risk: { color: colors.accent700 },
+  risk: { color: colors.advertencia },
 });

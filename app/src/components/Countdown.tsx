@@ -38,8 +38,12 @@ interface CountdownProps {
 
 /**
  * Contador de expiración de la oferta. Es el ÚNICO elemento animado del
- * sistema: pulsa la opacidad 1 → 0,35 en un ciclo de 2 s.
+ * sistema: pulsa la opacidad 1 → 0,9 en un ciclo de 2 s, un latido sereno
+ * que nunca baja el texto del contraste AA (verificado en contraste.test).
  */
+/** Opacidad mínima del pulso. */
+export const OPACIDAD_PULSO = 0.9;
+
 export function Countdown({ segundos, size, caption, align = "right", hideCaption, color, captionStyle, style }: CountdownProps) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
@@ -49,7 +53,7 @@ export function Countdown({ segundos, size, caption, align = "right", hideCaptio
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.35, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: OPACIDAD_PULSO, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(opacity, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     );
@@ -58,7 +62,7 @@ export function Countdown({ segundos, size, caption, align = "right", hideCaptio
   }, [opacity]);
 
   const urgente = segundos < UMBRAL_EXPIRA_PRONTO;
-  const numberColor = urgente ? colors.accent800 : (color ?? colors.accent700);
+  const numberColor = urgente ? colors.advertencia : (color ?? colors.contador);
 
   return (
     <View style={[{ alignItems: align === "right" ? "flex-end" : "center" }, style]}>
@@ -66,7 +70,7 @@ export function Countdown({ segundos, size, caption, align = "right", hideCaptio
         {mmss(segundos)}
       </Animated.Text>
       {!hideCaption && (
-        <Text style={[label(size > 40 ? 10 : 9), captionStyle, urgente && { color: colors.accent800 }]}>
+        <Text style={[label(size > 40 ? 10 : 9, colors.neutral600), captionStyle, urgente && { color: colors.advertencia }]}>
           {urgente ? t("oferta.expiraPronto") : caption}
         </Text>
       )}

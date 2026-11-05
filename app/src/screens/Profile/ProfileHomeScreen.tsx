@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { radius, sombra } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
 import { abrirAjustes, pedirPermisoNotificaciones } from "@/services/permisosService";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { Card } from "@/components/Card";
 import { AvatarPaciente } from "@/components/AvatarPaciente";
 import { elegirFotoPerfil } from "@/services/fotoService";
 import { diasEnEspera } from "@/utils/format";
@@ -71,7 +72,7 @@ export function ProfileHomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Encabezado sobre el arco celeste */}
         <View style={styles.hero}>
@@ -105,11 +106,11 @@ export function ProfileHomeScreen() {
         <View style={styles.cuerpo}>
           {/* Perfil por completar: desaparece cuando ya no falta nada */}
           {completo < 100 ? (
-            <Pressable
+            <Card
               onPress={() => navigation.navigate("PersonalData")}
               accessibilityRole="button"
               accessibilityLabel={t("perfil.completarA11y", { porcentaje: completo })}
-              style={({ pressed }) => [styles.tarjeta, pressed && styles.presionado]}
+              style={styles.tarjeta}
             >
               <Text style={body(14, colors.neutral700)}>{t("perfil.completar")}</Text>
               <View style={styles.separador} />
@@ -121,11 +122,11 @@ export function ProfileHomeScreen() {
                 </View>
                 <Text style={heading(18, colors.accent700)}>{completo}%</Text>
               </View>
-            </Pressable>
+            </Card>
           ) : null}
 
           {/* Lista de espera */}
-          <View style={styles.espera}>
+          <Card tono="acento" style={styles.espera}>
             <View style={styles.esperaFila}>
               <View style={styles.reloj}>
                 <Ionicons name="hourglass-outline" size={30} color={colors.accent600} />
@@ -146,7 +147,7 @@ export function ProfileHomeScreen() {
               </View>
             </View>
             <PrimaryButton label={t("perfil.editarPreferencias")} onPress={irAPreferencias} />
-          </View>
+          </Card>
 
           {/* Indicadores */}
           <Indicador
@@ -170,7 +171,7 @@ export function ProfileHomeScreen() {
           </View>
 
           {/* Cuenta */}
-          <View style={styles.cuenta}>
+          <Card style={styles.cuenta}>
             <Pressable
               onPress={alternarNotificaciones}
               accessibilityRole="button"
@@ -191,10 +192,10 @@ export function ProfileHomeScreen() {
               <Ionicons name="log-out-outline" size={20} color={colors.accent700} />
               <Text style={[body(15, colors.accent700), styles.flex]}>{t("perfil.cerrarSesion")}</Text>
             </Pressable>
-          </View>
+          </Card>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -236,19 +237,18 @@ function Indicador({
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   return (
-    <Pressable
+    <Card
       onPress={onPress}
-      disabled={!onPress}
       accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={`${etiqueta}: ${valor}`}
-      style={({ pressed }) => [styles.indicador, pressed && styles.presionado]}
+      style={styles.indicador}
     >
       <Ionicons name={icono} size={20} color={colors.accent600} style={styles.indicadorIcono} />
       <View style={styles.flex}>
         <Text style={heading(22, colors.accent900)}>{valor}</Text>
         <Text style={body(13, colors.neutral600)}>{etiqueta}</Text>
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -256,12 +256,10 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
-  // Blanco debajo del arco; arriba, el arco (que se extiende hacia arriba)
-  // cubre también el rebote del scroll.
+  // El degradado de la pantalla queda visible detrás del scroll; el arco es un halo tenue.
   scroll: {
-    backgroundColor: colors.fondoPantalla,
+    backgroundColor: "transparent",
   },
   content: {
     flexGrow: 1,
@@ -288,7 +286,7 @@ const crearStyles = (colors: Paleta) =>
   arco: {
     position: "absolute",
     bottom: 44,
-    backgroundColor: colors.fondo,
+    backgroundColor: colors.arcoPerfil,
   },
   barra: {
     flexDirection: "row",
@@ -323,12 +321,6 @@ const crearStyles = (colors: Paleta) =>
   },
   tarjeta: {
     padding: 18,
-    borderRadius: radius.lg,
-    backgroundColor: colors.fondoCard,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    ...sombra.md,
-    shadowOpacity: 0.08,
   },
   separador: {
     height: 1,
@@ -361,8 +353,6 @@ const crearStyles = (colors: Paleta) =>
     marginTop: 6,
     padding: 18,
     gap: 18,
-    borderRadius: radius.lg,
-    backgroundColor: colors.fondo,
   },
   esperaFila: {
     flexDirection: "row",
@@ -389,20 +379,12 @@ const crearStyles = (colors: Paleta) =>
     gap: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    backgroundColor: colors.fondoCard,
   },
   indicadorIcono: {
     marginTop: 3,
   },
   cuenta: {
     marginTop: 6,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    overflow: "hidden",
   },
   fila: {
     flexDirection: "row",

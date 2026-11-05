@@ -9,12 +9,15 @@ interface PrimaryButtonProps {
   label: string;
   onPress?: () => void;
   /**
-   * primary:   única acción sólida de la pantalla, en acero con sombra suave.
-   * secondary: superficie blanca con borde.
-   * ghost:     terciario, solo texto en acero.
-   * inverse:   sólido blanco sobre campo oscuro (estado terminal).
+   * primary:   única acción sólida de la pantalla: Venice con texto Merino
+   *            (claro) o Rock Blue con texto oscuro (oscuro).
+   * secondary: superficie crema / azul noche con borde de acento.
+   * ghost:     terciario, solo texto de acento.
+   * inverse:   sólido Merino sobre el campo de pantalla completa (estado terminal).
    */
   variant?: "primary" | "secondary" | "ghost" | "inverse";
+  /** El botón (ghost) está directamente sobre el degradado: texto en su color «sobre fondo». */
+  sobreFondo?: boolean;
   disabled?: boolean;
   /** Texto extra para lectores de pantalla (qué pasa al tocarlo). */
   accessibilityHint?: string;
@@ -23,15 +26,25 @@ interface PrimaryButtonProps {
 
 const crearTextColor = (colors: Paleta): Record<NonNullable<PrimaryButtonProps["variant"]>, string> => ({
   primary: colors.sobreAcento,
-  secondary: colors.text,
+  secondary: colors.accent700,
   ghost: colors.accent700,
-  inverse: colors.campo,
+  inverse: colors.campoPantalla,
 });
 
-export function PrimaryButton({ label, onPress, variant = "primary", disabled, accessibilityHint, style }: PrimaryButtonProps) {
+export function PrimaryButton({
+  label,
+  onPress,
+  variant = "primary",
+  sobreFondo,
+  disabled,
+  accessibilityHint,
+  style,
+}: PrimaryButtonProps) {
+  const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   const pressedStyle = useEstilos(crearPressedStyle);
   const textColor = useEstilos(crearTextColor);
+  const fantasmaSobreFondo = sobreFondo && variant === "ghost";
   return (
     <Pressable
       onPress={onPress}
@@ -43,12 +56,12 @@ export function PrimaryButton({ label, onPress, variant = "primary", disabled, a
       style={({ pressed }) => [
         styles.base,
         styles[variant],
-        pressed && pressedStyle[variant],
+        pressed && (fantasmaSobreFondo ? pressedStyle.ghostSobreFondo : pressedStyle[variant]),
         disabled && styles.disabled,
         style,
       ]}
     >
-      <Text style={[styles.text, { color: textColor[variant] }]}>{label}</Text>
+      <Text style={[styles.text, { color: fantasmaSobreFondo ? colors.acentoSobreFondo : textColor[variant] }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -63,19 +76,20 @@ const crearStyles = (colors: Paleta) =>
     borderRadius: radius.md + 2,
     borderWidth: 1,
   },
+  // El borde claro lo separa del degradado cuando va directo sobre el fondo.
   primary: {
     backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    borderColor: colors.bordePrimario,
     ...sombra.md,
   },
-  // Sólido sobre el campo: en claro, blanco con texto Campo.
+  // Sólido sobre el campo de pantalla completa: Merino con texto marino.
   inverse: {
-    backgroundColor: colors.sobreCampo,
-    borderColor: colors.sobreCampo,
+    backgroundColor: colors.sobreCampoPantalla,
+    borderColor: colors.sobreCampoPantalla,
   },
   secondary: {
     backgroundColor: colors.superficie,
-    borderColor: colors.accent200,
+    borderColor: colors.accent,
   },
   ghost: {
     backgroundColor: "transparent",
@@ -93,8 +107,9 @@ const crearStyles = (colors: Paleta) =>
 
 const crearPressedStyle = (colors: Paleta) =>
   StyleSheet.create({
-  primary: { backgroundColor: colors.accent700, borderColor: colors.accent700 },
+  primary: { backgroundColor: colors.acentoPresionado },
   inverse: { backgroundColor: colors.accent100 },
   secondary: { backgroundColor: colors.accent100 },
   ghost: { backgroundColor: colors.accent100 },
+  ghostSobreFondo: { backgroundColor: colors.divisorSobreFondo },
 });

@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,9 +7,11 @@ import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { usePaciente } from "@/auth/AuthContext";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
-import { radius, sombra } from "@/theme/spacing";
+import { Pantalla } from "@/components/Vidrio";
+import { radius } from "@/theme/spacing";
 import { body, fonts, label } from "@/theme/typography";
 import { EmptyState } from "@/components/EmptyState";
+import { Card } from "@/components/Card";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Notificacion, TipoNotificacion } from "@/types/domain";
 import { getNotificaciones, marcarComoLeida, marcarTodasComoLeidas } from "@/services/notificationsService";
@@ -93,7 +94,7 @@ export function NotificationsScreen() {
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScreenHeader
         title={t("notificaciones.titulo")}
         accion={
@@ -123,7 +124,7 @@ export function NotificationsScreen() {
           grupos.map(([grupo, avisos]) => (
             <View key={grupo} style={styles.grupo}>
               <Text style={label(10, colors.textoTenueSobreFondo)}>{grupo}</Text>
-              <View style={styles.bandeja}>
+              <Card>
                 {avisos.map((n, i) => (
                   <FilaAviso
                     key={n.id}
@@ -133,12 +134,12 @@ export function NotificationsScreen() {
                     onVerOferta={() => handleVerOferta(n)}
                   />
                 ))}
-              </View>
+              </Card>
             </View>
           ))
         )}
       </ScrollView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -215,7 +216,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,
@@ -256,15 +256,9 @@ const crearStyles = (colors: Paleta) =>
   filtroTextoActivo: {
     color: colors.sobreCampo,
   },
-  // Bandeja
+  // Bandeja (una Card de vidrio)
   grupo: {
     gap: 8,
-  },
-  bandeja: {
-    borderRadius: radius.lg,
-    backgroundColor: colors.fondoCard,
-    overflow: "hidden",
-    ...sombra.sm,
   },
   fila: {
     flexDirection: "row",

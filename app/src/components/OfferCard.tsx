@@ -54,7 +54,7 @@ function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress
   const expirada = segundos === 0;
 
   return (
-    <Card tono="acento" style={[styles.home, expirada && styles.expired]}>
+    <Card tono="acento" style={styles.home}>
       <View style={styles.topRow}>
         {expirada ? (
           <Badge label={t("oferta.expirada")} variant="lost" />
@@ -131,11 +131,11 @@ export function DataRow({ fecha, hora: h, size }: { fecha: string; hora: string;
     <View style={styles.dataRow}>
       <View style={styles.dataCell}>
         <Text style={label(9, colors.neutral600)}>{t("comun.fecha")}</Text>
-        <Text style={heading(size)}>{fecha}</Text>
+        <Text style={heading(size, colors.text)}>{fecha}</Text>
       </View>
       <View style={[styles.dataCell, styles.dataCellRight]}>
         <Text style={label(9, colors.neutral600)}>{t("comun.hora")}</Text>
-        <Text style={heading(size)}>{h}</Text>
+        <Text style={heading(size, colors.text)}>{h}</Text>
       </View>
     </View>
   );
@@ -150,9 +150,6 @@ const crearStyles = (colors: Paleta) =>
   full: {
     padding: 20,
     gap: 14,
-  },
-  expired: {
-    opacity: 0.55,
   },
   topRow: {
     flexDirection: "row",

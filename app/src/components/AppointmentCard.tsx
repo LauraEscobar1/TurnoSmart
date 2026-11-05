@@ -23,7 +23,7 @@ export const varianteEstado: Record<Cita["estado"], BadgeVariant> = {
 interface AppointmentCardProps {
   cita: Cita;
   onPress?: () => void;
-  /** Pasada: se atenúa y pierde la acción. */
+  /** Pasada: card plana (sin acción); el texto mantiene su contraste. */
   past?: boolean;
   /** Versión compacta: fecha a la izquierda, sin estado. */
   compact?: boolean;
@@ -71,7 +71,7 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
   const accion = past ? undefined : onPress;
 
   return (
-    <Card onPress={accion} style={[styles.completa, past && styles.past]}>
+    <Card onPress={accion} tono={past ? "plana" : "superficie"} style={styles.completa}>
       <View style={styles.encabezado}>
         <Text style={[heading(20, colors.accent900), styles.flex]} numberOfLines={1}>
           {especialidad}
@@ -123,9 +123,6 @@ const crearStyles = (colors: Paleta) =>
   compact: {
     padding: 12,
     gap: 12,
-  },
-  past: {
-    opacity: 0.55,
   },
   date: {
     alignItems: "center",

@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { body, heading, label } from "@/theme/typography";
 import { RootStackParamList } from "@/navigation/types";
 import { OfertaCupo } from "@/types/domain";
@@ -55,24 +56,23 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
   }, []);
 
   const fg = esAceptada ? colors.sobreCampoPantalla : colors.textoSobreFondo;
-  const rule = esAceptada ? colors.dividerOnField : colors.divider;
+  const rule = esAceptada ? colors.dividerOnField : colors.divisorSobreFondo;
+  // Aceptada: campo sólido a pantalla completa. Rechazada: el degradado de siempre.
+  const Raiz = esAceptada ? SafeAreaView : Pantalla;
 
   return (
-    <SafeAreaView
-      edges={["top", "bottom"]}
-      style={[styles.safe, { backgroundColor: esAceptada ? colors.campoPantalla : colors.fondoPantalla }]}
-    >
-      {/* El campo sólido es oscuro en los dos modos: sobre él la barra va clara. */}
-      <StatusBar style={esAceptada || oscuro ? "light" : "dark"} />
+    <Raiz edges={["top", "bottom"]} style={[styles.safe, esAceptada && { backgroundColor: colors.campoPantalla }]}>
+      {/* El campo y el degradado son oscuros en los dos modos: la barra de estado va clara. */}
+      <StatusBar style="light" />
       <View style={styles.body}>
-        <View style={[styles.halo, { backgroundColor: esAceptada ? colors.haloCampo : colors.accent100 }]}>
+        <View style={[styles.halo, { backgroundColor: colors.haloCampo }]}>
           <View style={[styles.mark, { borderColor: fg }]}>
             <Ionicons name={esAceptada ? "checkmark" : "close"} size={34} color={fg} />
           </View>
         </View>
         <Text style={[heading(34, fg), styles.center]}>{t(esAceptada ? "confirmacion.confirmado" : "confirmacion.rechazada")}</Text>
         {oferta && (
-          <Text style={[body(14, fg), styles.center, styles.soft]}>
+          <Text style={[body(14, colors.textoSuaveSobreFondo), styles.center]}>
             {dato("especialidades", oferta.especialidad)} ·{" "}
             {esDiaCercano(oferta.fechaHoraISO)
               ? diaRelativo(oferta.fechaHoraISO).toLowerCase()
@@ -83,7 +83,7 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
           </Text>
         )}
         <View style={[styles.note, { borderTopColor: rule }]}>
-          <Text style={[body(12, fg), styles.center, styles.faint]}>
+          <Text style={[body(12, colors.textoTenueSobreFondo), styles.center]}>
             {esAceptada
               ? t("confirmacion.confirmadoTexto")
               : t("confirmacion.rechazadaTexto")}
@@ -93,15 +93,15 @@ export function OfferConfirmationScreen({ route, navigation }: Props) {
       <View style={styles.footer}>
         {esAceptada ? (
           <>
-            {/* En oscuro el campo ya es tenue: el botón vuelve al Acero de siempre. */}
+            {/* En oscuro el campo ya es tenue: el botón vuelve al primario Rock Blue. */}
             <PrimaryButton label={t("confirmacion.verCita")} variant={oscuro ? "primary" : "inverse"} onPress={irAMisCitas} />
-            <Text style={[label(10, colors.sobreCampoPantalla), styles.center, styles.hint]}>{t("confirmacion.volviendo")}</Text>
+            <Text style={[label(10, colors.textoTenueSobreFondo), styles.center]}>{t("confirmacion.volviendo")}</Text>
           </>
         ) : (
           <PrimaryButton label={t("confirmacion.volverInicio")} variant="secondary" onPress={irAInicio} />
         )}
       </View>
-    </SafeAreaView>
+    </Raiz>
   );
 }
 
@@ -135,12 +135,6 @@ const crearStyles = (colors: Paleta) =>
   center: {
     textAlign: "center",
   },
-  soft: {
-    opacity: 0.9,
-  },
-  faint: {
-    opacity: 0.75,
-  },
   note: {
     alignSelf: "stretch",
     borderTopWidth: 1,
@@ -150,8 +144,5 @@ const crearStyles = (colors: Paleta) =>
     paddingVertical: 14,
     paddingHorizontal: 18,
     gap: 8,
-  },
-  hint: {
-    opacity: 0.65,
   },
 });

@@ -1,16 +1,19 @@
 import React from "react";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { Paleta } from "@/theme/colors";
-import { useEstilos, useTema } from "@/theme/Tema";
-import { radius, sombra } from "@/theme/spacing";
+import { useEstilos } from "@/theme/Tema";
+import { radius } from "@/theme/spacing";
+import { CapaVidrio } from "@/components/Vidrio";
 
 interface CardProps {
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   /**
-   * superficie: blanca con sombra tenue (por defecto).
-   * acento: tinte acero 100, para lo que tiene un reloj corriendo (oferta).
-   * plana: sin sombra ni relleno, solo el borde (figuras, filas atenuadas).
+   * superficie: vidrio crema (claro) o Venice translúcido (oscuro), por defecto.
+   * acento: vidrio con tinte Rock Blue, para lo que tiene un reloj corriendo (oferta).
+   * plana: el mismo vidrio sin tinte de acento, con el borde más marcado
+   *        (ayuda, filas secundarias). Nunca transparente: el texto de las
+   *        cards es oscuro en claro y no se lee sobre el degradado.
    */
   tono?: "superficie" | "acento" | "plana";
   onPress?: () => void;
@@ -20,8 +23,8 @@ interface CardProps {
 }
 
 /**
- * Tarjeta del estilo suave de TurnoSmart: esquinas redondeadas, superficie
- * blanca y una sombra apenas visible sobre el fondo acerado.
+ * Card de vidrio de TurnoSmart: radio 20, borde sutil y, detrás del
+ * contenido, el desenfoque del degradado con el color translúcido encima.
  */
 export function Card({
   children,
@@ -34,6 +37,7 @@ export function Card({
 }: CardProps) {
   const styles = useEstilos(crearStyles);
   const cardStyle = [styles.base, styles[tono], style];
+  const vidrio = <CapaVidrio variante={tono === "acento" ? "acento" : "card"} />;
 
   if (onPress) {
     return (
@@ -45,34 +49,37 @@ export function Card({
         accessibilityState={disabled ? { disabled } : undefined}
         style={({ pressed }) => [cardStyle, pressed && styles.pressed]}
       >
+        {vidrio}
         {children}
       </Pressable>
     );
   }
 
-  return <View style={cardStyle}>{children}</View>;
+  return (
+    <View style={cardStyle}>
+      {vidrio}
+      {children}
+    </View>
+  );
 }
 
 const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
-  base: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  superficie: {
-    backgroundColor: colors.fondoCard,
-    borderColor: colors.borde,
-    ...sombra.sm,
-  },
-  acento: {
-    backgroundColor: colors.fondoCardAcento,
-    borderColor: colors.bordeCardAcento,
-  },
-  plana: {
-    backgroundColor: "transparent",
-    borderColor: colors.borde,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-});
+    base: {
+      borderRadius: radius.card,
+      borderWidth: 1,
+      overflow: "hidden",
+    },
+    superficie: {
+      borderColor: colors.bordeCard,
+    },
+    acento: {
+      borderColor: colors.bordeCardAcento,
+    },
+    plana: {
+      borderColor: colors.borde,
+    },
+    pressed: {
+      opacity: 0.9,
+    },
+  });

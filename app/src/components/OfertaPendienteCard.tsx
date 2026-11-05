@@ -38,7 +38,7 @@ export function OfertaPendienteCard({ oferta, onAceptar, onVerDetalles }: Props)
   const expirada = segundos === 0;
 
   return (
-    <Card style={[styles.card, expirada && styles.expirada]}>
+    <Card style={styles.card}>
       <View style={styles.cabecera}>
         <View style={styles.estado}>
           <Badge
@@ -101,9 +101,6 @@ const crearStyles = (colors: Paleta) =>
   card: {
     padding: 18,
     gap: 14,
-  },
-  expirada: {
-    opacity: 0.6,
   },
   cabecera: {
     flexDirection: "row",

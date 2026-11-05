@@ -8,6 +8,7 @@ import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { RootTabParamList } from "@/navigation/types";
+import { CapaVidrio } from "@/components/Vidrio";
 
 const ICON_SIZE = 20;
 const BAR_HEIGHT = 64;
@@ -30,9 +31,9 @@ export type TabBadges = Partial<Record<keyof RootTabParamList, number>>;
 
 /**
  * Navegación primaria deslizable — "TabBar.dc.html" / "NavDeslizable.dc.html".
- * Un bloque sólido redondeado (acero 900) sigue al dedo
- * mientras se arrastra el contenido. La sección actual lleva el ícono
- * ampliado en papel y la etiqueta en negrita.
+ * Barra de vidrio sobre el degradado; un bloque redondeado (Rock Blue en
+ * claro, Light Blue en oscuro) sigue al dedo mientras se arrastra el
+ * contenido. La sección actual lleva el ícono ampliado y la etiqueta en negrita.
  *
  * Todo lo que se mueve con el arrastre (bloque, ícono, etiqueta) se anima
  * solo con transform y opacity, para correr en el hilo nativo.
@@ -53,6 +54,7 @@ export function TabBar({
 
   return (
     <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
+      <CapaVidrio variante="barra" />
       <View style={styles.row} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {width > 0 && (
           <Animated.View
@@ -104,7 +106,7 @@ export function TabBar({
                   <Ionicons name={icon} size={ICON_SIZE} color={colors.neutral600} />
                 </Animated.View>
                 <Animated.View style={[styles.layer, { opacity: on }]}>
-                  <Ionicons name={icon} size={ICON_SIZE} color={colors.bg} />
+                  <Ionicons name={icon} size={ICON_SIZE} color={colors.sobreCampo} />
                 </Animated.View>
               </Animated.View>
               <View style={styles.labelBox}>
@@ -142,8 +144,8 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   bar: {
     borderTopWidth: 1,
-    borderTopColor: colors.borde,
-    backgroundColor: colors.superficie,
+    borderTopColor: colors.bordeCard,
+    overflow: "hidden",
   },
   row: {
     height: BAR_HEIGHT,
@@ -208,7 +210,7 @@ const crearStyles = (colors: Paleta) =>
   },
   labelOn: {
     fontFamily: fonts.bodyBold,
-    color: colors.bg,
+    color: colors.sobreCampo,
   },
   badge: {
     position: "absolute",
@@ -229,7 +231,7 @@ const crearStyles = (colors: Paleta) =>
     fontFamily: fonts.bodyBold,
     fontSize: 9,
     lineHeight: 11,
-    color: colors.bg,
+    color: colors.sobreAcento,
     includeFontPadding: false,
   },
 });
