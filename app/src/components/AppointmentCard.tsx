@@ -13,17 +13,17 @@ import { useDato, useT } from "@/i18n";
 
 /** Relleno de la etiqueta de cada estado; el texto sale de i18n (datos.estadosCita). */
 export const varianteEstado: Record<Cita["estado"], BadgeVariant> = {
-  confirmada: "solid",
+  confirmada: "exito",
   asistida: "neutral",
-  cancelada: "lost",
-  reasignada: "outline",
-  "no-show": "neutral",
+  cancelada: "error",
+  reasignada: "info",
+  "no-show": "advertencia",
 };
 
 interface AppointmentCardProps {
   cita: Cita;
   onPress?: () => void;
-  /** Pasada: se atenúa y pierde la acción. */
+  /** Pasada: card plana (sin acción); el texto mantiene su contraste. */
   past?: boolean;
   /** Versión compacta: fecha a la izquierda, sin estado. */
   compact?: boolean;
@@ -71,31 +71,31 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
   const accion = past ? undefined : onPress;
 
   return (
-    <Card onPress={accion} style={[styles.completa, past && styles.past]}>
+    <Card onPress={accion} tono={past ? "plana" : "superficie"} style={styles.completa}>
       <View style={styles.encabezado}>
         <Text style={[heading(20, colors.accent900), styles.flex]} numberOfLines={1}>
           {especialidad}
         </Text>
         <View style={styles.hora}>
-          <Ionicons name="time-outline" size={14} color={colors.accent700} />
+          <Ionicons name="time-outline" size={14} color={colors.icono} />
           <Text style={heading(16, colors.accent700)}>{hora(cita.fechaHoraISO)}</Text>
         </View>
       </View>
 
       {conFecha ? (
         <View style={styles.dato}>
-          <Ionicons name="calendar-outline" size={15} color={colors.accent700} />
+          <Ionicons name="calendar-outline" size={15} color={colors.icono} />
           <Text style={[body(14, colors.accent700), styles.fecha]}>{fechaCita(cita.fechaHoraISO)}</Text>
         </View>
       ) : null}
       <View style={styles.dato}>
-        <Ionicons name="person-outline" size={15} color={colors.accent700} />
+        <Ionicons name="person-outline" size={15} color={colors.icono} />
         <Text style={[body(14, colors.text), styles.flex]} numberOfLines={1}>
           {cita.profesional}
         </Text>
       </View>
       <View style={styles.dato}>
-        <Ionicons name="location-outline" size={15} color={colors.neutral600} />
+        <Ionicons name="location-outline" size={15} color={colors.icono} />
         <Text style={[body(13, colors.neutral700), styles.flex]} numberOfLines={1}>
           {cita.consultorio}
         </Text>
@@ -106,7 +106,7 @@ export function AppointmentCard({ cita, onPress, past, compact, conFecha }: Appo
         {cita.origen === "cupo-recuperado" ? (
           <Text style={body(12, colors.neutral600)}>{t("citas.cupoRecuperado")}</Text>
         ) : null}
-        {accion ? <Ionicons name="chevron-forward" size={18} color={colors.neutral600} style={styles.chevron} /> : null}
+        {accion ? <Ionicons name="chevron-forward" size={18} color={colors.icono} style={styles.chevron} /> : null}
       </View>
     </Card>
   );
@@ -123,9 +123,6 @@ const crearStyles = (colors: Paleta) =>
   compact: {
     padding: 12,
     gap: 12,
-  },
-  past: {
-    opacity: 0.55,
   },
   date: {
     alignItems: "center",

@@ -1,5 +1,6 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { montarApp, reiniciarDatos } from "@/test-utils/app";
+import { tablaFalsa } from "@/test-utils/supabaseFalso";
 import * as fotoService from "@/services/fotoService";
 import { getAjustes } from "@/services/ajustesService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -239,7 +240,8 @@ describe("Secciones", () => {
     expect(screen.getByDisplayValue("Sura EPS")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Volver"));
 
-    await fireEvent.press(await screen.findByText("Franja preferida"));
+    // Las preferencias se editan solo desde «Editar preferencias» (card de la lista de espera).
+    await fireEvent.press(await screen.findByRole("button", { name: "Editar preferencias" }));
     await fireEvent.press(await screen.findByRole("radio", { name: "Mañana" }));
     await fireEvent.press(screen.getByRole("checkbox", { name: "Nutrición" }));
     await fireEvent.press(screen.getByText("Guardar"));
@@ -386,7 +388,7 @@ describe("Idioma", () => {
 describe("Modo oscuro", () => {
   it("por defecto la app está en claro", async () => {
     await montarApp();
-    // Título de sección sobre el fondo de pantalla: en claro, blanco.
+    // Título de sección sobre el fondo de pantalla: en claro, Merino.
     expect(await screen.findByText("Ofertas de cupo")).toHaveStyle({ color: paletaClara.textoSobreFondo });
   });
 
@@ -396,13 +398,13 @@ describe("Modo oscuro", () => {
     await fireEvent(screen.getByLabelText("Modo oscuro"), "valueChange", true);
     await fireEvent.press(screen.getByLabelText("Cerrar", { includeHiddenElements: true }));
 
-    // Títulos en tinta clara y textos y secciones sin cambios.
-    expect(screen.getByText("Ofertas de cupo")).toHaveStyle({ color: paletaOscura.accent900 });
+    // Títulos sobre el fondo en Merino y textos y secciones sin cambios.
+    expect(screen.getByText("Ofertas de cupo")).toHaveStyle({ color: paletaOscura.textoSobreFondo });
     expect(screen.getByText("Próxima cita")).toBeTruthy();
 
     // Otras pestañas y pantallas de detalle también.
     await fireEvent.press(screen.getByRole("tab", { name: "Notificaciones" }));
-    expect(await screen.findByText("Marcar todo como leído")).toHaveStyle({ color: paletaOscura.accent700 });
+    expect(await screen.findByText("Marcar todo como leído")).toHaveStyle({ color: paletaOscura.acentoSobreFondo });
     await fireEvent.press(screen.getByRole("tab", { name: "Inicio" }));
     await fireEvent.press((await screen.findAllByText("Ver oferta"))[0]);
     expect(await screen.findByText("Aceptar cupo")).toHaveStyle({ color: paletaOscura.sobreAcento });
@@ -411,7 +413,7 @@ describe("Modo oscuro", () => {
   it("el modo oscuro se guarda y se usa al volver a abrir la app", async () => {
     await AsyncStorage.setItem("ts.ajustes", JSON.stringify({ modoOscuro: true, idioma: "es" }));
     await montarApp({ sesion: false });
-    expect(await screen.findByText("Empezar")).toHaveStyle({ color: paletaOscura.sobreAcento });
+    expect(await screen.findByText("Empezar")).toHaveStyle({ color: paletaOscura.textoBotonBienvenida });
   });
 });
 
@@ -463,6 +465,25 @@ describe("Inicio: acciones de cada sección", () => {
     await fireEvent.press(await screen.findByRole("tab", { name: "Perfil" }));
     // Especialidades en espera: 2 → 3.
     expect(await screen.findByText("3")).toBeTruthy();
+  });
+
+  it("la lista de espera muestra cada solicitud y sacar una pide confirmación", async () => {
+    await montarApp();
+    await fireEvent.press(await screen.findByRole("button", { name: "Ver lista de espera" }));
+    expect(await screen.findByText("Tu lista de espera")).toBeTruthy();
+    const salir = await screen.findAllByRole("button", { name: /^Salir de la lista de / });
+    expect(salir).toHaveLength(2);
+
+    // Cancelar no cambia nada.
+    await fireEvent.press(salir[0]);
+    await fireEvent.press(await screen.findByRole("button", { name: "Seguir esperando" }));
+    expect(screen.getAllByRole("button", { name: /^Salir de la lista de / })).toHaveLength(2);
+
+    // Confirmar la saca de la lista y lo avisa.
+    await fireEvent.press(screen.getAllByRole("button", { name: /^Salir de la lista de / })[0]);
+    await fireEvent.press(await screen.findByRole("button", { name: "Sí, salir de la lista" }));
+    expect(await screen.findByText(/^Saliste de la lista de /)).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /^Salir de la lista de / })).toHaveLength(1);
   });
 
   it("sin oferta ni avisos nuevos muestra «Sin ofertas por ahora» y «Todo al día»", async () => {
@@ -539,5 +560,68 @@ describe("Detalle de cita", () => {
     expect(await screen.findByText("Cancelada")).toBeTruthy();
     expect(screen.getByText(/Cancelaste esta cita/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reprogramar" })).toBeNull();
+  });
+});
+
+describe("Inicio › panel del asistente IA", () => {
+  /** La oferta aceptada de la cuenta demo (Nutrición). */
+  const ofertaAceptada = () => tablaFalsa("ofertas").find((o) => o.estado === "aceptada")!;
+
+  async function abrirPanel() {
+    await montarApp();
+    await fireEvent.press((await screen.findAllByRole("button", { name: "Abrir el panel de tu asistente IA" }))[0]);
+  }
+
+  it("lista las ofertas pendientes y el cupo reasignado; sin IA de por medio, no la menciona", async () => {
+    await abrirPanel();
+    // El único cupo reasignado lo eligió el respaldo determinista.
+    expect(await screen.findByText("Reasignado por TurnoSmart")).toBeTruthy();
+    expect(screen.getByText("TurnoSmart ha trabajado para ti")).toBeTruthy();
+    expect(screen.getByText("Este cupo se liberó por una cancelación y TurnoSmart te lo asignó.")).toBeTruthy();
+    expect(screen.getByText("Nutrición")).toBeTruthy();
+    expect(screen.queryByText("Reasignado por IA")).toBeNull();
+    expect(screen.queryByText(/La IA ha recuperado/)).toBeNull();
+    expect(await screen.findByText("TurnoSmart ha recuperado 1 cita para ti")).toBeTruthy();
+
+    // Arriba, lo que espera respuesta, con «Ver oferta» que lleva al detalle.
+    expect(screen.getByText("Esperan tu respuesta")).toBeTruthy();
+    const verOferta = screen.getAllByRole("button", { name: "Ver oferta" });
+    await fireEvent.press(verOferta[verOferta.length - 1]);
+    expect(await screen.findByText("Aceptar cupo")).toBeTruthy();
+  });
+
+  it("si la IA reasignó el cupo, lo dice y cuenta las citas recuperadas", async () => {
+    ofertaAceptada().estrategia = "ai";
+    await abrirPanel();
+    expect(await screen.findByText("Reasignado por IA")).toBeTruthy();
+    expect(screen.getByText("Tu asistente IA ha trabajado para ti")).toBeTruthy();
+    expect(screen.getByText("Este cupo se liberó por una cancelación y tu asistente te lo asignó.")).toBeTruthy();
+    expect(await screen.findByText("La IA ha recuperado 1 cita para ti")).toBeTruthy();
+    expect(screen.queryByText("Reasignado por TurnoSmart")).toBeNull();
+  });
+
+  it("al aceptar una oferta, el cupo aparece con su cita de cupo recuperado y «Ver cita»", async () => {
+    await montarApp();
+    await fireEvent.press((await screen.findAllByText("Ver oferta"))[0]);
+    await fireEvent.press(await screen.findByText("Aceptar cupo"));
+    await fireEvent.press(await screen.findByText("Ver cita"));
+    await fireEvent.press(await screen.findByRole("tab", { name: "Inicio" }));
+    await fireEvent.press((await screen.findAllByRole("button", { name: "Abrir el panel de tu asistente IA" }))[0]);
+    // Dos cupos reasignados: el de la demo (sin cita enlazada) y el recién aceptado, con su cita.
+    expect(await screen.findAllByText(/^Reasignado por /)).toHaveLength(2);
+    await fireEvent.press(await screen.findByRole("button", { name: "Ver cita" }));
+    expect(await screen.findByText("Información de la reserva")).toBeTruthy();
+  });
+
+  it("sin cupos reasignados muestra el estado vacío del asistente", async () => {
+    ofertaAceptada().estado = "rechazada";
+    await abrirPanel();
+    expect(
+      await screen.findByText(
+        "Aún no tienes cupos reasignados. Tu asistente sigue atento y te avisará apenas se libere uno compatible."
+      )
+    ).toBeTruthy();
+    expect(screen.getByText("Tu asistente IA ha trabajado para ti")).toBeTruthy();
+    expect(screen.queryByText(/Reasignado por/)).toBeNull();
   });
 });

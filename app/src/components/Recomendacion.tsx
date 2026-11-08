@@ -7,6 +7,8 @@ import { useEstilos, useTema } from "@/theme/Tema";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
+import { Card } from "@/components/Card";
+import { IconoCirculo, IconoMetal } from "@/components/Adornos";
 
 /**
  * Cómo se le cuenta al paciente quién le recomendó un cupo.
@@ -17,7 +19,12 @@ import { useT } from "@/i18n";
  * Nunca se muestra el score, el riesgo ni datos de otros pacientes.
  */
 
-/** Píldora «Recomendado por IA» (destello) o «Recomendado por TurnoSmart» (check). */
+/**
+ * Píldora «Recomendado por IA» (destello) o «Recomendado por TurnoSmart» (check).
+ * La de IA es una sola capa: relleno claro propio, el robot del asistente
+ * metalizado y un brillo suave; se lee igual sobre cards, sobre el degradado
+ * y en los dos modos.
+ */
 export function InsigniaRecomendacion({
   estrategia,
   sobreAcento = false,
@@ -34,14 +41,27 @@ export function InsigniaRecomendacion({
   const ia = estrategia === "ai";
   const color = sobreAcento ? colors.sobreAcento : colors.accent800;
   const texto = t(ia ? "oferta.recomendacion.ia" : "oferta.recomendacion.turnoSmart");
+  if (ia) {
+    return (
+      <View
+        style={[styles.insignia, styles.insigniaIA, style]}
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={t("oferta.recomendacion.iaAccesible")}
+      >
+        <IconoMetal ia tamano={14} color={colors.textoInsigniaIA} />
+        <Text style={[styles.insigniaTexto, styles.insigniaTextoIA]}>{texto}</Text>
+      </View>
+    );
+  }
   return (
     <View
       style={[styles.insignia, sobreAcento ? styles.insigniaAcento : styles.insigniaTinte, style]}
       accessible
       accessibilityRole="text"
-      accessibilityLabel={ia ? t("oferta.recomendacion.iaAccesible") : texto}
+      accessibilityLabel={texto}
     >
-      <Ionicons name={ia ? "sparkles" : "checkmark-circle-outline"} size={12} color={color} />
+      <Ionicons name="checkmark-circle-outline" size={12} color={sobreAcento ? colors.sobreAcento : colors.icono} />
       <Text style={[styles.insigniaTexto, { color }]}>{texto}</Text>
     </View>
   );
@@ -69,15 +89,17 @@ export function AsistenteAtento({ style }: { style?: StyleProp<ViewStyle> }) {
   const titulo = t("asistenteIA.atentoTitulo");
   const texto = t("asistenteIA.atentoTexto");
   return (
-    <View style={[styles.atento, style]} accessible accessibilityLabel={`${titulo}. ${texto}`}>
-      <View style={styles.atentoIcono}>
-        <Ionicons name="sparkles" size={16} color={colors.sobreAcento} />
+    <Card tono="acento" style={style}>
+      <View style={styles.atento} accessible accessibilityLabel={`${titulo}. ${texto}`}>
+        <View style={styles.atentoIcono}>
+          <IconoCirculo ia tamano={36} tamanoIcono={20} />
+        </View>
+        <View style={styles.flex}>
+          <Text style={heading(16, colors.accent900)}>{titulo}</Text>
+          <Text style={body(13, colors.accent800)}>{texto}</Text>
+        </View>
       </View>
-      <View style={styles.flex}>
-        <Text style={heading(16, colors.accent900)}>{titulo}</Text>
-        <Text style={body(13, colors.accent800)}>{texto}</Text>
-      </View>
-    </View>
+    </Card>
   );
 }
 
@@ -94,8 +116,6 @@ const crearStyles = (colors: Paleta) =>
     },
     insigniaTinte: {
       backgroundColor: colors.accent100,
-      borderWidth: 1,
-      borderColor: colors.accent200,
     },
     insigniaAcento: {
       backgroundColor: colors.accent,
@@ -105,21 +125,31 @@ const crearStyles = (colors: Paleta) =>
       fontSize: 11,
       letterSpacing: 0.2,
     },
+    // Aro en degradado con un brillo suave de IA alrededor.
+    // Una sola capa, con un brillo suave de IA.
+    insigniaIA: {
+      backgroundColor: colors.fondoInsigniaIA,
+      shadowColor: colors.brilloIA,
+      shadowOpacity: 0.45,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 0 },
+    },
+    insigniaTextoIA: {
+      fontFamily: fonts.bodyBold,
+      color: colors.textoInsigniaIA,
+    },
     atento: {
       flexDirection: "row",
       alignItems: "flex-start",
       gap: 12,
       padding: 14,
-      borderRadius: radius.lg,
-      backgroundColor: colors.fondoCardAcento,
-      borderWidth: 1,
-      borderColor: colors.bordeCardAcento,
     },
     atentoIcono: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.accent,
+      borderRadius: 18,
+      shadowColor: colors.brilloIA,
+      shadowOpacity: 0.55,
+      shadowRadius: 9,
+      shadowOffset: { width: 0, height: 0 },
       alignItems: "center",
       justifyContent: "center",
     },

@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { sombra } from "@/theme/spacing";
@@ -14,17 +15,19 @@ interface Props {
   size: number;
   /** Con `onPress`, lleva la insignia de cámara para subir o cambiar la foto. */
   onPress?: () => void;
+  /** Anillo metalizado alrededor (cabecera de Perfil). */
+  anillo?: boolean;
 }
 
 /** Círculo del paciente: su foto si la subió; si no, sus iniciales. */
-export function AvatarPaciente({ paciente, size, onPress }: Props) {
+export function AvatarPaciente({ paciente, size, onPress, anillo = false }: Props) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   const t = useT();
   const circulo = { width: size, height: size, borderRadius: size / 2 };
   const insignia = Math.round(size * 0.28);
 
-  const contenido = (
+  const circuloAvatar = (
     <View style={[styles.circulo, circulo]}>
       {paciente.fotoUri ? (
         <Image source={{ uri: paciente.fotoUri }} style={circulo} accessibilityIgnoresInvertColors />
@@ -32,6 +35,20 @@ export function AvatarPaciente({ paciente, size, onPress }: Props) {
         <Text style={heading(Math.round(size * 0.36), colors.accent700)}>{iniciales(paciente)}</Text>
       )}
     </View>
+  );
+  // Anillo metalizado: degradado plata alrededor del avatar.
+  const grosor = Math.max(3, Math.round(size * 0.035));
+  const contenido = anillo ? (
+    <LinearGradient
+      colors={colors.anilloAvatar}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ padding: grosor, borderRadius: size / 2 + grosor }}
+    >
+      {circuloAvatar}
+    </LinearGradient>
+  ) : (
+    circuloAvatar
   );
 
   if (!onPress) return contenido;

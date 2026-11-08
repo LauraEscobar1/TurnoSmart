@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
+import { IconoCirculo, TituloSeccion } from "@/components/Adornos";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { radius } from "@/theme/spacing";
-import { body, fonts, heading, label } from "@/theme/typography";
+import { body, fonts, heading } from "@/theme/typography";
 import { AppointmentsStackParamList } from "@/navigation/types";
 import { Cita } from "@/types/domain";
 import {
@@ -71,6 +74,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   const t = useT();
   const dato = useDato();
   const { idioma, diaSemanaCorto, fechaCorta, fechaLarga } = useFormato();
+  const insets = useSafeAreaInsets();
   const { citaId, accion } = route.params;
   const [cita, setCita] = useState<Cita | null>(null);
   const [confirmando, setConfirmando] = useState(false);
@@ -108,9 +112,9 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 
   if (!cita) {
     return (
-      <SafeAreaView edges={["top"]} style={styles.safe}>
+      <Pantalla edges={["top"]} style={styles.safe}>
         <ScreenHeader title={t("citas.detalle")} onBack={volver} />
-      </SafeAreaView>
+      </Pantalla>
     );
   }
 
@@ -159,13 +163,18 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   }
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScreenHeader title={t("citas.detalle")} onBack={volver} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Carga → contenido: la ficha aparece con un fundido suave. */}
+      <Animated.ScrollView
+        entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 28 }]}
+        showsVerticalScrollIndicator={false}
+      >
         {aviso ? (
           <View style={styles.aviso} accessibilityLiveRegion="polite">
-            <Ionicons name="information-circle-outline" size={18} color={colors.accent700} />
-            <Text style={[body(13, colors.accent800), styles.flex]}>{aviso}</Text>
+            <Ionicons name="information-circle-outline" size={18} color={colors.icono} />
+            <Text style={[body(13, colors.info), styles.flex]}>{aviso}</Text>
           </View>
         ) : null}
 
@@ -193,7 +202,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {editable && !asistenciaConfirmada ? (
           <Card tono="acento" style={styles.confirmar}>
             <View style={styles.confirmarCabecera}>
-              <Ionicons name="checkmark-circle-outline" size={22} color={colors.accent700} />
+              <Ionicons name="checkmark-circle-outline" size={22} color={colors.icono} />
               <Text style={[heading(20, colors.accent900), styles.flex]}>{t("citas.confirmarTitulo")}</Text>
             </View>
             <Text style={body(14, colors.accent800)}>{t("citas.confirmarTexto")}</Text>
@@ -222,9 +231,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Lugar */}
         <Seccion titulo={t("citas.lugar")}>
           <Card style={styles.fila}>
-            <View style={styles.icono}>
-              <Ionicons name="location-outline" size={20} color={colors.accent700} />
-            </View>
+            <IconoCirculo nombre="location-outline" tamano={52} tamanoIcono={22} />
             <View style={styles.flex}>
               <Text style={body(12, colors.neutral600)}>{t("comun.consultorio")}</Text>
               <Text style={heading(19, colors.accent900)}>{cita.consultorio}</Text>
@@ -249,21 +256,20 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             ) : null}
           </Card>
         </Seccion>
-      </ScrollView>
 
-      {editable ? (
-        <View style={styles.acciones}>
-          <PrimaryButton label={t("citas.reprogramar")} onPress={abrirReprogramar} style={styles.flex} />
-          <Pressable
-            onPress={() => setHoja("cancelar")}
-            accessibilityRole="button"
-            accessibilityLabel={t("citas.cancelarCita")}
-            style={({ pressed }) => [styles.cancelar, pressed && styles.presionado]}
-          >
-            <Text style={styles.cancelarTexto}>{t("citas.cancelarCita")}</Text>
-          </Pressable>
-        </View>
-      ) : null}
+        {/* Acciones al final del contenido: se desplazan con la pantalla y nunca tapan la información. */}
+        {editable ? (
+          <View style={styles.acciones}>
+            <PrimaryButton label={t("citas.reprogramar")} onPress={abrirReprogramar} style={styles.flex} />
+            <PrimaryButton
+              label={t("citas.cancelarCita")}
+              variant="peligro"
+              onPress={() => setHoja("cancelar")}
+              style={styles.flex}
+            />
+          </View>
+        ) : null}
+      </Animated.ScrollView>
 
       <HojaInferior
         visible={hoja === "cancelar"}
@@ -307,16 +313,15 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         </View>
         <PrimaryButton label={t("citas.confirmarHorario")} onPress={confirmarReprogramacion} disabled={!elegido} />
       </HojaInferior>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   return (
     <View style={styles.seccion}>
-      <Text style={label(10, colors.textoTenueSobreFondo)}>{titulo}</Text>
+      <TituloSeccion titulo={titulo} />
       {children}
     </View>
   );
@@ -339,7 +344,7 @@ function Dato({
   const styles = useEstilos(crearStyles);
   return (
     <View style={[styles.dato, divisor && styles.divisor]}>
-      <Ionicons name={icono} size={18} color={colors.accent700} />
+      <IconoCirculo nombre={icono} tamano={34} tamanoIcono={17} />
       <View style={styles.flex}>
         <Text style={body(12, colors.neutral600)}>{etiqueta}</Text>
         <Text style={[body(15, colors.text), styles.medio]}>{valor}</Text>
@@ -353,7 +358,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,
@@ -389,21 +393,17 @@ const crearStyles = (colors: Paleta) =>
     alignItems: "flex-start",
     padding: 14,
     borderRadius: radius.md,
-    backgroundColor: colors.accent100,
-    borderWidth: 1,
-    borderColor: colors.accent200,
+    backgroundColor: colors.infoFondo,
   },
   // Encabezado
+  // Ficha de la cita: una sola capa, sin borde.
   hero: {
     padding: 22,
     borderRadius: radius.xl,
     backgroundColor: colors.accent100,
-    borderWidth: 1,
-    borderColor: colors.accent200,
   },
   heroInactivo: {
     backgroundColor: colors.superficie,
-    borderColor: colors.borde,
   },
   heroFecha: {
     marginTop: 4,
@@ -433,7 +433,7 @@ const crearStyles = (colors: Paleta) =>
     backgroundColor: colors.superficie,
   },
   estadoInactivo: {
-    backgroundColor: colors.neutral100,
+    backgroundColor: colors.neutralTinte,
   },
   estadoPunto: {
     width: 8,
@@ -450,7 +450,7 @@ const crearStyles = (colors: Paleta) =>
     color: colors.accent900,
   },
   estadoTextoInactivo: {
-    color: colors.neutral700,
+    color: colors.neutralTexto,
   },
   tachado: {
     textDecorationLine: "line-through",
@@ -466,14 +466,6 @@ const crearStyles = (colors: Paleta) =>
     padding: 16,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.accent100,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  icono: {
     width: 52,
     height: 52,
     borderRadius: 26,
@@ -498,26 +490,7 @@ const crearStyles = (colors: Paleta) =>
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingTop: 14,
-    paddingBottom: 10,
-    paddingHorizontal: 20,
-    backgroundColor: colors.superficie,
-    borderTopWidth: 1,
-    borderTopColor: colors.borde,
-  },
-  cancelar: {
-    minHeight: 50,
-    paddingHorizontal: 16,
-    borderRadius: radius.md + 2,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelarTexto: {
-    fontFamily: fonts.heading,
-    fontSize: 17,
-    color: colors.accent900,
+    marginTop: 4,
   },
   // Horarios
   horarios: {

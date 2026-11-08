@@ -9,11 +9,11 @@ import {
   View,
 } from "react-native";
 import type { ScrollViewInstance } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
 import { body, heading, label } from "@/theme/typography";
 import { Clave, useDato, useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
@@ -65,7 +65,7 @@ export function IntroScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <Pantalla edges={["top", "bottom"]} style={styles.safe}>
       <ScrollView
         ref={scrollRef}
         horizontal
@@ -97,7 +97,7 @@ export function IntroScreen({ navigation }: Props) {
         <PrimaryButton label={t("intro.omitir")} variant="secondary" onPress={terminar} style={styles.action} />
         <PrimaryButton label={t(ultimo ? "intro.empezar" : "intro.siguiente")} onPress={siguiente} style={styles.action} />
       </View>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -108,7 +108,7 @@ function FiguraOferta() {
   const dato = useDato();
   return (
     <View style={styles.stack}>
-      <Badge label={t("notificaciones.mensajes.cupo-ultimo-minuto.titulo")} variant="outline" />
+      <Badge label={t("notificaciones.mensajes.cupo-ultimo-minuto.titulo")} variant="accent" />
       <Card tono="acento" style={styles.ofertaCard}>
         <View style={styles.row}>
           <Badge label={t("oferta.paraVos")} variant="accent" />
@@ -148,7 +148,7 @@ function FiguraConfirmacion() {
   return (
     <Card style={styles.confirmacion}>
       <View style={styles.check}>
-        <Ionicons name="checkmark" size={28} color={colors.bg} />
+        <Ionicons name="checkmark" size={28} color={colors.sobreCampo} />
       </View>
       <Text style={heading(24, colors.text)}>{t("confirmacion.confirmado")}</Text>
       <Text style={body(13, colors.neutral700)}>{t("intro.confirmacionEjemplo")}</Text>
@@ -160,7 +160,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   flex: {
     flex: 1,
@@ -223,11 +222,11 @@ const crearStyles = (colors: Paleta) =>
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: colors.neutral300,
+    backgroundColor: colors.puntoSobreFondo,
   },
   dotOn: {
     width: 18,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.puntoActivoSobreFondo,
   },
   actions: {
     flexDirection: "row",

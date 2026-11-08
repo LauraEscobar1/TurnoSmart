@@ -1,17 +1,21 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
-import { radius, sombra } from "@/theme/spacing";
+import { IconoCirculo } from "@/components/Adornos";
+import { Presionable } from "@/components/Presionable";
+import { CON_DESENFOQUE, Pantalla } from "@/components/Vidrio";
+import { BlurView } from "expo-blur";
+import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
 import { abrirAjustes, pedirPermisoNotificaciones } from "@/services/permisosService";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { Card } from "@/components/Card";
 import { AvatarPaciente } from "@/components/AvatarPaciente";
 import { elegirFotoPerfil } from "@/services/fotoService";
 import { diasEnEspera } from "@/utils/format";
@@ -31,10 +35,14 @@ function listaO(items: string[], idioma: Idioma) {
  * Perfil — Nivel 1 ("NavDeslizable.dc.html", sección 5 / 5).
  * Una ficha amable del paciente: el nombre centrado con accesos redondos a
  * Preferencias y Datos personales, su círculo (foto o iniciales, con la
- * cámara para subirla) sobre el arco celeste, el aviso de perfil incompleto
+ * cámara para subirla) sobre el banner de la cabecera, el aviso de perfil incompleto
  * (solo mientras falten datos opcionales), el estado de la lista de espera
  * y tres indicadores. Todo sale de los datos del paciente.
  */
+/** Avatar de la cabecera y la mitad de su alto con el anillo: lo que asoma bajo el banner. */
+const TAMANO_AVATAR = 132;
+const MITAD_AVATAR = (TAMANO_AVATAR + 2 * Math.max(3, Math.round(TAMANO_AVATAR * 0.035))) / 2;
+
 export function ProfileHomeScreen() {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
@@ -45,7 +53,6 @@ export function ProfileHomeScreen() {
   const paciente = usePaciente();
   const { actualizar, cerrarSesion } = useAuth();
   const [pidiendo, setPidiendo] = useState(false);
-  const { width } = useWindowDimensions();
 
   const completo = perfilCompleto(paciente);
   const dias = diasEnEspera(paciente.registradoEnISO);
@@ -71,22 +78,29 @@ export function ProfileHomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Encabezado sobre el arco celeste */}
+        {/* Cabecera: banner sólido de ancho completo y, montado sobre su borde inferior, el avatar. */}
         <View style={styles.hero}>
-          <View
-            pointerEvents="none"
-            style={[styles.arco, { width: width * 3, height: width * 3, borderRadius: width * 1.5, left: -width }]}
-          />
+          <View pointerEvents="none" style={styles.banner}>
+            {/* Vidrio (modo claro): desenfoque recortado a la forma y el blanco translúcido encima. */}
+            <View style={[StyleSheet.absoluteFill, styles.bannerRecorte]}>
+              {CON_DESENFOQUE && colors.desenfoqueBanner ? (
+                <BlurView intensity={colors.intensidadBlur} tint={colors.tintaBlur} style={StyleSheet.absoluteFill} />
+              ) : null}
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bannerPerfil }]} />
+            </View>
+          </View>
 
           <View style={styles.barra}>
-            <BotonRedondo icono="settings-outline" etiqueta={t("preferencias.titulo")} onPress={irAPreferencias} />
+            {/* Mismo ancho que el lápiz, para que el nombre quede centrado. Las preferencias
+                se editan solo desde «Editar preferencias», en la card de la lista de espera. */}
+            <View style={styles.redondoVacio} />
             <View style={styles.identidad}>
-              <Text style={[heading(30, colors.textoSobreFondo), styles.centrado]} numberOfLines={1}>
+              <Text style={[heading(30, colors.textoBannerPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.nombre} {paciente.apellido}
               </Text>
-              <Text style={[body(14, colors.textoTenueSobreFondo), styles.centrado]} numberOfLines={1}>
+              <Text style={[body(14, colors.textoSuaveBannerPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.email}
               </Text>
             </View>
@@ -98,37 +112,37 @@ export function ProfileHomeScreen() {
           </View>
 
           <View style={styles.personaje}>
-            <AvatarPaciente paciente={paciente} size={132} onPress={cambiarFoto} />
+            <AvatarPaciente paciente={paciente} size={TAMANO_AVATAR} onPress={cambiarFoto} anillo />
           </View>
         </View>
 
         <View style={styles.cuerpo}>
           {/* Perfil por completar: desaparece cuando ya no falta nada */}
           {completo < 100 ? (
-            <Pressable
+            <Card
               onPress={() => navigation.navigate("PersonalData")}
               accessibilityRole="button"
               accessibilityLabel={t("perfil.completarA11y", { porcentaje: completo })}
-              style={({ pressed }) => [styles.tarjeta, pressed && styles.presionado]}
+              style={styles.tarjeta}
             >
               <Text style={body(14, colors.neutral700)}>{t("perfil.completar")}</Text>
               <View style={styles.separador} />
               <View style={styles.progresoFila}>
-                <Ionicons name="person-circle-outline" size={22} color={colors.accent600} />
+                <Ionicons name="person-circle-outline" size={22} color={colors.icono} />
                 <Text style={styles.progresoEtiqueta}>{t("nav.perfil")}</Text>
                 <View style={styles.pista}>
                   <View style={[styles.relleno, { width: `${completo}%` }]} />
                 </View>
                 <Text style={heading(18, colors.accent700)}>{completo}%</Text>
               </View>
-            </Pressable>
+            </Card>
           ) : null}
 
           {/* Lista de espera */}
-          <View style={styles.espera}>
+          <Card tono="acento" style={styles.espera}>
             <View style={styles.esperaFila}>
               <View style={styles.reloj}>
-                <Ionicons name="hourglass-outline" size={30} color={colors.accent600} />
+                <IconoCirculo nombre="hourglass-outline" tamano={64} tamanoIcono={30} />
               </View>
               <View style={styles.flex}>
                 <Text style={heading(21, colors.accent900)}>{t("perfil.esperando")}</Text>
@@ -146,7 +160,7 @@ export function ProfileHomeScreen() {
               </View>
             </View>
             <PrimaryButton label={t("perfil.editarPreferencias")} onPress={irAPreferencias} />
-          </View>
+          </Card>
 
           {/* Indicadores */}
           <Indicador
@@ -159,42 +173,40 @@ export function ProfileHomeScreen() {
               icono="medkit-outline"
               valor={String(especialidades.length)}
               etiqueta={t("preferencias.especialidades")}
-              onPress={irAPreferencias}
             />
             <Indicador
               icono="time-outline"
               valor={dato("franjas", paciente.franjaPreferida)}
               etiqueta={t("perfil.franjaPreferida")}
-              onPress={irAPreferencias}
             />
           </View>
 
           {/* Cuenta */}
-          <View style={styles.cuenta}>
-            <Pressable
+          <Card style={styles.cuenta}>
+            <Presionable
               onPress={alternarNotificaciones}
               accessibilityRole="button"
               accessibilityLabel={`${t("notificaciones.titulo")}: ${t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}`}
               style={({ pressed }) => [styles.fila, pressed && styles.presionado]}
             >
-              <Ionicons name="notifications-outline" size={20} color={colors.accent700} />
+              <IconoCirculo nombre="notifications-outline" tamano={34} tamanoIcono={18} />
               <Text style={[body(15, colors.text), styles.flex]}>{t("notificaciones.titulo")}</Text>
               <Text style={body(14, colors.neutral600)}>
                 {pidiendo ? "…" : t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}
               </Text>
-            </Pressable>
-            <Pressable
+            </Presionable>
+            <Presionable
               onPress={cerrarSesion}
               accessibilityRole="button"
               style={({ pressed }) => [styles.fila, styles.divisor, pressed && styles.presionado]}
             >
-              <Ionicons name="log-out-outline" size={20} color={colors.accent700} />
+              <IconoCirculo nombre="log-out-outline" tamano={34} tamanoIcono={18} />
               <Text style={[body(15, colors.accent700), styles.flex]}>{t("perfil.cerrarSesion")}</Text>
-            </Pressable>
-          </View>
+            </Presionable>
+          </Card>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -210,15 +222,22 @@ function BotonRedondo({
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   return (
-    <Pressable
+    <Presionable
       onPress={onPress}
       hitSlop={6}
       accessibilityRole="button"
       accessibilityLabel={etiqueta}
       style={({ pressed }) => [styles.redondo, pressed && styles.presionado]}
     >
-      <Ionicons name={icono} size={22} color={colors.neutral700} />
-    </Pressable>
+      {/* Mismo vidrio que el banner (en claro): desenfoque y relleno recortados al círculo. */}
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.redondoRecorte]}>
+        {CON_DESENFOQUE && colors.desenfoqueBanner ? (
+          <BlurView intensity={colors.intensidadBlur} tint={colors.tintaBlur} style={StyleSheet.absoluteFill} />
+        ) : null}
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.botonBannerPerfil }]} />
+      </View>
+      <Ionicons name={icono} size={22} color={colors.iconoBotonBannerPerfil} />
+    </Presionable>
   );
 }
 
@@ -236,19 +255,18 @@ function Indicador({
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   return (
-    <Pressable
+    <Card
       onPress={onPress}
-      disabled={!onPress}
       accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={`${etiqueta}: ${valor}`}
-      style={({ pressed }) => [styles.indicador, pressed && styles.presionado]}
+      style={styles.indicador}
     >
-      <Ionicons name={icono} size={20} color={colors.accent600} style={styles.indicadorIcono} />
+      <IconoCirculo nombre={icono} tamano={36} tamanoIcono={18} />
       <View style={styles.flex}>
         <Text style={heading(22, colors.accent900)}>{valor}</Text>
         <Text style={body(13, colors.neutral600)}>{etiqueta}</Text>
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -256,12 +274,10 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
-  // Blanco debajo del arco; arriba, el arco (que se extiende hacia arriba)
-  // cubre también el rebote del scroll.
+  // El degradado de la pantalla queda visible detrás del scroll (también en el rebote).
   scroll: {
-    backgroundColor: colors.fondoPantalla,
+    backgroundColor: "transparent",
   },
   content: {
     flexGrow: 1,
@@ -283,12 +299,24 @@ const crearStyles = (colors: Paleta) =>
     paddingHorizontal: 20,
     paddingTop: 10,
   },
-  // El borde del arco cruza el tercio inferior del círculo, como el personaje
-  // de la referencia sobre la curva.
-  arco: {
+  // Banner rectangular: ancho completo, esquinas inferiores redondeadas y sombra suave
+  // (vidrio blanco en claro, Rock Blue sólido en oscuro).
+  // Termina a media altura del avatar, que queda montado sobre su borde.
+  banner: {
     position: "absolute",
-    bottom: 44,
-    backgroundColor: colors.fondo,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: MITAD_AVATAR,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    borderTopWidth: 1,
+    borderTopColor: colors.bordeSuperiorBanner,
+    shadowColor: colors.sombraCard,
+    shadowOpacity: colors.opacidadSombraBanner,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   barra: {
     flexDirection: "row",
@@ -303,14 +331,34 @@ const crearStyles = (colors: Paleta) =>
     paddingTop: 12,
     gap: 2,
   },
+  // Sobre el banner: un círculo de vidrio blanco con borde brillante y sombra azulada (claro),
+  // o del mismo tono apenas oscurecido (oscuro).
   redondo: {
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: colors.superficie,
+    // Sin borde en oscuro, para que el círculo conserve su tamaño de siempre.
+    borderWidth: colors.bordeBotonBanner === "transparent" ? 0 : 1,
+    borderColor: colors.bordeBotonBanner,
+    shadowColor: colors.sombraCard,
+    shadowOpacity: colors.opacidadSombraBotonBanner,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
     alignItems: "center",
     justifyContent: "center",
-    ...sombra.sm,
+  },
+  redondoRecorte: {
+    borderRadius: 23,
+    overflow: "hidden",
+  },
+  bannerRecorte: {
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "hidden",
+  },
+  redondoVacio: {
+    width: 46,
+    height: 46,
   },
   personaje: {
     marginTop: 26,
@@ -323,12 +371,6 @@ const crearStyles = (colors: Paleta) =>
   },
   tarjeta: {
     padding: 18,
-    borderRadius: radius.lg,
-    backgroundColor: colors.fondoCard,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    ...sombra.md,
-    shadowOpacity: 0.08,
   },
   separador: {
     height: 1,
@@ -349,7 +391,7 @@ const crearStyles = (colors: Paleta) =>
     flex: 1,
     height: 10,
     borderRadius: radius.pill,
-    backgroundColor: colors.neutral200,
+    backgroundColor: colors.fondoChip,
     overflow: "hidden",
   },
   relleno: {
@@ -361,8 +403,6 @@ const crearStyles = (colors: Paleta) =>
     marginTop: 6,
     padding: 18,
     gap: 18,
-    borderRadius: radius.lg,
-    backgroundColor: colors.fondo,
   },
   esperaFila: {
     flexDirection: "row",
@@ -370,14 +410,7 @@ const crearStyles = (colors: Paleta) =>
     gap: 14,
   },
   reloj: {
-    width: 64,
-    height: 64,
     borderRadius: 32,
-    borderWidth: 2,
-    borderColor: colors.accent200,
-    backgroundColor: colors.superficie,
-    alignItems: "center",
-    justifyContent: "center",
   },
   par: {
     flexDirection: "row",
@@ -389,20 +422,12 @@ const crearStyles = (colors: Paleta) =>
     gap: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    backgroundColor: colors.fondoCard,
   },
   indicadorIcono: {
     marginTop: 3,
   },
   cuenta: {
     marginTop: 6,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borde,
-    overflow: "hidden",
   },
   fila: {
     flexDirection: "row",

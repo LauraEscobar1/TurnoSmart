@@ -46,7 +46,8 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer theme={temaNavegacion(colors, oscuro)}>
-      <StatusBar style={oscuro ? "light" : "dark"} />
+      {/* Claro: celeste con texto oscuro. Oscuro: azul Venice con texto claro. */}
+      <StatusBar style={colors.barraEstado} />
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}>
         {paciente ? (
           <>

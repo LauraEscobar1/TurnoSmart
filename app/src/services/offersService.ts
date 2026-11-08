@@ -203,6 +203,42 @@ export async function getHistorialOfertas(): Promise<OfertaCupo[]> {
     .sort((a, b) => new Date(b.fechaHoraISO).getTime() - new Date(a.fechaHoraISO).getTime());
 }
 
+/** Un cupo liberado por una cancelación que se le asignó a este paciente (oferta aceptada). */
+export interface CupoReasignado {
+  oferta: OfertaCupo;
+  /** Cita que se creó al aceptar (origen «cupo recuperado»), si se pudo leer. */
+  citaId: string | null;
+}
+
+/**
+ * Cupos reaprovechados para el paciente con sesión: sus ofertas aceptadas
+ * (cada una dice si la priorizó la IA o el respaldo) con la cita de cupo
+ * recuperado que generó (`citas.oferta_id`). Solo datos propios (RLS y
+ * filtro por paciente); si la lectura de citas falla, se muestran igual sin
+ * el enlace a la cita.
+ */
+export async function getCuposReasignados(): Promise<CupoReasignado[]> {
+  const aceptadas = (await misOfertas())
+    .filter((o) => o.estado === "aceptada")
+    .sort((a, b) => new Date(b.fechaHoraISO).getTime() - new Date(a.fechaHoraISO).getTime());
+  if (aceptadas.length === 0) return [];
+  const citaPorOferta = new Map<string, string>();
+  try {
+    const pacienteId = await getPacienteActualId();
+    const { data, error } = await getSupabase()
+      .from("citas")
+      .select("id, oferta_id, origen")
+      .eq("paciente_id", pacienteId)
+      .in("oferta_id", aceptadas.map((o) => o.id))
+      .returns<{ id: string; oferta_id: string | null; origen: string }[]>();
+    if (error) throw new DatosError(error.message, error.code);
+    for (const c of data ?? []) if (c.oferta_id && c.origen === "cupo-recuperado") citaPorOferta.set(c.oferta_id, c.id);
+  } catch (e) {
+    console.warn(`[ofertas] No se pudieron leer las citas de los cupos reasignados: ${String(e)}`);
+  }
+  return aceptadas.map((oferta) => ({ oferta, citaId: citaPorOferta.get(oferta.id) ?? null }));
+}
+
 /**
  * Acepta la oferta: todo el cambio (cita, cupo, lista de espera, evento y
  * notificación) lo hace la RPC en una transacción. Si la oferta venció o ya

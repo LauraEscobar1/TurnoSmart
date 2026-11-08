@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { RootTabParamList } from "@/navigation/types";
+import { CapaVidrio } from "@/components/Vidrio";
 
 const ICON_SIZE = 20;
 const BAR_HEIGHT = 64;
@@ -30,9 +32,8 @@ export type TabBadges = Partial<Record<keyof RootTabParamList, number>>;
 
 /**
  * Navegación primaria deslizable — "TabBar.dc.html" / "NavDeslizable.dc.html".
- * Un bloque sólido redondeado (acero 900) sigue al dedo
- * mientras se arrastra el contenido. La sección actual lleva el ícono
- * ampliado en papel y la etiqueta en negrita.
+ * Barra de vidrio sobre el degradado; un bloque redondeado y tenue sigue
+ * al dedo mientras se arrastra el contenido. La sección actual lleva el ícono ampliado y la etiqueta en negrita.
  *
  * Todo lo que se mueve con el arrastre (bloque, ícono, etiqueta) se anima
  * solo con transform y opacity, para correr en el hilo nativo.
@@ -53,6 +54,7 @@ export function TabBar({
 
   return (
     <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
+      <CapaVidrio variante="barra" />
       <View style={styles.row} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {width > 0 && (
           <Animated.View
@@ -91,7 +93,7 @@ export function TabBar({
           };
 
           return (
-            <Pressable
+            <Presionable
               key={route.key}
               onPress={onPress}
               style={styles.cell}
@@ -101,10 +103,10 @@ export function TabBar({
             >
               <Animated.View style={[styles.iconBox, { transform: [{ translateY: lift }, { scale }] }]}>
                 <Animated.View style={[styles.layer, { opacity: off }]}>
-                  <Ionicons name={icon} size={ICON_SIZE} color={colors.neutral600} />
+                  <Ionicons name={icon} size={ICON_SIZE} color={colors.iconoTabInactivo} />
                 </Animated.View>
                 <Animated.View style={[styles.layer, { opacity: on }]}>
-                  <Ionicons name={icon} size={ICON_SIZE} color={colors.bg} />
+                  <Ionicons name={icon} size={ICON_SIZE} color={colors.iconoTabActivo} />
                 </Animated.View>
               </Animated.View>
               <View style={styles.labelBox}>
@@ -130,7 +132,7 @@ export function TabBar({
                   <Text style={styles.badgeText}>{badge}</Text>
                 </View>
               ) : null}
-            </Pressable>
+            </Presionable>
           );
         })}
       </View>
@@ -142,8 +144,8 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   bar: {
     borderTopWidth: 1,
-    borderTopColor: colors.borde,
-    backgroundColor: colors.superficie,
+    borderTopColor: colors.bordeCard,
+    overflow: "hidden",
   },
   row: {
     height: BAR_HEIGHT,
@@ -162,7 +164,7 @@ const crearStyles = (colors: Paleta) =>
     left: 6,
     right: 6,
     borderRadius: radius.md + 2,
-    backgroundColor: colors.campo,
+    backgroundColor: colors.indicadorTab,
   },
   cell: {
     flex: 1,
@@ -204,11 +206,11 @@ const crearStyles = (colors: Paleta) =>
   },
   labelOff: {
     fontFamily: fonts.bodyMedium,
-    color: colors.neutral600,
+    color: colors.textoTabInactivo,
   },
   labelOn: {
     fontFamily: fonts.bodyBold,
-    color: colors.bg,
+    color: colors.textoTabActivo,
   },
   badge: {
     position: "absolute",
@@ -229,7 +231,7 @@ const crearStyles = (colors: Paleta) =>
     fontFamily: fonts.bodyBold,
     fontSize: 9,
     lineHeight: 11,
-    color: colors.bg,
+    color: colors.sobreAcento,
     includeFontPadding: false,
   },
 });

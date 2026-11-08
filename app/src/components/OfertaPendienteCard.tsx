@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { OfertaCupo } from "@/types/domain";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { IconoCirculo } from "@/components/Adornos";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { Badge } from "@/components/Badge";
@@ -38,12 +39,12 @@ export function OfertaPendienteCard({ oferta, onAceptar, onVerDetalles }: Props)
   const expirada = segundos === 0;
 
   return (
-    <Card style={[styles.card, expirada && styles.expirada]}>
+    <Card style={styles.card}>
       <View style={styles.cabecera}>
         <View style={styles.estado}>
           <Badge
             label={t(expirada ? "oferta.expirada" : "oferta.esperandoRespuesta")}
-            variant={expirada ? "lost" : "tint"}
+            variant={expirada ? "advertencia" : "info"}
           />
           {!expirada && <InsigniaRecomendacion estrategia={oferta.estrategia} />}
         </View>
@@ -83,9 +84,7 @@ function Dato({
   const styles = useEstilos(crearStyles);
   return (
     <View style={styles.dato}>
-      <View style={styles.datoIcono}>
-        <Ionicons name={icono} size={15} color={colors.accent700} />
-      </View>
+      <IconoCirculo nombre={icono} tamano={30} tamanoIcono={15} />
       <View style={styles.flex}>
         <Text style={label(9, colors.neutral600)}>{etiqueta}</Text>
         <Text style={[body(14, colors.text), styles.datoValor]} numberOfLines={1}>
@@ -101,9 +100,6 @@ const crearStyles = (colors: Paleta) =>
   card: {
     padding: 18,
     gap: 14,
-  },
-  expirada: {
-    opacity: 0.6,
   },
   cabecera: {
     flexDirection: "row",

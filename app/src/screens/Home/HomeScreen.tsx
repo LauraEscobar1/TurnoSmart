@@ -1,25 +1,31 @@
 import React, { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Pantalla } from "@/components/Vidrio";
+import Animated, { FadeIn, LinearTransition, ReduceMotion } from "react-native-reanimated";
+import { IconoCirculo, TituloSeccion } from "@/components/Adornos";
+import { Presionable } from "@/components/Presionable";
+import { TarjetaListaEspera } from "@/components/TarjetaListaEspera";
+import { getSolicitudesActivas } from "@/services/solicitudesEsperaService";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { OfferCard } from "@/components/OfferCard";
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { Card } from "@/components/Card";
 import { MenuAjustes } from "@/components/MenuAjustes";
+import { PanelAsistente } from "@/components/PanelAsistente";
 import { Cita, Notificacion, OfertaCupo } from "@/types/domain";
 import { getOfertaPendiente } from "@/services/offersService";
 import { getCitasProximas } from "@/services/appointmentsService";
 import { getNotificaciones } from "@/services/notificationsService";
 import { RootStackParamList } from "@/navigation/types";
 import { usePaciente } from "@/auth/AuthContext";
-import { diasEnEspera, useFormato } from "@/utils/format";
+import { useFormato } from "@/utils/format";
 import { T, useT } from "@/i18n";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -49,16 +55,23 @@ export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const paciente = usePaciente();
   const [ajustesAbiertos, setAjustesAbiertos] = useState(false);
+  /** Panel del asistente IA: lo abre la card de «Ofertas de cupo». */
+  const [panelAbierto, setPanelAbierto] = useState(false);
   const [oferta, setOferta] = useState<OfertaCupo | null>(null);
   const [proximaCita, setProximaCita] = useState<Cita | null>(null);
   const [avisos, setAvisos] = useState<Notificacion[]>([]);
+  /** Alta de cada solicitud de la lista de espera, para los días por especialidad. */
+  const [desde, setDesde] = useState<Record<string, string>>({});
 
   useCargarDatos(
     useCallback(() => {
       getOfertaPendiente().then(setOferta);
       getCitasProximas().then((citas) => setProximaCita(citas[0] ?? null));
       getNotificaciones(paciente.nombre, idioma).then(setAvisos);
-    }, [paciente.nombre, idioma])
+      getSolicitudesActivas(paciente.id)
+        .then((s) => setDesde(Object.fromEntries(s.map((x) => [x.especialidad, x.creadaEnISO]))))
+        .catch(() => {});
+    }, [paciente.nombre, paciente.id, idioma, paciente.especialidadesInteres.length])
   );
 
   const noLeidos = avisos.filter((a) => !a.leida);
@@ -73,13 +86,14 @@ export function HomeScreen() {
   const irA = {
     buscar: () => navigation.navigate("BuscarEspecialista"),
     citas: () => navigation.navigate("Tabs", { screen: "MisCitas" }),
-    espera: () => navigation.navigate("Tabs", { screen: "Perfil", params: { screen: "Preferences", initial: false } }),
+    // La lista de espera (ver, sumar y sacar especialidades) vive en Buscar especialista.
+    espera: () => navigation.navigate("BuscarEspecialista"),
     avisos: () => navigation.navigate("Tabs", { screen: "Notificaciones" }),
     ofertas: () => navigation.navigate("Tabs", { screen: "Ofertas" }),
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* 1. Saludo */}
         <View style={styles.saludo}>
@@ -90,15 +104,15 @@ export function HomeScreen() {
             </Text>
             <Text style={[body(14, colors.textoSuaveSobreFondo), styles.bajada]}>{bajada}</Text>
           </View>
-          <Pressable
+          <Presionable
             onPress={() => setAjustesAbiertos(true)}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel={t("ajustes.titulo")}
             style={({ pressed }) => [styles.menu, pressed && styles.presionado]}
           >
-            <Ionicons name="menu-outline" size={24} color={colors.accent900} />
-          </Pressable>
+            <Ionicons name="menu-outline" size={24} color={colors.icono} />
+          </Presionable>
         </View>
 
         {/* 2. Ofertas */}
@@ -108,13 +122,19 @@ export function HomeScreen() {
               variant="home"
               oferta={oferta}
               onPress={() => navigation.navigate("OfferDetail", { ofertaId: oferta.id })}
+              onAbrirPanel={() => setPanelAbierto(true)}
             />
           ) : (
             // Sin oferta: el asistente IA queda atento (describe el sistema, no una priorización).
-            <Card tono="acento" style={styles.sinOferta}>
+            <Card
+              tono="acento"
+              style={styles.sinOferta}
+              onPress={() => setPanelAbierto(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t("panelIA.abrir")}
+            >
               <View style={styles.radar}>
-                <View style={styles.radarAnillo} />
-                <Ionicons name="sparkles" size={20} color={colors.sobreAcento} />
+                <IconoCirculo ia tamano={44} tamanoIcono={24} />
               </View>
               <View style={styles.flex} accessible accessibilityLabel={`${t("asistenteIA.atentoTitulo")}. ${t("asistenteIA.atentoTexto")}`}>
                 <Text style={label(9, colors.accent700)}>{t("inicio.sinOfertas")}</Text>
@@ -147,7 +167,7 @@ export function HomeScreen() {
             />
           ) : (
             <Card style={styles.filaSimple}>
-              <Ionicons name="calendar-clear-outline" size={20} color={colors.neutral600} />
+              <IconoCirculo nombre="calendar-clear-outline" tamano={38} tamanoIcono={18} />
               <Text style={body(14, colors.neutral700)}>{t("inicio.sinCitas")}</Text>
             </Card>
           )}
@@ -155,10 +175,12 @@ export function HomeScreen() {
 
         {/* 4. Lista de espera */}
         <Seccion titulo={t("inicio.listaEspera")} accion={t("inicio.sumarEspecialidad")} onAccion={irA.buscar}>
-          <ListaEspera
+          <TarjetaListaEspera
+            especialidades={paciente.especialidadesInteres}
+            desde={desde}
+            desdeGeneral={paciente.registradoEnISO}
             puesto={paciente.puestoEspera}
-            dias={diasEnEspera(paciente.registradoEnISO)}
-            onPress={irA.espera}
+            onVer={irA.espera}
           />
         </Seccion>
 
@@ -171,7 +193,7 @@ export function HomeScreen() {
           <Card style={styles.avisos}>
             {noLeidos.length ? (
               noLeidos.slice(0, 2).map((a, i) => (
-                <Pressable
+                <Presionable
                   key={a.id}
                   onPress={() =>
                     a.tipo === "cupo-ultimo-minuto" && a.referenciaId
@@ -193,12 +215,12 @@ export function HomeScreen() {
                     ) : null}
                   </View>
                   <Text style={label(9, colors.neutral600)}>{haceCuanto(a.fechaISO)}</Text>
-                </Pressable>
+                </Presionable>
               ))
             ) : (
               <View style={styles.alDia}>
                 <View style={styles.alDiaIcono}>
-                  <Ionicons name="checkmark" size={18} color={colors.sobreAcento} />
+                  <Ionicons name="checkmark" size={18} color={colors.exitoTexto} />
                 </View>
                 <View>
                   <Text style={heading(17, colors.accent900)}>{t("inicio.todoAlDia")}</Text>
@@ -210,7 +232,18 @@ export function HomeScreen() {
         </Seccion>
       </ScrollView>
       <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
-    </SafeAreaView>
+      <PanelAsistente
+        visible={panelAbierto}
+        onCerrar={() => setPanelAbierto(false)}
+        onVerOferta={(ofertaId) => navigation.navigate("OfferDetail", { ofertaId })}
+        onVerCita={(citaId) =>
+          navigation.navigate("Tabs", {
+            screen: "MisCitas",
+            params: { screen: "AppointmentDetail", params: { citaId }, initial: false },
+          })
+        }
+      />
+    </Pantalla>
   );
 }
 
@@ -225,64 +258,25 @@ function Seccion({
   onAccion?: () => void;
   children: React.ReactNode;
 }) {
-  const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   return (
     <View style={styles.seccion}>
-      <View style={styles.seccionCabecera}>
-        <Text style={heading(18, colors.textoSobreFondo)}>{titulo}</Text>
-        {accion ? (
-          <Pressable onPress={onAccion} hitSlop={8} accessibilityRole="button">
-            <Text style={styles.link}>{accion}</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {children}
+      <TituloSeccion
+        titulo={titulo}
+        variante="grande"
+        accion={
+          accion ? (
+            <Presionable onPress={onAccion} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.link}>{accion}</Text>
+            </Presionable>
+          ) : null
+        }
+      />
+      {/* Carga → contenido: cada sección se acomoda y aparece con un fundido suave. */}
+      <Animated.View entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)} layout={LinearTransition.reduceMotion(ReduceMotion.System)}>
+        {children}
+      </Animated.View>
     </View>
-  );
-}
-
-/**
- * Lista de espera: el puesto en grande y la cola dibujada como puntos
- * (los que están antes, tenues; vos, la píldora de acero).
- */
-function ListaEspera({ puesto, dias, onPress }: { puesto: number; dias: number; onPress: () => void }) {
-  const { colors } = useTema();
-  const styles = useEstilos(crearStyles);
-  const t = useT();
-  const antes = Math.max(0, puesto - 1);
-  const visibles = Math.min(antes, 9);
-
-  return (
-    <Card onPress={onPress} accessibilityRole="button" accessibilityLabel={t("inicio.verListaEspera")} style={styles.espera}>
-      <View style={styles.esperaDatos}>
-        <View style={styles.flex}>
-          <Text style={label(9, colors.neutral600)}>{t("inicio.puesto")}</Text>
-          <Text style={styles.esperaNumero}>{puesto}</Text>
-        </View>
-        <View style={styles.esperaSeparador} />
-        <View style={styles.flex}>
-          <Text style={label(9, colors.neutral600)}>{t("inicio.enEspera")}</Text>
-          <Text style={styles.esperaNumero}>
-            {dias}
-            <Text style={heading(17, colors.neutral600)}> {t("comun.dias", { count: dias })}</Text>
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.cola} accessibilityLabel={t("inicio.personasAntes", { count: antes })}>
-        {antes > visibles ? <Text style={styles.colaMas}>+{antes - visibles}</Text> : null}
-        {Array.from({ length: visibles }, (_, i) => (
-          <View key={i} style={[styles.colaPunto, { opacity: 0.35 + (0.5 * (i + 1)) / Math.max(visibles, 1) }]} />
-        ))}
-        <View style={styles.colaVos}>
-          <Text style={styles.colaVosTexto}>{t("inicio.vos")}</Text>
-        </View>
-      </View>
-      <Text style={body(13, colors.neutral700)}>
-        {antes === 0 ? t("inicio.sosPrimero") : t("inicio.personasAntesAviso", { count: antes })}
-      </Text>
-    </Card>
   );
 }
 
@@ -290,7 +284,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: MARGEN,
@@ -328,11 +321,6 @@ const crearStyles = (colors: Paleta) =>
   seccion: {
     gap: 12,
   },
-  seccionCabecera: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-  },
   link: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
@@ -344,21 +332,14 @@ const crearStyles = (colors: Paleta) =>
     gap: 14,
     padding: 18,
   },
+  // Brillo suave de IA.
   radar: {
-    width: 44,
-    height: 44,
     borderRadius: 22,
-    backgroundColor: colors.accent,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radarAnillo: {
-    position: "absolute",
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    borderWidth: 1.5,
-    borderColor: colors.accent300,
+    alignSelf: "flex-start",
+    shadowColor: colors.brilloIA,
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
   },
   estadoAlertas: {
     flexDirection: "row",
@@ -391,56 +372,6 @@ const crearStyles = (colors: Paleta) =>
     gap: 10,
     padding: 16,
   },
-  // Lista de espera
-  espera: {
-    padding: 18,
-    gap: 14,
-  },
-  esperaDatos: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  esperaSeparador: {
-    width: 1,
-    alignSelf: "stretch",
-    backgroundColor: colors.borde,
-    marginHorizontal: 18,
-  },
-  esperaNumero: {
-    fontFamily: fonts.heading,
-    fontSize: 36,
-    lineHeight: 40,
-    color: colors.accent900,
-  },
-  cola: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  colaMas: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: colors.neutral600,
-    marginRight: 2,
-  },
-  colaPunto: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.accent300,
-  },
-  colaVos: {
-    marginLeft: 2,
-    paddingVertical: 3,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-    backgroundColor: colors.accent,
-  },
-  colaVosTexto: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: colors.sobreAcento,
-  },
   // Avisos
   avisos: {
     paddingHorizontal: 16,
@@ -471,7 +402,9 @@ const crearStyles = (colors: Paleta) =>
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.accent,
+    borderWidth: 1,
+    borderColor: colors.exitoBorde,
+    backgroundColor: colors.exitoTinte,
     alignItems: "center",
     justifyContent: "center",
   },

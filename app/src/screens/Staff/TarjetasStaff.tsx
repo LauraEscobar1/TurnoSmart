@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
 import { body, fonts, heading, label } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -22,16 +23,16 @@ import { useDato, useT } from "@/i18n";
 
 const VARIANTE_CUPO: Record<EstadoCupo, BadgeVariant> = {
   abierto: "outline",
-  ofrecido: "tint",
-  tomado: "solid",
-  expirado: "lost",
+  ofrecido: "info",
+  tomado: "exito",
+  expirado: "advertencia",
 };
 
 const VARIANTE_OFERTA: Record<EstadoOfertaCupo, BadgeVariant> = {
-  pendiente: "tint",
-  aceptada: "solid",
-  rechazada: "neutral",
-  expirada: "lost",
+  pendiente: "info",
+  aceptada: "exito",
+  rechazada: "error",
+  expirada: "advertencia",
 };
 
 // — Métricas —
@@ -81,7 +82,7 @@ export function BadgeRiesgo({ riesgo, abierto = false, onPress }: BadgeRiesgoPro
   const etiqueta = t(`staff.riesgo.${riesgo.nivel}`);
   if (!onPress) return <Badge label={etiqueta} variant="risk" />;
   return (
-    <Pressable
+    <Presionable
       onPress={onPress}
       hitSlop={8}
       accessibilityRole="button"
@@ -91,8 +92,8 @@ export function BadgeRiesgo({ riesgo, abierto = false, onPress }: BadgeRiesgoPro
       style={({ pressed }) => [styles.badgeTocable, pressed && styles.presionado]}
     >
       <Badge label={etiqueta} variant="risk" />
-      <Ionicons name={abierto ? "chevron-up" : "information-circle-outline"} size={16} color={colors.neutral600} />
-    </Pressable>
+      <Ionicons name={abierto ? "chevron-up" : "information-circle-outline"} size={16} color={colors.icono} />
+    </Presionable>
   );
 }
 
@@ -135,7 +136,7 @@ export function CitaAgendaCard({ cita, pasada, ocupado, onCalcular, onCancelar, 
       {cita.origen === "cupo-recuperado" || cita.asistenciaConfirmadaISO ? (
         <View style={styles.etiquetas}>
           {cita.origen === "cupo-recuperado" ? <Badge label={t("staff.agenda.recuperado")} variant="neutral" /> : null}
-          {cita.asistenciaConfirmadaISO ? <Badge label={t("staff.agenda.confirmoAsistencia")} variant="solid" /> : null}
+          {cita.asistenciaConfirmadaISO ? <Badge label={t("staff.agenda.confirmoAsistencia")} variant="exito" /> : null}
         </View>
       ) : null}
 

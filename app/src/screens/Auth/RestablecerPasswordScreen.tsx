@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
-import { body, fonts, heading } from "@/theme/typography";
+import { AvisoEstado } from "@/components/AvisoEstado";
+import { body, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
 import { AuthError, restablecerPassword, solicitarRestablecimiento } from "@/services/authService";
@@ -91,14 +92,14 @@ export function RestablecerPasswordScreen({ navigation, route }: Props) {
             : t("restablecer.bajada")}
         </Text>
         <View style={styles.sobre}>
-          <Ionicons name="mail-outline" size={20} color={colors.accent700} />
+          <Ionicons name="mail-outline" size={20} color={colors.icono} />
         </View>
       </View>
 
       {enviado ? (
         <>
           <CodeInput value={codigo} onChange={setCodigo} autoFocus />
-          {errores.codigo ? <Text style={styles.error}>{errores.codigo}</Text> : null}
+          {errores.codigo ? <AvisoEstado tipo="error" style={styles.error}>{errores.codigo}</AvisoEstado> : null}
           <ReenviarCodigo restante={envio.restante} codigoPrueba={envio.codigoPrueba} onReenviar={envio.reenviar} />
           <TextField sobreFondo
             label={t("restablecer.nueva")}
@@ -160,9 +161,6 @@ const crearStyles = (colors: Paleta) =>
     justifyContent: "center",
   },
   error: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.text,
     marginTop: -8,
   },
 });

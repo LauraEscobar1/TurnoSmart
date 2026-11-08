@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
 import { radius, sombra } from "@/theme/spacing";
 import { fonts, heading } from "@/theme/typography";
 import { claveDia, useFormato } from "@/utils/format";
@@ -56,24 +57,24 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
       <View style={styles.cabecera}>
         <Text style={heading(18, colors.textoSobreFondo)}>{mesYAnio(seleccionado)}</Text>
         <View style={styles.flechas}>
-          <Pressable
+          <Presionable
             onPress={() => desplazar(-1)}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel={t("citas.semanaAnterior")}
             style={({ pressed }) => [styles.flecha, pressed && styles.flechaPresionada]}
           >
-            <Ionicons name="chevron-back" size={16} color={colors.accent700} />
-          </Pressable>
-          <Pressable
+            <Ionicons name="chevron-back" size={16} color={colors.icono} />
+          </Presionable>
+          <Presionable
             onPress={() => desplazar(1)}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel={t("citas.semanaSiguiente")}
             style={({ pressed }) => [styles.flecha, pressed && styles.flechaPresionada]}
           >
-            <Ionicons name="chevron-forward" size={16} color={colors.accent700} />
-          </Pressable>
+            <Ionicons name="chevron-forward" size={16} color={colors.icono} />
+          </Presionable>
         </View>
       </View>
 
@@ -95,7 +96,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
           const activo = clave === claveSel;
           const cantidad = citasPorDia[clave] ?? 0;
           return (
-            <Pressable
+            <Presionable
               key={clave}
               onPress={() => onSeleccionar(d)}
               accessibilityRole="button"
@@ -107,7 +108,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
                 pressed && !activo && styles.capsulaPresionada,
               ]}
             >
-              <Text style={[styles.diaSemana, activo ? { color: colors.sobreAcento, opacity: 0.85 } : { color: colors.neutral600 }]}>
+              <Text style={[styles.diaSemana, { color: activo ? colors.sobreAcento : colors.neutral600 }]}>
                 {diaSemanaCorto(d)}
               </Text>
               <Text style={[styles.numero, { color: activo ? colors.sobreAcento : colors.accent900 }]}>{d.getDate()}</Text>
@@ -117,7 +118,7 @@ export function CalendarioHorizontal({ dias, seleccionado, onSeleccionar, citasP
                   { backgroundColor: cantidad ? (activo ? colors.sobreAcento : colors.accent) : "transparent" },
                 ]}
               />
-            </Pressable>
+            </Presionable>
           );
         })}
       </ScrollView>

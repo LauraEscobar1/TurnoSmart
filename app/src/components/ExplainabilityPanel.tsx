@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { EstrategiaOferta, FactorPrioridad } from "@/types/domain";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { IconoMetal } from "@/components/Adornos";
 import { body, label } from "@/theme/typography";
 import { T, useT, useValorFactor } from "@/i18n";
 
@@ -70,7 +71,7 @@ export function ExplainabilityPanel({ factores, title, estrategia, fechaHoraISO 
   return (
     <View>
       <View style={styles.titleRow}>
-        {ia && <Ionicons name="sparkles" size={13} color={colors.accent700} />}
+        {ia && <IconoMetal ia tamano={15} />}
         <Text style={label(10, colors.accent700)} accessibilityRole="header">
           {titulo}
         </Text>
@@ -81,7 +82,7 @@ export function ExplainabilityPanel({ factores, title, estrategia, fechaHoraISO 
           return (
             <View key={f.etiqueta} accessible accessibilityLabel={razon}>
               <View style={styles.row}>
-                <Ionicons name="checkmark" size={14} color={colors.accent} style={styles.check} />
+                <Ionicons name="checkmark" size={14} color={colors.icono} style={styles.check} />
                 <Text style={[body(13, colors.text), styles.razon]}>{razon}</Text>
               </View>
               <View style={styles.track}>

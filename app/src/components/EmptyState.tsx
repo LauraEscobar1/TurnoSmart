@@ -15,8 +15,8 @@ export function EmptyState({ title, description }: EmptyStateProps) {
   const styles = useEstilos(crearStyles);
   return (
     <Card style={styles.container}>
-      <Text style={[heading(20, colors.textoSobreFondo), styles.center]}>{title}</Text>
-      {description ? <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>{description}</Text> : null}
+      <Text style={[heading(20, colors.accent900), styles.center]}>{title}</Text>
+      {description ? <Text style={[body(13, colors.neutral700), styles.center]}>{description}</Text> : null}
     </Card>
   );
 }

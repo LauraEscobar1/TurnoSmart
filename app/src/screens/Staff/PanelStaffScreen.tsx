@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
+import { Presionable } from "@/components/Presionable";
+import { Pantalla } from "@/components/Vidrio";
 import { sombra } from "@/theme/spacing";
 import { body } from "@/theme/typography";
 import { Card } from "@/components/Card";
@@ -266,29 +268,29 @@ export function PanelStaffScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScreenHeader
         title={t("staff.titulo")}
         accion={
           <View style={styles.iconos}>
-            <Pressable
+            <Presionable
               onPress={() => setAjustesAbiertos(true)}
               hitSlop={8}
               style={styles.icono}
               accessibilityRole="button"
               accessibilityLabel={t("staff.ajustes")}
             >
-              <Ionicons name="settings-outline" size={18} color={colors.text} />
-            </Pressable>
-            <Pressable
+              <Ionicons name="settings-outline" size={18} color={colors.icono} />
+            </Presionable>
+            <Presionable
               onPress={cerrarSesion}
               hitSlop={8}
               style={styles.icono}
               accessibilityRole="button"
               accessibilityLabel={t("staff.cerrarSesion")}
             >
-              <Ionicons name="log-out-outline" size={18} color={colors.text} />
-            </Pressable>
+              <Ionicons name="log-out-outline" size={18} color={colors.icono} />
+            </Presionable>
           </View>
         }
       />
@@ -308,16 +310,19 @@ export function PanelStaffScreen() {
             <Text style={body(13, colors.textoSuaveSobreFondo)}>{staff.consultorios.map((c) => c.nombre).join(" · ")}</Text>
           ) : null}
         </View>
-        {contenido()}
+        {/* Carga → contenido: cada estado (cargando, error, panel) entra con un fundido. */}
+        <Animated.View key={sinConsultorio ? "sin" : estado} entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)}>
+          {contenido()}
+        </Animated.View>
       </ScrollView>
       <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
 const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
-    safe: { flex: 1, backgroundColor: colors.fondoPantalla },
+    safe: { flex: 1 },
     content: { paddingHorizontal: 18, paddingBottom: 40, gap: 16 },
     saludo: { gap: 2 },
     bloque: { gap: 12 },

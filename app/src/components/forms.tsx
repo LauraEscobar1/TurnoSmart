@@ -1,17 +1,19 @@
 import React, { forwardRef, useState } from "react";
-import { Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from "react-native";
 import type { TextInputInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { Presionable } from "@/components/Presionable";
+import { AvisoEstado } from "@/components/AvisoEstado";
 import { radius } from "@/theme/spacing";
 import { fonts } from "@/theme/typography";
 import { useT } from "@/i18n";
 
 /**
- * Controles de formulario del sistema Industry (.field, .input, .seg, .radio):
- * esquinas rectas, borde de un pelo, foco en acero. Sin color de error:
- * la paleta es mono, un error se marca con borde en tinta y el mensaje debajo.
+ * Controles de formulario (.field, .input, .seg, .radio): superficie crema
+ * (claro) o azul noche (oscuro), borde de un pelo y foco en acento. Un
+ * error se marca con el borde y el mensaje en el color de error del tema.
  */
 
 interface TextFieldProps extends TextInputProps {
@@ -61,18 +63,28 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
           ]}
         />
         {revelable ? (
-          <Pressable
+          <Presionable
             onPress={() => setVisible((v) => !v)}
             hitSlop={8}
             style={styles.ojo}
             accessibilityRole="button"
             accessibilityLabel={t(visible ? "comun.ocultarPassword" : "comun.mostrarPassword")}
           >
-            <Ionicons name={visible ? "eye-off-outline" : "eye-outline"} size={18} color={colors.accent700} />
-          </Pressable>
+            <Ionicons name={visible ? "eye-off-outline" : "eye-outline"} size={18} color={colors.icono} />
+          </Presionable>
         ) : null}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={[styles.hint, sobreFondo && styles.hintSobreFondo]}>{hint}</Text> : null}
+      {error ? (
+        sobreFondo ? (
+          <AvisoEstado tipo="error" style={styles.avisoError}>
+            {error}
+          </AvisoEstado>
+        ) : (
+          <Text style={styles.error}>{error}</Text>
+        )
+      ) : hint ? (
+        <Text style={[styles.hint, sobreFondo && styles.hintSobreFondo]}>{hint}</Text>
+      ) : null}
     </View>
   );
 });
@@ -118,7 +130,7 @@ export function Segmented<T>({
         {options.map((o, i) => {
           const checked = o.value === value;
           return (
-            <Pressable
+            <Presionable
               key={String(o.value)}
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
@@ -142,7 +154,7 @@ export function Segmented<T>({
               >
                 {o.label}
               </Text>
-            </Pressable>
+            </Presionable>
           );
         })}
       </View>
@@ -177,7 +189,7 @@ export function ChipSelect({ label, options, value, onChange, error, etiqueta = 
         {options.map((o) => {
           const on = value.includes(o);
           return (
-            <Pressable
+            <Presionable
               key={o}
               onPress={() => toggle(o)}
               accessibilityRole="checkbox"
@@ -185,12 +197,20 @@ export function ChipSelect({ label, options, value, onChange, error, etiqueta = 
               accessibilityLabel={etiqueta(o)}
               style={[styles.chip, on ? styles.chipOn : styles.chipOff]}
             >
-              <Text style={[styles.chipText, { color: on ? colors.bg : colors.accent700 }]}>{etiqueta(o)}</Text>
-            </Pressable>
+              <Text style={[styles.chipText, { color: on ? colors.sobreCampo : colors.accent700 }]}>{etiqueta(o)}</Text>
+            </Presionable>
           );
         })}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        sobreFondo ? (
+          <AvisoEstado tipo="error" style={styles.avisoError}>
+            {error}
+          </AvisoEstado>
+        ) : (
+          <Text style={styles.error}>{error}</Text>
+        )
+      ) : null}
     </View>
   );
 }
@@ -199,13 +219,15 @@ interface CheckRowProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   children: React.ReactNode;
+  /** Está sobre el fondo de pantalla: el texto usa su color «sobre fondo». */
+  sobreFondo?: boolean;
 }
 
 /** Casilla con el punto del sistema (.radio + .dot). */
-export function CheckRow({ checked, onChange, children }: CheckRowProps) {
+export function CheckRow({ checked, onChange, children, sobreFondo }: CheckRowProps) {
   const styles = useEstilos(crearStyles);
   return (
-    <Pressable
+    <Presionable
       onPress={() => onChange(!checked)}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
@@ -214,8 +236,8 @@ export function CheckRow({ checked, onChange, children }: CheckRowProps) {
       <View style={[styles.dot, checked && styles.dotChecked]}>
         {checked ? <View style={styles.dotInner} /> : null}
       </View>
-      <Text style={styles.checkText}>{children}</Text>
-    </Pressable>
+      <Text style={[styles.checkText, sobreFondo && styles.checkTextSobreFondo]}>{children}</Text>
+    </Presionable>
   );
 }
 
@@ -261,13 +283,17 @@ const crearStyles = (colors: Paleta) =>
     borderColor: colors.accent,
   },
   inputError: {
-    borderColor: colors.text,
+    borderColor: colors.error,
+    borderWidth: 1.5,
   },
   error: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    color: colors.text,
+    color: colors.error,
     marginTop: 4,
+  },
+  avisoError: {
+    marginTop: 6,
   },
   hint: {
     fontFamily: fonts.body,
@@ -395,5 +421,8 @@ const crearStyles = (colors: Paleta) =>
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.text,
+  },
+  checkTextSobreFondo: {
+    color: colors.textoSobreFondo,
   },
 });

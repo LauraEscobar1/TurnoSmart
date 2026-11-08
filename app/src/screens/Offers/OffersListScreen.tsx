@@ -1,12 +1,16 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCargarDatos } from "@/hooks/useCargarDatos";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { IconoCirculo, TituloSeccion } from "@/components/Adornos";
+import { Presionable } from "@/components/Presionable";
+import { PulsoAsistente } from "@/components/Animaciones";
+import { AvisoEstado } from "@/components/AvisoEstado";
+import { Pantalla } from "@/components/Vidrio";
 import { radius } from "@/theme/spacing";
 import { body, fonts, heading } from "@/theme/typography";
 import { Badge, BadgeVariant } from "@/components/Badge";
@@ -32,9 +36,9 @@ const FILTROS: { value: Filtro; label: Clave; vacio: Clave }[] = [
 ];
 
 const ESTADO: Record<Exclude<EstadoOferta, "pendiente">, { label: Clave; variant: BadgeVariant; icono: keyof typeof Ionicons.glyphMap }> = {
-  aceptada: { label: "ofertas.estados.aceptada", variant: "solid", icono: "checkmark" },
-  rechazada: { label: "ofertas.estados.cancelada", variant: "neutral", icono: "close" },
-  expirada: { label: "ofertas.estados.expirada", variant: "lost", icono: "time-outline" },
+  aceptada: { label: "ofertas.estados.aceptada", variant: "exito", icono: "checkmark" },
+  rechazada: { label: "ofertas.estados.cancelada", variant: "error", icono: "close" },
+  expirada: { label: "ofertas.estados.expirada", variant: "advertencia", icono: "time-outline" },
 };
 
 const PASOS: Clave[] = ["ofertas.pasos.uno", "ofertas.pasos.dos", "ofertas.pasos.tres"];
@@ -87,7 +91,7 @@ export function OffersListScreen() {
   const n = pendientes.length;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Pantalla edges={["top"]} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Encabezado */}
         <View>
@@ -98,9 +102,9 @@ export function OffersListScreen() {
         </View>
 
         {errorRespuesta && (
-          <Text style={body(13, colors.textoSobreFondo)} accessibilityRole="alert">
+          <AvisoEstado tipo="error" accessibilityRole="alert">
             {errorRespuesta}
-          </Text>
+          </AvisoEstado>
         )}
 
         {/* 1. Lo que requiere respuesta */}
@@ -108,7 +112,7 @@ export function OffersListScreen() {
           <View style={styles.bloque}>
             <View style={styles.aviso} accessibilityRole="summary">
               <View style={styles.avisoIcono}>
-                <Ionicons name="flash" size={18} color={colors.accent900} />
+                <Ionicons name="flash" size={18} color={colors.icono} />
               </View>
               <Text style={styles.avisoTexto}>{t("ofertas.requierenRespuesta", { count: n })}</Text>
             </View>
@@ -123,7 +127,10 @@ export function OffersListScreen() {
           </View>
         ) : (
           <View style={styles.vacio}>
-            <IlustracionSinOfertas />
+            {/* El asistente IA, atento: respira y emite anillos suaves (quieto con «Reducir movimiento»). */}
+            <PulsoAsistente tamano={168}>
+              <IlustracionSinOfertas />
+            </PulsoAsistente>
             <Text style={[heading(22, colors.textoSobreFondo), styles.centro]}>{t("ofertas.sinNuevas")}</Text>
             <AsistenteAtento style={styles.atento} />
           </View>
@@ -132,7 +139,7 @@ export function OffersListScreen() {
         {/* 2. Historial compacto */}
         {historial.length > 0 && (
           <View style={styles.bloque}>
-            <Text style={heading(18, colors.textoSobreFondo)}>{t("ofertas.historial")}</Text>
+            <TituloSeccion titulo={t("ofertas.historial")} variante="grande" />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -142,7 +149,7 @@ export function OffersListScreen() {
               {FILTROS.map((f) => {
                 const activo = f.value === filtro;
                 return (
-                  <Pressable
+                  <Presionable
                     key={f.value}
                     onPress={() => setFiltro(f.value)}
                     accessibilityRole="button"
@@ -150,7 +157,7 @@ export function OffersListScreen() {
                     style={[styles.filtro, activo && styles.filtroActivo]}
                   >
                     <Text style={[styles.filtroTexto, activo && styles.filtroTextoActivo]}>{t(f.label)}</Text>
-                  </Pressable>
+                  </Presionable>
                 );
               })}
             </ScrollView>
@@ -169,15 +176,15 @@ export function OffersListScreen() {
 
         {/* 3. Ayuda colapsable */}
         <Card tono="plana" style={styles.ayuda}>
-          <Pressable
+          <Presionable
             onPress={() => setAyudaAbierta((v) => !v)}
             accessibilityRole="button"
             accessibilityState={{ expanded: ayudaAbierta }}
             style={styles.ayudaCabecera}
           >
             <Text style={heading(17, colors.accent900)}>{t("ofertas.comoFuncionan")}</Text>
-            <Ionicons name={ayudaAbierta ? "remove" : "add"} size={20} color={colors.accent700} />
-          </Pressable>
+            <Ionicons name={ayudaAbierta ? "remove" : "add"} size={20} color={colors.icono} />
+          </Presionable>
           {ayudaAbierta && (
             <View style={styles.pasos}>
               {PASOS.map((p, i) => (
@@ -192,7 +199,7 @@ export function OffersListScreen() {
           )}
         </Card>
       </ScrollView>
-    </SafeAreaView>
+    </Pantalla>
   );
 }
 
@@ -206,9 +213,13 @@ function FilaHistorial({ oferta, divisor }: { oferta: OfertaCupo; divisor: boole
   const e = ESTADO[oferta.estado as Exclude<EstadoOferta, "pendiente">];
   return (
     <View style={[styles.fila, divisor && styles.filaDivisor]}>
-      <View style={[styles.filaIcono, oferta.estado === "aceptada" && styles.filaIconoAceptada]}>
-        <Ionicons name={e.icono} size={14} color={oferta.estado === "aceptada" ? colors.sobreCampo : colors.neutral600} />
-      </View>
+      {oferta.estado === "aceptada" ? (
+        <View style={[styles.filaIcono, styles.filaIconoAceptada]}>
+          <Ionicons name={e.icono} size={14} color={colors.sobreCampo} />
+        </View>
+      ) : (
+        <IconoCirculo nombre={e.icono} tamano={28} tamanoIcono={14} />
+      )}
       <View style={styles.flex}>
         <Text style={heading(16, colors.accent900)} numberOfLines={1}>
           {dato("especialidades", oferta.especialidad)}
@@ -226,7 +237,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   content: {
     paddingHorizontal: 20,

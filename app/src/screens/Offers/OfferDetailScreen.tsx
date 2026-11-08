@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
+import { CapaVidrio, FondoDegradado } from "@/components/Vidrio";
 import { body, heading } from "@/theme/typography";
 import { RootStackParamList } from "@/navigation/types";
 import { OfertaCupo } from "@/types/domain";
@@ -14,6 +16,7 @@ import { Countdown, useCountdown } from "@/components/Countdown";
 import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { DataRow } from "@/components/OfferCard";
 import { EmptyState } from "@/components/EmptyState";
+import { AvisoEstado } from "@/components/AvisoEstado";
 import { Card } from "@/components/Card";
 import { AnalisisRecomendacion, InsigniaRecomendacion } from "@/components/Recomendacion";
 import { hora, useFormato } from "@/utils/format";
@@ -48,10 +51,10 @@ export function OfferDetailScreen({ route, navigation }: Props) {
   // de iOS puede medir 0 arriba y dejar el encabezado bajo la barra de estado.
   const marco = [styles.safe, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }];
 
-  if (oferta === undefined) return <View style={marco} />;
+  if (oferta === undefined) return <FondoDegradado style={marco} />;
 
   return (
-    <View style={marco}>
+    <FondoDegradado style={marco}>
       <ScreenHeader title={t("oferta.titulo")} onBack={volverAHome} />
       {oferta && oferta.estado === "pendiente" ? (
         <OfertaVigente oferta={oferta} navigation={navigation} onYaNoDisponible={recargar} />
@@ -72,7 +75,7 @@ export function OfferDetailScreen({ route, navigation }: Props) {
       ) : (
         <OfertaExpirada onVerHistorial={() => navigation.navigate("Tabs", { screen: "Ofertas" })} />
       )}
-    </View>
+    </FondoDegradado>
   );
 }
 
@@ -120,7 +123,13 @@ function OfertaVigente({
 
   return (
     <>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Carga → contenido: la oferta aparece con un fundido suave. */}
+      <Animated.ScrollView
+        entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)}
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Card tono="acento" style={styles.timer}>
           <Countdown segundos={segundos} size={52} caption={t("oferta.tiempoParaResponder")} align="center" />
         </Card>
@@ -137,13 +146,14 @@ function OfertaVigente({
           <View style={styles.divisor} />
           <ExplainabilityPanel factores={oferta.factores} estrategia={oferta.estrategia} fechaHoraISO={oferta.fechaHoraISO} />
         </Card>
-      </ScrollView>
+      </Animated.ScrollView>
       {/* La barra llega al borde inferior y absorbe el inset (indicador de inicio). */}
       <View style={[styles.barra, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+        <CapaVidrio variante="barra" />
         {error && (
-          <Text style={[body(13, colors.text), styles.error]} accessibilityRole="alert">
+          <AvisoEstado tipo="error" accessibilityRole="alert" style={styles.error}>
             {error}
-          </Text>
+          </AvisoEstado>
         )}
         <View style={styles.actions}>
           <PrimaryButton
@@ -192,7 +202,6 @@ const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.fondoPantalla,
   },
   scroll: {
     flex: 1,
@@ -219,12 +228,12 @@ const crearStyles = (colors: Paleta) =>
     gap: 10,
     paddingTop: 14,
     paddingHorizontal: 18,
-    backgroundColor: colors.superficie,
     borderTopWidth: 1,
-    borderTopColor: colors.borde,
+    borderTopColor: colors.bordeCard,
+    overflow: "hidden",
   },
   error: {
-    textAlign: "center",
+    alignSelf: "center",
   },
   actions: {
     flexDirection: "row",

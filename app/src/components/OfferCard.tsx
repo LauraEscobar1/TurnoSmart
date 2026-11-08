@@ -21,6 +21,8 @@ interface OfferCardProps {
    */
   variant?: "home" | "full";
   onPress?: () => void;
+  /** home: tocar la card (fuera de «Ver oferta») abre el panel del asistente IA. */
+  onAbrirPanel?: () => void;
   onAceptar?: () => void;
   onRechazar?: () => void;
 }
@@ -29,9 +31,9 @@ interface OfferCardProps {
  * Tarjeta de oferta de cupo — el objeto de mayor jerarquía de la app
  * (docs/02-jerarquia.md §4). Nunca hay dos tarjetas de oferta activas.
  */
-export function OfferCard({ oferta, variant = "full", onPress, onAceptar, onRechazar }: OfferCardProps) {
+export function OfferCard({ oferta, variant = "full", onPress, onAbrirPanel, onAceptar, onRechazar }: OfferCardProps) {
   return variant === "home" ? (
-    <HomeOffer oferta={oferta} onPress={onPress} />
+    <HomeOffer oferta={oferta} onPress={onPress} onAbrirPanel={onAbrirPanel} />
   ) : (
     <FullOffer oferta={oferta} onAceptar={onAceptar} onRechazar={onRechazar} />
   );
@@ -44,7 +46,7 @@ function abreviarProfesional(nombre: string) {
   return `${partes[0]} ${partes[1][0]}. ${partes.slice(2).join(" ")}`;
 }
 
-function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress">) {
+function HomeOffer({ oferta, onPress, onAbrirPanel }: Pick<OfferCardProps, "oferta" | "onPress" | "onAbrirPanel">) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   const t = useT();
@@ -54,10 +56,16 @@ function HomeOffer({ oferta, onPress }: Pick<OfferCardProps, "oferta" | "onPress
   const expirada = segundos === 0;
 
   return (
-    <Card tono="acento" style={[styles.home, expirada && styles.expired]}>
+    <Card
+      tono="acento"
+      style={styles.home}
+      onPress={onAbrirPanel}
+      accessibilityRole={onAbrirPanel ? "button" : undefined}
+      accessibilityLabel={onAbrirPanel ? t("panelIA.abrir") : undefined}
+    >
       <View style={styles.topRow}>
         {expirada ? (
-          <Badge label={t("oferta.expirada")} variant="lost" />
+          <Badge label={t("oferta.expirada")} variant="advertencia" />
         ) : (
           <InsigniaRecomendacion estrategia={oferta.estrategia} sobreAcento />
         )}
@@ -95,7 +103,7 @@ function FullOffer({ oferta, onAceptar, onRechazar }: Pick<OfferCardProps, "ofer
     <Card style={styles.full}>
       <View style={styles.topRow}>
         {expirada ? (
-          <Badge label={t("oferta.expirada")} variant="lost" />
+          <Badge label={t("oferta.expirada")} variant="advertencia" />
         ) : (
           <InsigniaRecomendacion estrategia={oferta.estrategia} />
         )}
@@ -131,11 +139,11 @@ export function DataRow({ fecha, hora: h, size }: { fecha: string; hora: string;
     <View style={styles.dataRow}>
       <View style={styles.dataCell}>
         <Text style={label(9, colors.neutral600)}>{t("comun.fecha")}</Text>
-        <Text style={heading(size)}>{fecha}</Text>
+        <Text style={heading(size, colors.text)}>{fecha}</Text>
       </View>
       <View style={[styles.dataCell, styles.dataCellRight]}>
         <Text style={label(9, colors.neutral600)}>{t("comun.hora")}</Text>
-        <Text style={heading(size)}>{h}</Text>
+        <Text style={heading(size, colors.text)}>{h}</Text>
       </View>
     </View>
   );
@@ -150,9 +158,6 @@ const crearStyles = (colors: Paleta) =>
   full: {
     padding: 20,
     gap: 14,
-  },
-  expired: {
-    opacity: 0.55,
   },
   topRow: {
     flexDirection: "row",
