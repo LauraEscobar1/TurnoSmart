@@ -161,16 +161,20 @@ export const paletaClara = {
   textoSuavePanelIA: "#E3F2FE",
   tiradorPanelIA: "rgba(255,255,255,0.45)",
   /**
-   * Cabecera de Perfil: banner de vidrio Blue Lobster al 38 % con desenfoque y
-   * borde superior iluminado. Sobre el celeste de arriba de la pantalla su
-   * color efectivo pide texto marino (4,58:1 en el peor punto); el blanco
-   * recién pasaría con un 62 % de opacidad.
+   * Cabecera de Perfil: banner de vidrio blanco al 75 % con desenfoque, borde
+   * superior blanco brillante y sombra azulada suave. Nombre en marino, correo
+   * en Cobalt; el lápiz va en un círculo del mismo vidrio con el ícono Blue Lobster.
    */
-  bannerPerfil: "rgba(2,80,169,0.38)",
+  bannerPerfil: "rgba(255,255,255,0.75)",
   desenfoqueBanner: true,
-  bordeSuperiorBanner: "rgba(255,255,255,0.25)",
+  bordeSuperiorBanner: "rgba(255,255,255,0.95)",
+  opacidadSombraBanner: 0.16,
   textoBannerPerfil: BASE.subnautical,
-  botonBannerPerfil: "rgba(255,255,255,0.16)",
+  textoSuaveBannerPerfil: BASE.cobalt,
+  botonBannerPerfil: "rgba(255,255,255,0.75)",
+  bordeBotonBanner: "rgba(255,255,255,0.95)",
+  opacidadSombraBotonBanner: 0.18,
+  iconoBotonBannerPerfil: BASE.blueLobster,
   /** Anillo metalizado del avatar. */
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"] as Degradado,
   /** Chips de vidrio dentro de cards (lista de espera de Inicio). */
@@ -329,8 +333,13 @@ export const paletaOscura: Paleta = {
   bannerPerfil: BASE.rockBlue,
   desenfoqueBanner: false,
   bordeSuperiorBanner: "transparent",
+  opacidadSombraBanner: 0.22,
   textoBannerPerfil: "#0F2A3A",
+  textoSuaveBannerPerfil: "#0F2A3A",
   botonBannerPerfil: "rgba(15,42,58,0.10)",
+  bordeBotonBanner: "transparent",
+  opacidadSombraBotonBanner: 0,
+  iconoBotonBannerPerfil: "#0F2A3A",
   anilloAvatar: ["#FFFFFF", "#C9D8E6", "#8FA9C2", "#E9F0F6"],
   // Chip más claro que la card: el texto marino llega a AA.
   fondoChip: "rgba(255,255,255,0.30)",

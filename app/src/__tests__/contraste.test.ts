@@ -204,7 +204,8 @@ const PARES: Par[] = [
   par("textoInsigniaIA", "fondoInsigniaIA", "icono"),
   // Perfil: nombre y correo sobre el banner, y el ícono del lápiz en su botón.
   par("textoBannerPerfil", "bannerPerfil"),
-  par("textoBannerPerfil", "botonBannerPerfil", "icono"),
+  par("textoSuaveBannerPerfil", "bannerPerfil"),
+  par("iconoBotonBannerPerfil", "botonBannerPerfil", "icono"),
   // Panel del asistente IA: su texto.
   par("textoPanelIA", "panelIA"),
   par("textoSuavePanelIA", "panelIA"),
