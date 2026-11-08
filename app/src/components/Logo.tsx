@@ -1,5 +1,13 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useTema } from "@/theme/Tema";
 import { heading } from "@/theme/typography";
@@ -17,6 +25,36 @@ interface LogoProps {
   disposicion?: "vertical" | "horizontal";
   /** Bajada bajo el nombre, solo en disposición vertical. */
   tagline?: string;
+  /** Color de «Smart» en el nombre (por defecto, el mismo que «Turno»). */
+  acentoNombre?: string;
+  /** Tamaño del nombre en disposición horizontal (por defecto, ~ el alto del isotipo). */
+  tamanoNombre?: number;
+  /** Color de un resplandor suave detrás del isotipo y del nombre (logo claro sobre celeste). */
+  resplandor?: string;
+  /**
+   * El estetoscopio da un «latido» (dos pulsos de escala) a los `latidoAlEntrar` ms
+   * de montarse. Quien lo usa no lo pasa si el sistema pide reducir movimiento.
+   */
+  latidoAlEntrar?: number;
+}
+
+/** Latido doble, como un «lub-dub»: sube, vuelve, sube menos y vuelve. */
+function IsotipoConLatido({ retraso, children }: { retraso: number; children: React.ReactNode }) {
+  const escala = useSharedValue(1);
+  useEffect(() => {
+    const suave = Easing.out(Easing.quad);
+    escala.value = withDelay(
+      retraso,
+      withSequence(
+        withTiming(1.16, { duration: 140, easing: suave }),
+        withTiming(1, { duration: 160, easing: suave }),
+        withTiming(1.08, { duration: 120, easing: suave }),
+        withTiming(1, { duration: 220, easing: suave })
+      )
+    );
+  }, [retraso, escala]);
+  const estilo = useAnimatedStyle(() => ({ transform: [{ scale: escala.value }] }));
+  return <Animated.View style={estilo}>{children}</Animated.View>;
 }
 
 /**
@@ -44,6 +82,10 @@ export function Logo({
   wordmark = false,
   disposicion = "vertical",
   tagline,
+  acentoNombre,
+  tamanoNombre,
+  resplandor,
+  latidoAlEntrar,
 }: LogoProps) {
   const { colors } = useTema();
   color ??= colors.accent900;
@@ -52,7 +94,15 @@ export function Logo({
   const t = LOGO_TRAZOS;
   const horizontal = disposicion === "horizontal";
 
-  const isotipo = (
+  // Resplandor: sombra difusa sin desplazamiento (en iOS sigue la forma del trazo).
+  const brilloIsotipo: ViewStyle | undefined = resplandor
+    ? { shadowColor: resplandor, shadowOpacity: 1, shadowRadius: 6, shadowOffset: { width: 0, height: 1 } }
+    : undefined;
+  const brilloNombre: TextStyle | undefined = resplandor
+    ? { textShadowColor: resplandor, textShadowRadius: 8, textShadowOffset: { width: 0, height: 1 } }
+    : undefined;
+
+  const dibujo = (
     <Svg width={(size * w) / h} height={size} viewBox={`${x} ${y} ${w} ${h}`} fill="none">
       <Path d={t.olivas} stroke={color} strokeWidth={t.grosor} strokeLinecap="round" strokeLinejoin="round" />
       <Path d={t.tubo} stroke={color} strokeWidth={t.grosor} strokeLinecap="round" strokeLinejoin="round" />
@@ -60,12 +110,19 @@ export function Logo({
       <Circle cx={t.campana.cx} cy={t.campana.cy} r={t.campana.r} stroke={color} strokeWidth={t.grosor} />
     </Svg>
   );
+  const conBrillo = brilloIsotipo ? <View style={brilloIsotipo}>{dibujo}</View> : dibujo;
+  const isotipo =
+    latidoAlEntrar !== undefined ? <IsotipoConLatido retraso={latidoAlEntrar}>{conBrillo}</IsotipoConLatido> : conBrillo;
 
   if (horizontal) {
     return (
       <View style={styles.fila} accessibilityRole="image" accessibilityLabel="TurnoSmart">
         {isotipo}
-        {wordmark ? <Text style={heading(Math.round(size * 0.95), color)}>TurnoSmart</Text> : null}
+        {wordmark ? (
+          <Text style={[heading(tamanoNombre ?? Math.round(size * 0.95), color), brilloNombre]}>
+            Turno<Text style={{ color: acentoNombre ?? color }}>Smart</Text>
+          </Text>
+        ) : null}
       </View>
     );
   }
@@ -88,7 +145,7 @@ const styles = StyleSheet.create({
   fila: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   nombre: {
     marginTop: 12,

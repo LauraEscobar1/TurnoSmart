@@ -11,6 +11,7 @@ import { AuthStackParamList } from "@/navigation/types";
 import { useAuth } from "@/auth/AuthContext";
 import { AuthError, getUltimoUsuario } from "@/services/authService";
 import { TextField } from "@/components/forms";
+import { Card } from "@/components/Card";
 import { Logo } from "@/components/Logo";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { BackBar } from "@/components/StepHeader";
@@ -18,7 +19,12 @@ import { FormScreen } from "@/screens/Auth/FormScreen";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
-/** Acceso — Iniciar sesión: marca centrada, correo, contraseña y Face ID. */
+/**
+ * Acceso — Iniciar sesión, como en el diseño: logo arriba a la izquierda,
+ * titular y bajada alineados a la izquierda, y una card de vidrio con
+ * correo, contraseña y el botón de marca (el mismo de «Empezar»). Debajo,
+ * Face ID y el enlace para crear cuenta.
+ */
 export function LoginScreen({ navigation, route }: Props) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
@@ -78,7 +84,6 @@ export function LoginScreen({ navigation, route }: Props) {
       header={navigation.canGoBack() ? <BackBar onBack={navigation.goBack} /> : undefined}
       footer={
         <>
-          <PrimaryButton label={t("login.iniciarSesion")} onPress={ingresar} disabled={enviando} />
           <PrimaryButton label={t("login.conFaceId")} variant="secondary" onPress={ingresarConFaceId} />
           <View style={styles.signup}>
             <Text style={body(13, colors.textoSuaveSobreFondo)}>{t("login.noTenesCuenta")} </Text>
@@ -90,45 +95,59 @@ export function LoginScreen({ navigation, route }: Props) {
       }
     >
       <View style={styles.marca}>
-        <Logo size={52} wordmark color={colors.logoSobreFondo} acento={colors.logoAcentoSobreFondo} />
-        <Text style={[heading(24, colors.textoSobreFondo), styles.center, styles.titulo]}>{t("login.titulo")}</Text>
-        <Text style={[body(13, colors.textoSuaveSobreFondo), styles.center]}>{t("login.bajada")}</Text>
+        <Logo
+          size={38}
+          tamanoNombre={28}
+          wordmark
+          disposicion="horizontal"
+          color={colors.logoMarca}
+          acento={colors.logoMarcaAcento}
+          acentoNombre={colors.logoMarcaAcento}
+          resplandor={colors.sombraLogoMarca}
+        />
+        <Text style={[heading(40, colors.textoSobreFondo), styles.titulo]} accessibilityRole="header">
+          {t("login.titulo")}
+        </Text>
+        <Text style={body(15, colors.textoSuaveSobreFondo)}>{t("login.bajada")}</Text>
       </View>
 
-      <TextField sobreFondo
-        label={t("comun.correo")}
-        placeholder={t("comun.correoEj")}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        textContentType="username"
-        returnKeyType="next"
-        onSubmitEditing={() => passwordRef.current?.focus()}
-        error={error?.campo === "email" ? error.mensaje : undefined}
-      />
-      <TextField sobreFondo
-        ref={passwordRef}
-        label={t("comun.password")}
-        value={password}
-        onChangeText={setPassword}
-        revelable
-        autoComplete="current-password"
-        textContentType="password"
-        returnKeyType="go"
-        onSubmitEditing={ingresar}
-        error={error && error.campo !== "email" ? error.mensaje : undefined}
-      />
-      <Pressable
-        onPress={() => navigation.navigate("RestablecerPassword", { email: email.trim() || undefined })}
-        style={styles.forgot}
-        hitSlop={8}
-      >
-        <Text style={body(12, colors.acentoSobreFondo)}>{t("login.olvidaste")}</Text>
-      </Pressable>
-      {aviso ? <Text style={body(13, colors.textoSuaveSobreFondo)}>{aviso}</Text> : null}
+      <Card destacada style={styles.formulario}>
+        <TextField
+          label={t("comun.correo")}
+          placeholder={t("comun.correoEj")}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="username"
+          returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
+          error={error?.campo === "email" ? error.mensaje : undefined}
+        />
+        <TextField
+          ref={passwordRef}
+          label={t("comun.password")}
+          value={password}
+          onChangeText={setPassword}
+          revelable
+          autoComplete="current-password"
+          textContentType="password"
+          returnKeyType="go"
+          onSubmitEditing={ingresar}
+          error={error && error.campo !== "email" ? error.mensaje : undefined}
+        />
+        <Pressable
+          onPress={() => navigation.navigate("RestablecerPassword", { email: email.trim() || undefined })}
+          style={styles.forgot}
+          hitSlop={8}
+        >
+          <Text style={[body(13, colors.accent700), styles.link]}>{t("login.olvidaste")}</Text>
+        </Pressable>
+        {aviso ? <Text style={body(13, colors.neutral700)}>{aviso}</Text> : null}
+        <PrimaryButton label={t("login.iniciarSesion")} variant="marca" onPress={ingresar} disabled={enviando} />
+      </Card>
     </FormScreen>
   );
 }
@@ -136,26 +155,32 @@ export function LoginScreen({ navigation, route }: Props) {
 const crearStyles = (colors: Paleta) =>
   StyleSheet.create({
   marca: {
-    alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 8,
+    alignItems: "flex-start",
+    paddingTop: 8,
+    paddingBottom: 10,
   },
   titulo: {
-    marginTop: 22,
-    marginBottom: 4,
+    marginTop: 30,
+    marginBottom: 6,
+    lineHeight: 44,
   },
-  center: {
-    textAlign: "center",
+  formulario: {
+    padding: 18,
+    gap: 14,
   },
   forgot: {
     alignSelf: "flex-end",
     marginTop: -4,
   },
+  // Pie separado por una línea, como en el diseño.
   signup: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 6,
+    marginTop: 8,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.divisorSobreFondo,
   },
   link: {
     fontFamily: fonts.bodyMedium,

@@ -48,6 +48,7 @@ module.exports = {
   ...Animated,
   useSharedValue: (inicial) => React.useRef({ value: inicial }).current,
   useAnimatedStyle: (f) => f(),
+  useAnimatedProps: (f) => f(),
   useAnimatedScrollHandler: () => () => {},
   useReducedMotion: () => false,
   withTiming: (v) => v,
