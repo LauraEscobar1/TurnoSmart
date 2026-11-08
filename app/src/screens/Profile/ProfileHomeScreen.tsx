@@ -83,7 +83,7 @@ export function ProfileHomeScreen() {
         {/* Cabecera: banner sólido de ancho completo y, montado sobre su borde inferior, el avatar. */}
         <View style={styles.hero}>
           <View pointerEvents="none" style={styles.banner}>
-            {/* Vidrio (modo claro): desenfoque recortado a la forma y el azul translúcido encima. */}
+            {/* Vidrio (modo claro): desenfoque recortado a la forma y el blanco translúcido encima. */}
             <View style={[StyleSheet.absoluteFill, styles.bannerRecorte]}>
               {CON_DESENFOQUE && colors.desenfoqueBanner ? (
                 <BlurView intensity={colors.intensidadBlur} tint={colors.tintaBlur} style={StyleSheet.absoluteFill} />
@@ -100,7 +100,7 @@ export function ProfileHomeScreen() {
               <Text style={[heading(30, colors.textoBannerPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.nombre} {paciente.apellido}
               </Text>
-              <Text style={[body(14, colors.textoBannerPerfil), styles.centrado]} numberOfLines={1}>
+              <Text style={[body(14, colors.textoSuaveBannerPerfil), styles.centrado]} numberOfLines={1}>
                 {paciente.email}
               </Text>
             </View>
@@ -229,7 +229,14 @@ function BotonRedondo({
       accessibilityLabel={etiqueta}
       style={({ pressed }) => [styles.redondo, pressed && styles.presionado]}
     >
-      <Ionicons name={icono} size={22} color={colors.textoBannerPerfil} />
+      {/* Mismo vidrio que el banner (en claro): desenfoque y relleno recortados al círculo. */}
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.redondoRecorte]}>
+        {CON_DESENFOQUE && colors.desenfoqueBanner ? (
+          <BlurView intensity={colors.intensidadBlur} tint={colors.tintaBlur} style={StyleSheet.absoluteFill} />
+        ) : null}
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.botonBannerPerfil }]} />
+      </View>
+      <Ionicons name={icono} size={22} color={colors.iconoBotonBannerPerfil} />
     </Presionable>
   );
 }
@@ -293,7 +300,7 @@ const crearStyles = (colors: Paleta) =>
     paddingTop: 10,
   },
   // Banner rectangular: ancho completo, esquinas inferiores redondeadas y sombra suave
-  // (vidrio azul en claro, Rock Blue sólido en oscuro).
+  // (vidrio blanco en claro, Rock Blue sólido en oscuro).
   // Termina a media altura del avatar, que queda montado sobre su borde.
   banner: {
     position: "absolute",
@@ -306,7 +313,7 @@ const crearStyles = (colors: Paleta) =>
     borderTopWidth: 1,
     borderTopColor: colors.bordeSuperiorBanner,
     shadowColor: colors.sombraCard,
-    shadowOpacity: 0.22,
+    shadowOpacity: colors.opacidadSombraBanner,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
     elevation: 4,
@@ -324,14 +331,25 @@ const crearStyles = (colors: Paleta) =>
     paddingTop: 12,
     gap: 2,
   },
-  // Sobre el banner: un círculo del mismo tono, apenas aclarado u oscurecido, con el ícono del banner.
+  // Sobre el banner: un círculo de vidrio blanco con borde brillante y sombra azulada (claro),
+  // o del mismo tono apenas oscurecido (oscuro).
   redondo: {
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: colors.botonBannerPerfil,
+    // Sin borde en oscuro, para que el círculo conserve su tamaño de siempre.
+    borderWidth: colors.bordeBotonBanner === "transparent" ? 0 : 1,
+    borderColor: colors.bordeBotonBanner,
+    shadowColor: colors.sombraCard,
+    shadowOpacity: colors.opacidadSombraBotonBanner,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
     alignItems: "center",
     justifyContent: "center",
+  },
+  redondoRecorte: {
+    borderRadius: 23,
+    overflow: "hidden",
   },
   bannerRecorte: {
     borderBottomLeftRadius: 28,
