@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,6 +14,7 @@ import { body, fonts, heading } from "@/theme/typography";
 import { ProfileStackParamList } from "@/navigation/types";
 import { useAuth, usePaciente } from "@/auth/AuthContext";
 import { abrirAjustes, pedirPermisoNotificaciones } from "@/services/permisosService";
+import { ETIQUETA_METODO, MetodoBiometria } from "@/services/biometriaService";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Card } from "@/components/Card";
 import { AvatarPaciente } from "@/components/AvatarPaciente";
@@ -43,6 +44,13 @@ function listaO(items: string[], idioma: Idioma) {
 const TAMANO_AVATAR = 132;
 const MITAD_AVATAR = (TAMANO_AVATAR + 2 * Math.max(3, Math.round(TAMANO_AVATAR * 0.035))) / 2;
 
+const ICONO_METODO: Record<MetodoBiometria, keyof typeof Ionicons.glyphMap> = {
+  faceId: "scan-outline",
+  touchId: "finger-print-outline",
+  huella: "finger-print-outline",
+  codigo: "keypad-outline",
+};
+
 export function ProfileHomeScreen() {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
@@ -51,8 +59,9 @@ export function ProfileHomeScreen() {
   const { idioma } = useAjustes();
   const navigation = useNavigation<Nav>();
   const paciente = usePaciente();
-  const { actualizar, cerrarSesion } = useAuth();
+  const { actualizar, cerrarSesion, biometria, activarBiometria, desactivarBiometria } = useAuth();
   const [pidiendo, setPidiendo] = useState(false);
+  const [cambiandoBiometria, setCambiandoBiometria] = useState(false);
 
   const completo = perfilCompleto(paciente);
   const dias = diasEnEspera(paciente.registradoEnISO);
@@ -75,6 +84,17 @@ export function ProfileHomeScreen() {
     setPidiendo(false);
     if (ok) await actualizar({ notificacionesActivas: true });
     else await abrirAjustes();
+  }
+
+  /** Activar pide la biometría (y guarda el token); desactivar borra lo guardado. */
+  async function alternarBiometria(activar: boolean) {
+    setCambiandoBiometria(true);
+    try {
+      if (activar) await activarBiometria();
+      else await desactivarBiometria();
+    } finally {
+      setCambiandoBiometria(false);
+    }
   }
 
   return (
@@ -195,6 +215,21 @@ export function ProfileHomeScreen() {
                 {pidiendo ? "…" : t(paciente.notificacionesActivas ? "perfil.activadas" : "perfil.desactivadas")}
               </Text>
             </Presionable>
+            {biometria.metodo ? (
+              <View style={[styles.fila, styles.divisor]}>
+                <IconoCirculo nombre={ICONO_METODO[biometria.metodo]} tamano={34} tamanoIcono={18} />
+                <Text style={[body(15, colors.text), styles.flex]}>{t(ETIQUETA_METODO[biometria.metodo])}</Text>
+                <Switch
+                  value={biometria.activada}
+                  onValueChange={alternarBiometria}
+                  disabled={cambiandoBiometria}
+                  accessibilityLabel={t(ETIQUETA_METODO[biometria.metodo])}
+                  trackColor={{ false: colors.neutral300, true: colors.accent }}
+                  thumbColor={colors.pulgarSwitch}
+                  ios_backgroundColor={colors.neutral300}
+                />
+              </View>
+            ) : null}
             <Presionable
               onPress={cerrarSesion}
               accessibilityRole="button"

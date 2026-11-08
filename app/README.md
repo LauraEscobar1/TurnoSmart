@@ -34,6 +34,24 @@ muestra el aviso del sistema (`src/services/notificacionesLocales.ts`,
 a segundo plano; lo demás queda en la pestaña Notificaciones. Push remotas
 requerirían un development build.
 
+### Ingreso con Face ID (biometría)
+
+Tras el primer ingreso con correo y contraseña, la app pregunta una sola vez
+si quieres ingresar con Face ID la próxima vez. Si aceptas, guarda en el
+llavero del teléfono (`expo-secure-store`) el **refresh token** de Supabase,
+nunca la contraseña, y lo actualiza cada vez que Supabase lo renueva. Desde
+entonces la app abre en Iniciar sesión y entra con la biometría
+(`expo-local-authentication`). Se activa o desactiva en Perfil, y se borra al
+cerrar sesión o si el token vence (ahí pide correo y contraseña).
+Código: `src/services/biometriaService.ts`.
+
+- **Expo Go (iOS):** Expo Go no tiene permiso de Face ID, así que el sistema
+  pide el **código del teléfono** y el botón dice «Ingresar con el código del
+  teléfono».
+- **Face ID real:** requiere un development build (`npx expo run:ios` o EAS
+  Build), que incluye el permiso `faceIDPermission` del plugin de
+  `expo-local-authentication` en `app.json`.
+
 ## Estructura de carpetas
 
 ```

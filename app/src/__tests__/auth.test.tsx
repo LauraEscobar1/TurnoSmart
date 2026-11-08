@@ -1,4 +1,3 @@
-import * as LocalAuthentication from "expo-local-authentication";
 import * as Notifications from "expo-notifications";
 import { fireEvent, screen } from "@testing-library/react-native";
 import * as auth from "@/services/authService";
@@ -44,17 +43,10 @@ describe("authService", () => {
     await expect(auth.iniciarSesion("", "x")).rejects.toMatchObject({ campo: "email" });
   });
 
-  it("cerrar sesión borra la sesión de Supabase pero recuerda el usuario; Face ID solo retoma una sesión guardada", async () => {
+  it("cerrar sesión borra la sesión de Supabase y la app nunca guarda la contraseña", async () => {
     await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
-    // Con la sesión de Supabase guardada, Face ID la retoma.
-    expect((await auth.iniciarSesionBiometrica()).email).toBe(CUENTA_DEMO.email);
     await auth.cerrarSesion();
     expect(await auth.getSesion()).toBeNull();
-    expect(await auth.getUltimoUsuario()).toBe(CUENTA_DEMO.email);
-    // Sin sesión no hay forma de reingresar sin contraseña: la app no la guarda.
-    await expect(auth.iniciarSesionBiometrica()).rejects.toMatchObject({
-      message: "Ingresa una vez con tu correo para activar Face ID.",
-    });
     const guardado = JSON.stringify(await AsyncStorage.multiGet(await AsyncStorage.getAllKeys()));
     expect(guardado).not.toContain(CUENTA_DEMO.password);
   });
@@ -193,38 +185,6 @@ describe("Acceso en pantalla", () => {
     await fireEvent.changeText(screen.getByLabelText("Contraseña"), CUENTA_DEMO.password);
     await fireEvent.press(screen.getByRole("button", { name: "Iniciar sesión" }));
     expect(await screen.findByText("Martín Ávila")).toBeTruthy();
-  });
-
-  it("Face ID: pide ingresar una vez con correo si no hay usuario recordado", async () => {
-    await montarApp({ sesion: false });
-    await irALogin();
-    await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
-    expect(await screen.findByText("Ingresa una vez con tu correo para activar Face ID.")).toBeTruthy();
-    expect(LocalAuthentication.authenticateAsync).not.toHaveBeenCalled();
-  });
-
-  it("Face ID: con usuario recordado pero sin sesión guardada, pide ingresar con correo", async () => {
-    await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
-    await auth.cerrarSesion();
-    await montarApp({ sesion: false });
-    await irALogin();
-
-    await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
-    expect(LocalAuthentication.authenticateAsync).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText("Ingresa una vez con tu correo para activar Face ID.")).toBeTruthy();
-    expect(screen.queryByText("Martín Ávila")).toBeNull();
-  });
-
-  it("Face ID cancelado no inicia sesión", async () => {
-    await auth.iniciarSesion(CUENTA_DEMO.email, CUENTA_DEMO.password);
-    await auth.cerrarSesion();
-    jest.mocked(LocalAuthentication.authenticateAsync).mockResolvedValueOnce({ success: false, error: "user_cancel" });
-    await montarApp({ sesion: false });
-    await irALogin();
-
-    await fireEvent.press(await screen.findByText("Ingresar con Face ID"));
-    expect(screen.getByText("Ingresa a tu cuenta")).toBeTruthy();
-    expect(screen.queryByText("Martín Ávila")).toBeNull();
   });
 
   it("registro en 3 pasos: valida, verifica el código, pide notificaciones y entra a Home", async () => {

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useTema } from "@/theme/Tema";
 import { AuthStackParamList } from "@/navigation/types";
 import { introVista } from "@/services/authService";
+import { estaActivada } from "@/services/biometriaService";
 import { IntroScreen } from "@/screens/Auth/IntroScreen";
 import { BienvenidaScreen } from "@/screens/Auth/BienvenidaScreen";
 import { LoginScreen } from "@/screens/Auth/LoginScreen";
@@ -17,13 +18,16 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 /**
  * Acceso: Intro (solo la primera vez) → Bienvenida → Iniciar sesión /
  * Registro (datos → preferencias → verificación) / Restablecer contraseña.
+ * Con el ingreso biométrico activado abre directo en Iniciar sesión.
  */
 export function AuthNavigator() {
   const { colors } = useTema();
-  const [inicial, setInicial] = useState<"Intro" | "Bienvenida" | null>(null);
+  const [inicial, setInicial] = useState<"Intro" | "Bienvenida" | "Login" | null>(null);
 
   useEffect(() => {
-    introVista().then((vista) => setInicial(vista ? "Bienvenida" : "Intro"));
+    Promise.all([estaActivada(), introVista()]).then(([biometria, vista]) =>
+      setInicial(biometria ? "Login" : vista ? "Bienvenida" : "Intro")
+    );
   }, []);
 
   if (!inicial) return null;

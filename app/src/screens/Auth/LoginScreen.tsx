@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import * as LocalAuthentication from "expo-local-authentication";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { body, fonts, heading } from "@/theme/typography";
 import { useT } from "@/i18n";
 import { AuthStackParamList } from "@/navigation/types";
-import { useAuth } from "@/auth/AuthContext";
-import { AuthError, getUltimoUsuario } from "@/services/authService";
+import { PreguntaBiometria, useAuth } from "@/auth/AuthContext";
+import { AuthError } from "@/services/authService";
+import { BiometriaCancelada, BiometriaError, ETIQUETA_METODO, NOMBRE_METODO } from "@/services/biometriaService";
 import { TextField } from "@/components/forms";
 import { Card } from "@/components/Card";
 import { Logo } from "@/components/Logo";
@@ -29,7 +29,7 @@ export function LoginScreen({ navigation, route }: Props) {
   const { colors } = useTema();
   const styles = useEstilos(crearStyles);
   const t = useT();
-  const { iniciarSesion, iniciarSesionBiometrica } = useAuth();
+  const { iniciarSesion, iniciarSesionBiometrica, biometria } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<{ campo?: string; mensaje: string } | null>(null);
@@ -42,49 +42,54 @@ export function LoginScreen({ navigation, route }: Props) {
     if (route.params?.aviso) setAviso(route.params.aviso);
   }, [route.params?.aviso]);
 
+  // Tras el primer ingreso con correo: «¿Quieres ingresar con Face ID la próxima vez?».
+  const preguntarBiometria: PreguntaBiometria = (metodo) =>
+    new Promise((responder) =>
+      Alert.alert(
+        t("biometria.pregunta", { metodo: t(NOMBRE_METODO[metodo]) }),
+        t("biometria.preguntaTexto"),
+        [
+          { text: t("biometria.ahoraNo"), style: "cancel", onPress: () => responder(false) },
+          { text: t("biometria.activar"), onPress: () => responder(true) },
+        ],
+        { cancelable: false }
+      )
+    );
+
   async function ingresar() {
     setError(null);
     setAviso(null);
     setEnviando(true);
     try {
-      await iniciarSesion(email, password);
+      await iniciarSesion(email, password, preguntarBiometria);
     } catch (e) {
       setError(e instanceof AuthError ? { campo: e.campo, mensaje: e.message } : { mensaje: t("login.error") });
       setEnviando(false);
     }
   }
 
-  async function ingresarConFaceId() {
+  async function ingresarConBiometria() {
     setError(null);
     setAviso(null);
-    if (!(await getUltimoUsuario())) {
-      setAviso(t("errores.faceIdPrimeraVez"));
-      return;
-    }
-    const disponible = (await LocalAuthentication.hasHardwareAsync()) && (await LocalAuthentication.isEnrolledAsync());
-    if (!disponible) {
-      setAviso(t("login.faceIdNoDisponible"));
-      return;
-    }
-    const r = await LocalAuthentication.authenticateAsync({
-      promptMessage: t("login.faceIdPrompt"),
-      cancelLabel: t("comun.cancelar"),
-      disableDeviceFallback: false,
-    });
-    if (!r.success) return; // canceló: no es un error que mostrar
     try {
       await iniciarSesionBiometrica();
     } catch (e) {
-      setAviso(e instanceof AuthError ? e.message : t("login.error"));
+      if (e instanceof BiometriaCancelada) return; // canceló: no es un error que mostrar
+      setAviso(e instanceof BiometriaError || e instanceof AuthError ? e.message : t("login.error"));
     }
   }
+
+  // El botón aparece solo con el ingreso biométrico activado en este teléfono.
+  const metodo = biometria.activada ? biometria.metodo : null;
 
   return (
     <FormScreen
       header={navigation.canGoBack() ? <BackBar onBack={navigation.goBack} /> : undefined}
       footer={
         <>
-          <PrimaryButton label={t("login.conFaceId")} variant="secondary" onPress={ingresarConFaceId} />
+          {metodo ? (
+            <PrimaryButton label={t(ETIQUETA_METODO[metodo])} variant="secondary" onPress={ingresarConBiometria} />
+          ) : null}
           <View style={styles.signup}>
             <Text style={body(13, colors.textoSuaveSobreFondo)}>{t("login.noTenesCuenta")} </Text>
             <Pressable onPress={() => navigation.navigate("RegistroDatos")} hitSlop={8}>

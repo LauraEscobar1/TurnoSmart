@@ -38,8 +38,26 @@ jest.mock("react-native-pager-view", () => {
 jest.mock("expo-local-authentication", () => ({
   hasHardwareAsync: jest.fn(async () => true),
   isEnrolledAsync: jest.fn(async () => true),
+  // Por defecto, un iPhone con Face ID configurado.
+  supportedAuthenticationTypesAsync: jest.fn(async () => [2]),
+  getEnrolledLevelAsync: jest.fn(async () => 3),
   authenticateAsync: jest.fn(async () => ({ success: true })),
+  AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2, IRIS: 3 },
+  SecurityLevel: { NONE: 0, SECRET: 1, BIOMETRIC_WEAK: 2, BIOMETRIC_STRONG: 3 },
 }));
+
+// Llavero del teléfono (SecureStore) en memoria; `__limpiar()` lo vacía entre pruebas.
+jest.mock("expo-secure-store", () => {
+  const llavero = new Map();
+  return {
+    getItemAsync: jest.fn(async (clave) => (llavero.has(clave) ? llavero.get(clave) : null)),
+    setItemAsync: jest.fn(async (clave, valor) => void llavero.set(clave, valor)),
+    deleteItemAsync: jest.fn(async (clave) => void llavero.delete(clave)),
+    WHEN_UNLOCKED_THIS_DEVICE_ONLY: 6,
+    __contenido: () => Object.fromEntries(llavero),
+    __limpiar: () => llavero.clear(),
+  };
+});
 // Notificaciones locales: `__tocar(respuesta)` simula que el usuario toca una
 // notificación (o uno de sus botones) con la app abierta.
 jest.mock("expo-notifications", () => {
@@ -73,3 +91,10 @@ jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn(async () => {}),
   ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
 }));
+
+// Alertas del sistema: por defecto el usuario toca la opción «cancel» (p. ej.
+// «Ahora no» al ofrecer Face ID); cada prueba puede responder otra cosa.
+const { Alert } = require("react-native");
+jest
+  .spyOn(Alert, "alert")
+  .mockImplementation((_titulo, _mensaje, botones) => botones?.find((b) => b.style === "cancel")?.onPress?.());

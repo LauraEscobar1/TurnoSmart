@@ -36,8 +36,10 @@ interface UsuarioFalso {
   identities: { id: string }[];
   confirmado: boolean;
 }
-type Evento = "SIGNED_IN" | "SIGNED_OUT" | "USER_UPDATED";
-type Oyente = (evento: Evento, sesion: { user: UsuarioFalso } | null) => void;
+type Evento = "SIGNED_IN" | "SIGNED_OUT" | "USER_UPDATED" | "TOKEN_REFRESHED";
+/** Sesión de Auth: el usuario y su refresh token (de un solo uso: se rota al renovar). */
+type SesionFalsa = { user: UsuarioFalso; refresh_token: string };
+type Oyente = (evento: Evento, sesion: SesionFalsa | null) => void;
 type Fila = Record<string, unknown>;
 type ErrorFalso = { code: string; message: string; details: null };
 type Resultado<T> = { data: T; error: null } | { data: null; error: ErrorFalso };
@@ -49,7 +51,9 @@ const DIA = 86_400_000;
 const hace = (dias: number) => new Date(Date.now() - dias * DIA).toISOString();
 
 let usuarios: UsuarioFalso[] = [];
-let sesion: { user: UsuarioFalso } | null = null;
+let sesion: SesionFalsa | null = null;
+/** Refresh tokens vigentes en el servidor → id del usuario. */
+let tokensVigentes = new Map<string, string>();
 let oyentes: Oyente[] = [];
 let codigosRecuperacion: Record<string, string> = {};
 /** «Confirm email» de Supabase Auth: si está activo, signUp no devuelve sesión. */
@@ -79,6 +83,13 @@ let ofertas: Fila[] = [];
 let ofertasFactores: Fila[] = [];
 let ofertasEventos: Fila[] = [];
 let notificaciones: Fila[] = [];
+
+/** Sesión nueva con su refresh token vigente. */
+function nuevaSesion(user: UsuarioFalso): SesionFalsa {
+  const refresh_token = nuevoId("rt");
+  tokensVigentes.set(refresh_token, user.id);
+  return { user, refresh_token };
+}
 
 function emitir(evento: Evento) {
   oyentes.forEach((o) => o(evento, sesion));
@@ -268,6 +279,7 @@ function sembrarDemo() {
 export function reiniciarSupabaseFalso() {
   usuarios = [];
   sesion = null;
+  tokensVigentes = new Map();
   oyentes = [];
   codigosRecuperacion = {};
   pedirConfirmacion = false;
@@ -438,7 +450,17 @@ export function vencerOfertaFalsa(ofertaId: string) {
 /** Deja abierta la sesión de un usuario, como si la hubiera restaurado Supabase. */
 export function abrirSesionFalsa(email: string) {
   const user = usuarios.find((u) => u.email === email);
-  sesion = user ? { user } : null;
+  sesion = user ? nuevaSesion(user) : null;
+}
+
+/** El servidor da por vencidos (o revocados) todos los refresh tokens. */
+export function vencerRefreshTokensFalsos() {
+  tokensVigentes.clear();
+}
+
+/** Borra la sesión guardada en el teléfono sin tocar el servidor (p. ej. se vació el almacenamiento). */
+export function olvidarSesionLocalFalsa() {
+  sesion = null;
 }
 
 /** Activa o desactiva «Confirm email» en el proyecto falso. */
@@ -469,7 +491,7 @@ const auth = {
     const user = usuarios.find((u) => u.email === email && u.password === password);
     if (!user) return { data: { user: null, session: null }, error: errorAuth("invalid_credentials") };
     if (!user.confirmado) return { data: { user: null, session: null }, error: errorAuth("email_not_confirmed") };
-    sesion = { user };
+    sesion = nuevaSesion(user);
     emitir("SIGNED_IN");
     return { data: { user, session: sesion }, error: null };
   },
@@ -489,11 +511,13 @@ const auth = {
       };
     }
     if (pedirConfirmacion) return { data: { user, session: null }, error: null };
-    sesion = { user };
+    sesion = nuevaSesion(user);
     emitir("SIGNED_IN");
     return { data: { user, session: sesion }, error: null };
   },
   async signOut() {
+    // Cierra la sesión también en el servidor: su refresh token deja de servir.
+    if (sesion) tokensVigentes.delete(sesion.refresh_token);
     sesion = null;
     emitir("SIGNED_OUT");
     return { error: null };
@@ -508,7 +532,7 @@ const auth = {
     const user = usuarios.find((u) => u.email === email);
     if (!user || codigosRecuperacion[email] !== token) return { data: { user: null, session: null }, error: errorAuth("otp_expired") };
     delete codigosRecuperacion[email];
-    sesion = { user };
+    sesion = nuevaSesion(user);
     emitir("SIGNED_IN");
     return { data: { user, session: sesion }, error: null };
   },
@@ -517,6 +541,22 @@ const auth = {
     if (password) sesion.user.password = password;
     emitir("USER_UPDATED");
     return { data: { user: sesion.user }, error: null };
+  },
+  /** Renueva la sesión con un refresh token: si sigue vigente, se rota (el anterior deja de servir). */
+  async refreshSession(actual?: { refresh_token: string }) {
+    const token = actual?.refresh_token ?? sesion?.refresh_token;
+    const uid = token ? tokensVigentes.get(token) : undefined;
+    const user = usuarios.find((u) => u.id === uid);
+    if (!token || !user) {
+      return {
+        data: { user: null, session: null },
+        error: errorAuth("refresh_token_not_found", "Invalid Refresh Token: Refresh Token Not Found"),
+      };
+    }
+    tokensVigentes.delete(token);
+    sesion = nuevaSesion(user);
+    emitir("TOKEN_REFRESHED");
+    return { data: { user, session: sesion }, error: null };
   },
   onAuthStateChange(oyente: Oyente) {
     oyentes.push(oyente);

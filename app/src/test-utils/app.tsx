@@ -1,4 +1,5 @@
 import React from "react";
+import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { AuthProvider } from "@/auth/AuthContext";
@@ -21,6 +22,7 @@ export async function reiniciarDatos() {
   citasMock.splice(0, citasMock.length, ...copia.citasMock);
   notificacionesMock.splice(0, notificacionesMock.length, ...copia.notificacionesMock);
   await AsyncStorage.clear();
+  (SecureStore as unknown as { __limpiar: () => void }).__limpiar();
   reiniciarSupabaseFalso();
   setIdiomaActual("es");
 }
@@ -32,7 +34,6 @@ export async function reiniciarDatos() {
 export async function montarApp({ sesion = true, intro = false } = {}) {
   if (sesion) {
     abrirSesionFalsa(CUENTA_DEMO.email);
-    await AsyncStorage.setItem("ts.ultimoUsuario", CUENTA_DEMO.email);
   }
   if (!intro) await AsyncStorage.setItem("ts.introVista", "1");
   return render(

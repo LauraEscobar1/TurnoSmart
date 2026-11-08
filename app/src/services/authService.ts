@@ -7,6 +7,7 @@ import { getResumenListaEspera, ResumenListaEspera, sincronizarListaEspera } fro
 import { tr } from "@/i18n";
 import type { PerfilStaff } from "@/types/staff";
 import { getPerfilStaff } from "@/services/staffService";
+import * as biometria from "@/services/biometriaService";
 
 /**
  * Capa de servicio de cuentas y sesión, sobre Supabase Auth.
@@ -26,8 +27,6 @@ import { getPerfilStaff } from "@/services/staffService";
 
 /** Perfiles locales por id de usuario de Supabase (sin credenciales). */
 const KEY_PERFILES = "ts.perfiles";
-/** Último correo que inició sesión: habilita «Ingresar con Face ID». */
-const KEY_ULTIMO = "ts.ultimoUsuario";
 /** La intro de 3 pantallas se muestra solo la primera vez. */
 const KEY_INTRO = "ts.introVista";
 /**
@@ -253,7 +252,7 @@ async function ingresar(email: string, password: string): Promise<User> {
     if (error && error.code !== "invalid_credentials") throw new AuthError(tr("login.error"));
     throw new AuthError(tr("errores.credenciales"), "password");
   }
-  await AsyncStorage.setItem(KEY_ULTIMO, data.user.email ?? normalizarEmail(email));
+  await biometria.alIngresarConCorreo(data.user.email ?? normalizarEmail(email));
   return data.user;
 }
 
@@ -266,34 +265,17 @@ export async function iniciarSesionApp(email: string, password: string): Promise
   return sesionDeUsuario(await ingresar(email, password));
 }
 
-/** Correo del último paciente que ingresó (para ingresar con biometría). */
-export async function getUltimoUsuario(): Promise<string | null> {
-  return AsyncStorage.getItem(KEY_ULTIMO);
-}
-
 /**
- * Tras validar la biometría del sistema, retoma la sesión de Supabase que
- * sigue guardada en el teléfono. Sin sesión guardada (p. ej. después de
- * cerrar sesión) hay que ingresar con correo y contraseña: la app nunca
- * guarda la contraseña para reingresar sola.
+ * Ingreso con biometría: renueva la sesión de Supabase con el refresh
+ * token guardado (biometriaService). La app nunca guarda la contraseña.
  */
-async function usuarioBiometrico(): Promise<User> {
-  const email = await getUltimoUsuario();
-  const { data } = await getSupabase().auth.getSession();
-  const user = data.session?.user;
-  if (!email || !user || user.email !== email) throw new AuthError(tr("errores.faceIdPrimeraVez"));
-  return user;
-}
-
-export async function iniciarSesionBiometrica(): Promise<Paciente> {
-  return pacienteDeUsuario(await usuarioBiometrico());
-}
-
 export async function iniciarSesionBiometricaApp(): Promise<SesionApp> {
-  return sesionDeUsuario(await usuarioBiometrico());
+  return sesionDeUsuario(await biometria.ingresar());
 }
 
+/** Cierra la sesión en Supabase y borra el ingreso biométrico guardado. */
 export async function cerrarSesion(): Promise<void> {
+  await biometria.alCerrarSesion();
   await getSupabase().auth.signOut();
 }
 
@@ -472,7 +454,6 @@ export async function crearCuenta(
   // pide confirmar el correo antes del primer ingreso.
   if (!data.session) throw new ConfirmacionCorreoPendiente();
 
-  await AsyncStorage.setItem(KEY_ULTIMO, data.user.email ?? normalizarEmail(datos.email));
   return pacienteDeUsuario(data.user);
 }
 

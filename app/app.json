@@ -37,9 +37,10 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "TurnoSmart usa Face ID para que ingreses sin escribir tu contraseña."
+          "faceIDPermission": "TurnoSmart usa Face ID para que ingreses de forma rápida y segura"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "icon": "./assets/icon.png",
     "web": {
