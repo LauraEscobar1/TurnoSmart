@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import { Paleta } from "@/theme/colors";
 import { useEstilos, useTema } from "@/theme/Tema";
 import { body, fonts } from "@/theme/typography";
@@ -10,6 +11,7 @@ import { AuthStackParamList } from "@/navigation/types";
 import { Logo } from "@/components/Logo";
 import { OndasPulso } from "@/components/OndasPulso";
 import { FondoDegradado } from "@/components/Vidrio";
+import { MenuAjustes } from "@/components/MenuAjustes";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Bienvenida">;
 
@@ -17,16 +19,17 @@ const MARGEN = 28;
 
 /**
  * Bienvenida, igual en los dos modos: arriba el degradado del fondo con
- * líneas de electrocardiograma y el logo, que cierra en una curva; abajo,
- * sobre la zona inferior, titular, bajada y acciones. El electrocardiograma,
- * el logo y el botón usan exactamente el mismo color: el primario de la
- * Bienvenida en cada modo (Blue Lobster en claro, Rock Blue en oscuro).
+ * líneas de electrocardiograma, el logo y el botón de ajustes, que cierra
+ * en una loma suave; abajo, sobre la zona inferior, titular, bajada y
+ * acciones. El botón «Empezar» lleva el azul claro de la parte superior
+ * (Tractor Beam en claro, Rock Blue en oscuro) con texto Subnautical.
  */
 export function BienvenidaScreen({ navigation }: Props) {
   const { colors, oscuro } = useTema();
   const insets = useSafeAreaInsets();
   // Tamaño de la zona del degradado, para dibujar las ondas a su medida.
   const [cabecera, setCabecera] = useState({ width: 0, height: 0 });
+  const [ajustesAbiertos, setAjustesAbiertos] = useState(false);
   const styles = useEstilos(crearStyles);
   const t = useT();
 
@@ -40,11 +43,28 @@ export function BienvenidaScreen({ navigation }: Props) {
         <OndasPulso
           width={cabecera.width}
           height={cabecera.height}
-          color={colors.botonBienvenida}
+          color={colors.trazoSobreFondo}
           colorCurva={colors.fondoBienvenida}
         />
         <View style={styles.marca}>
-          <Logo size={20} wordmark disposicion="horizontal" color={colors.botonBienvenida} acento={colors.botonBienvenida} />
+          <Logo
+            size={38}
+            tamanoNombre={28}
+            wordmark
+            disposicion="horizontal"
+            color={colors.logoSobreFondo}
+            acento={colors.logoAcentoSobreFondo}
+            acentoNombre={colors.nombreAcentoSobreFondo}
+          />
+          <Pressable
+            onPress={() => setAjustesAbiertos(true)}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={t("ajustes.titulo")}
+            style={({ pressed }) => [styles.ajustes, pressed && styles.presionado]}
+          >
+            <Ionicons name="settings-outline" size={22} color={colors.textoSobreFondo} />
+          </Pressable>
         </View>
       </FondoDegradado>
 
@@ -66,6 +86,7 @@ export function BienvenidaScreen({ navigation }: Props) {
           style={({ pressed }) => [styles.boton, pressed && styles.presionado]}
         >
           <Text style={styles.botonTexto}>{t("intro.empezar")}</Text>
+          <Ionicons name="arrow-forward" size={20} color={colors.textoBotonBienvenida} />
         </Pressable>
         <View style={styles.ingresar}>
           <Text style={body(14, oscuro ? colors.textoSuaveSobreFondo : colors.neutral700)}>{t("bienvenida.yaTenesCuenta")} </Text>
@@ -79,6 +100,7 @@ export function BienvenidaScreen({ navigation }: Props) {
           </Pressable>
         </View>
       </View>
+      <MenuAjustes visible={ajustesAbiertos} onCerrar={() => setAjustesAbiertos(false)} />
     </SafeAreaView>
   );
 }
@@ -96,12 +118,22 @@ const crearStyles = (colors: Paleta) =>
     flex: 1,
     overflow: "hidden",
   },
+  // Logo arriba a la izquierda y ajustes a la derecha, en la misma fila: no tapa las líneas ni la loma.
   marca: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: MARGEN,
-    paddingTop: 12,
+    justifyContent: "space-between",
+    paddingLeft: MARGEN - 4,
+    paddingRight: MARGEN - 8,
+    paddingTop: 14,
+  },
+  ajustes: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.botonSobreFondo,
   },
   texto: {
     paddingHorizontal: MARGEN,
@@ -114,7 +146,7 @@ const crearStyles = (colors: Paleta) =>
     color: colors.text,
   },
   punto: {
-    color: colors.botonBienvenida,
+    color: colors.puntoBienvenida,
   },
   // En oscuro el texto va sobre la zona inferior azul profundo (en claro, sobre la zona blanca).
   sobreFondo: {
@@ -131,11 +163,19 @@ const crearStyles = (colors: Paleta) =>
     paddingHorizontal: MARGEN,
     paddingTop: 28,
     paddingBottom: 16,
-    gap: 18,
+    gap: 22,
   },
+  // Como en el diseño: botón compacto con flecha, alineado a la derecha.
   boton: {
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    gap: 10,
+    minWidth: 156,
     height: 54,
+    paddingHorizontal: 26,
     borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.bordeBotonBienvenida,
     backgroundColor: colors.botonBienvenida,
     alignItems: "center",
     justifyContent: "center",

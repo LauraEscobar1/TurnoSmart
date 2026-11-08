@@ -18,8 +18,10 @@ interface PrimaryButtonProps {
    * destructive: sólido de error con texto blanco (confirmar que se borra algo).
    * peligro:   destructivo de vidrio: rojo translúcido con borde y texto rojo intenso
    *            (acción destructiva que convive con un primario, p. ej. «Cancelar cita»).
+   * marca:     el de Bienvenida e Iniciar sesión: azul claro de la parte superior
+   *            (Tractor Beam / Rock Blue) con texto Subnautical.
    */
-  variant?: "primary" | "secondary" | "ghost" | "inverse" | "destructive" | "peligro";
+  variant?: "primary" | "secondary" | "ghost" | "inverse" | "destructive" | "peligro" | "marca";
   /** El botón (ghost) está directamente sobre el degradado: texto en su color «sobre fondo». */
   sobreFondo?: boolean;
   disabled?: boolean;
@@ -35,6 +37,7 @@ const crearTextColor = (colors: Paleta): Record<NonNullable<PrimaryButtonProps["
   inverse: colors.campoPantalla,
   destructive: colors.sobreEstado,
   peligro: colors.botonDestructivoTexto,
+  marca: colors.textoBotonBienvenida,
 });
 
 export function PrimaryButton({
@@ -110,6 +113,12 @@ const crearStyles = (colors: Paleta) =>
     backgroundColor: "transparent",
     borderColor: "transparent",
   },
+  marca: {
+    backgroundColor: colors.botonBienvenida,
+    borderColor: colors.bordeBotonBienvenida,
+    borderWidth: 1.5,
+    ...sombra.md,
+  },
   disabled: {
     opacity: 0.45,
   },
@@ -129,4 +138,5 @@ const crearPressedStyle = (colors: Paleta) =>
   ghostSobreFondo: { backgroundColor: colors.divisorSobreFondo },
   destructive: { opacity: 0.85 },
   peligro: { opacity: 0.85 },
+  marca: { opacity: 0.85 },
 });

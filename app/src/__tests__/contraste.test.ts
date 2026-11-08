@@ -41,6 +41,8 @@ type Superficie =
   | "chip"
   | "botonDestructivo"
   | "bienvenida"
+  | "degradadoArriba"
+  | "botonAjustesBienvenida"
   | keyof Paleta;
 
 /** Panel del asistente: su relleno sobre la pantalla oscurecida por el velo (cada punta del degradado). */
@@ -90,6 +92,14 @@ function efectivos(p: Paleta, oscuro: boolean, s: Superficie): string[] {
     case "bienvenida":
       // Zona inferior de la Bienvenida: blanca en claro, azul profundo en oscuro.
       return [p.fondoBienvenida];
+    case "degradadoArriba": {
+      // Logo de Bienvenida e Iniciar sesión: arriba, entre el 0 y el 20 % del alto del degradado.
+      const [arriba, abajo] = p.degradadoFondo;
+      return Array.from({ length: 11 }, (_, i) => componer(abajo, arriba, (i * 0.2) / 10));
+    }
+    case "botonAjustesBienvenida":
+      // Engranaje de la Bienvenida: círculo translúcido junto al logo.
+      return efectivos(p, oscuro, "degradadoArriba").map((f) => componer(p.botonSobreFondo, f));
     default: {
       if (s.startsWith("badge:")) {
         const e = s.slice(6) as Estado;
@@ -234,6 +244,21 @@ const PARES: Par[] = [
   par("textoInsigniaIA", "fondoInsigniaIA"),
   par("sobreAcentoIA", "acentoIA", "icono"),
   par("textoBotonBienvenida", "botonBienvenida"),
+  // Nombre del logo (texto grande): «Turno» y «Smart».
+  par("logoSobreFondo", "degradadoArriba", "grande"),
+  par("nombreAcentoSobreFondo", "degradadoArriba", "grande"),
+  par("textoSobreFondo", "botonAjustesBienvenida", "icono"),
+  // Límite del botón de marca: su relleno o su borde se distinguen (≥ 3:1) de lo que lo rodea:
+  // la zona inferior de la Bienvenida, la card de Iniciar sesión y el degradado.
+  ...(["bienvenida", "card", "degradado"] as const).map(
+    (sobre): Par => ({
+      texto: (p, fondo) =>
+        [p.botonBienvenida, p.bordeBotonBienvenida].reduce((a, b) => (contraste(b, fondo) > contraste(a, fondo) ? b : a)),
+      nombre: "límite del botón de marca",
+      sobre,
+      tipo: "icono",
+    })
+  ),
   // Insignia IA y aviso de la Bienvenida en su propio contexto.
   // Texto de la Bienvenida: de card en claro (zona blanca), «sobre fondo» en oscuro.
   ...(
@@ -241,7 +266,7 @@ const PARES: Par[] = [
       ["text", "textoSobreFondo"],
       ["neutral700", "textoSuaveSobreFondo"],
       ["accent700", "acentoSobreFondo"],
-      ["botonBienvenida", "botonBienvenida"],
+      ["puntoBienvenida", "puntoBienvenida"],
     ] as const
   ).map(
     ([claro, oscuro]): Par => ({
@@ -250,7 +275,6 @@ const PARES: Par[] = [
       sobre: "bienvenida",
     })
   ),
-  par("botonBienvenida", "bienvenida", "icono"),
   // Splash.
   par("splashTexto", "splashFondo"),
   par("splashLogo", "splashFondo", "icono"),

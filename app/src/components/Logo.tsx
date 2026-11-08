@@ -17,6 +17,10 @@ interface LogoProps {
   disposicion?: "vertical" | "horizontal";
   /** Bajada bajo el nombre, solo en disposición vertical. */
   tagline?: string;
+  /** Color de «Smart» en el nombre (por defecto, el mismo que «Turno»). */
+  acentoNombre?: string;
+  /** Tamaño del nombre en disposición horizontal (por defecto, ~ el alto del isotipo). */
+  tamanoNombre?: number;
 }
 
 /**
@@ -44,6 +48,8 @@ export function Logo({
   wordmark = false,
   disposicion = "vertical",
   tagline,
+  acentoNombre,
+  tamanoNombre,
 }: LogoProps) {
   const { colors } = useTema();
   color ??= colors.accent900;
@@ -65,7 +71,11 @@ export function Logo({
     return (
       <View style={styles.fila} accessibilityRole="image" accessibilityLabel="TurnoSmart">
         {isotipo}
-        {wordmark ? <Text style={heading(Math.round(size * 0.95), color)}>TurnoSmart</Text> : null}
+        {wordmark ? (
+          <Text style={heading(tamanoNombre ?? Math.round(size * 0.95), color)}>
+            Turno<Text style={{ color: acentoNombre ?? color }}>Smart</Text>
+          </Text>
+        ) : null}
       </View>
     );
   }
@@ -88,7 +98,7 @@ const styles = StyleSheet.create({
   fila: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   nombre: {
     marginTop: 12,
