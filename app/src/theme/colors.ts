@@ -110,8 +110,15 @@ export const paletaClara = {
   fondoBienvenida: BASE.blanco,
   logoSobreFondo: BASE.subnautical,
   logoAcentoSobreFondo: BASE.cobalt,
-  /** «Smart» del logo, arriba del degradado (texto grande): el acento Blue Lobster. */
-  nombreAcentoSobreFondo: BASE.blueLobster,
+  /**
+   * Logo luminoso de Bienvenida e Iniciar sesión: estetoscopio y «Turno» en
+   * blanco, latido y «Smart» en Merino, con un resplandor marino suave
+   * detrás para que se lean sobre el celeste. Es un logotipo: WCAG 1.4.3 lo
+   * exime del mínimo de contraste (el resplandor es lo que lo despega).
+   */
+  logoMarca: BASE.blanco,
+  logoMarcaAcento: BASE.merino,
+  sombraLogoMarca: "rgba(1,30,80,0.42)",
   /**
    * Botón de marca de Bienvenida e Iniciar sesión: el azul claro de la
    * parte superior (Tractor Beam). El blanco no llega a AA sobre él: texto
@@ -305,7 +312,9 @@ export const paletaOscura: Paleta = {
   fondoBienvenida: BASE.veniceProfundo,
   logoSobreFondo: BASE.merino,
   logoAcentoSobreFondo: BASE.rockBlue,
-  nombreAcentoSobreFondo: BASE.rockBlue,
+  logoMarca: BASE.blanco,
+  logoMarcaAcento: "#BFE3F8",
+  sombraLogoMarca: "rgba(4,24,38,0.6)",
   // Rock Blue, el azul claro del encabezado en oscuro; el blanco no pasa AA: texto Subnautical.
   botonBienvenida: BASE.rockBlue,
   textoBotonBienvenida: BASE.subnautical,

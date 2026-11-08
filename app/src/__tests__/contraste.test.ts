@@ -244,9 +244,8 @@ const PARES: Par[] = [
   par("textoInsigniaIA", "fondoInsigniaIA"),
   par("sobreAcentoIA", "acentoIA", "icono"),
   par("textoBotonBienvenida", "botonBienvenida"),
-  // Nombre del logo (texto grande): «Turno» y «Smart».
-  par("logoSobreFondo", "degradadoArriba", "grande"),
-  par("nombreAcentoSobreFondo", "degradadoArriba", "grande"),
+  // El logo luminoso de Bienvenida e Iniciar sesión (logoMarca*) es un logotipo:
+  // WCAG 1.4.3 lo exime del mínimo de contraste; lo despega su resplandor marino.
   par("textoSobreFondo", "botonAjustesBienvenida", "icono"),
   // Límite del botón de marca: su relleno o su borde se distinguen (≥ 3:1) de lo que lo rodea:
   // la zona inferior de la Bienvenida, la card de Iniciar sesión y el degradado.
