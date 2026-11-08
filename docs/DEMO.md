@@ -22,13 +22,35 @@ con la «Dra. Demo Ficticia». Los demás pacientes de la agenda son ficticios
 
 ## Preparación (15 minutos antes)
 
-1. **Datos de la demo** (cuentas de prueba y datos ficticios; se puede repetir):
+1. **Datos de la demo: correr el script ANTES DE CADA ENSAYO O PRESENTACIÓN.**
+   Las fechas son relativas al momento en que se ejecuta (hora de Bogotá), así
+   que un script corrido días antes deja la cita de A vencida. Solo toca las
+   cuentas de prueba y los datos ficticios, y se puede repetir sin duplicar:
    ```bash
    supabase db query --linked -f supabase/pruebas/preparar_demo_fase5.sql
    ```
-   Debe responder `en_espera_cardiologia = 2` y una `cita_paciente_a` futura.
-   Deja a B (y a A) en la lista de espera de Cardiología, saca de esa lista a
-   los pacientes ficticios y crea la cita de A que se va a cancelar.
+   Qué hace:
+   - borra las ofertas, notificaciones y citas de A y B de ensayos anteriores
+     (la demo arranca desde cero);
+   - crea la cita de Cardiología de A **mañana a las 10:00** (o el siguiente
+     día hábil), la que se va a cancelar;
+   - arma la lista de espera de Cardiología con varios candidatos para que la
+     IA tenga que comparar: **B** (45 días, franja Mañana, alertas activas),
+     A (15 días) y dos pacientes ficticios con menos espera, otra franja y sin
+     alertas. B es el mejor candidato sin discusión;
+   - crea la cita de Julián (demo) para el extra del staff, si no hay una.
+
+   Debe responder algo así:
+
+   | Columna | Valor esperado |
+   |---|---|
+   | `cita_paciente_a_bogota` | mañana (o el siguiente día hábil) `10:00` |
+   | `citas_paciente_a` | `1` |
+   | `lista_espera_cardiologia` | `1:B 45d Mañana alertas \| 2:A 15d … \| 3:demo.paciente5 … \| 4:demo.paciente6 …` |
+   | `candidatos_cupo_a` | `3` (B y los dos ficticios; A no recibe su propio cupo) |
+   | `reales_en_cardiologia` | `0` (si no es 0, hay un paciente real en espera de Cardiología: avisar antes de la demo) |
+   | `historial_paciente_b` | `0` |
+   | `cita_julian_bogota` | una fecha futura |
 2. **Comprobar el backend** (SQL Editor o `supabase db query --linked`):
    ```sql
    select jobname, schedule, active from cron.job;  -- 3 tareas turnosmart-*, activas
@@ -52,15 +74,16 @@ con la «Dra. Demo Ficticia». Los demás pacientes de la agenda son ficticios
 |---|---|---|
 | 0:00 | Presentar el problema con la pantalla de Inicio de A. | En Colombia muchos cupos médicos se pierden por cancelaciones de último minuto e inasistencias. TurnoSmart los recupera. |
 | 0:45 | **Teléfono 1 (A):** *Mis citas* → la cita de Cardiología → **Cancelar cita** → **Sí, cancelar cita**. | Cancelar libera el cupo al instante; la app no decide a quién va: lo hace el servidor. |
-| 1:30 | Esperar 3-8 s. **Teléfono 2 (B):** llega **«La IA de TurnoSmart encontró un cupo para ti»** (si DeepSeek falló, «¡Cita de último minuto disponible!»). | La base dispara la Edge Function `priorizar-cupo`; DeepSeek ordena a los candidatos con datos anónimos (alias, días en espera, puesto, franja horaria, alertas) y el servidor valida la respuesta antes de crear la oferta. |
+| 1:30 | Esperar 3-8 s. **Teléfono 2 (B):** llega **«La IA de TurnoSmart encontró un cupo para ti»** (si DeepSeek falló, «¡Cita de último minuto disponible!»). | La base dispara la Edge Function `priorizar-cupo`; DeepSeek compara a los tres candidatos de la lista y los ordena con datos anónimos (alias, días en espera, puesto, franja horaria, alertas) y el servidor valida la respuesta antes de crear la oferta. |
 | 2:15 | **B** toca la notificación → se abre la oferta con su contador, la insignia **«Recomendado por IA»** y **«Por qué la IA te recomienda este turno»**. | La IA no ve nombres, cédulas ni datos clínicos, y el paciente ve los motivos, nunca un puntaje. |
 | 2:45 | **B** → **Aceptar cupo** → «Cupo confirmado». | Dos toques: la cita queda creada en una transacción. |
-| 3:15 | **Teléfono 1:** cerrar sesión (Perfil) e ingresar como **staff**. | El mismo login: el rol lo asigna el servidor y el staff solo ve su consultorio. |
-| 3:45 | Panel: métricas (cancelaciones, cupos liberados, **cupos recuperados**, tasa). Pestaña **Cupos**: el cupo de A en «Recuperado» con la oferta «Aceptada». | Así mide la clínica cuántas citas recupera. |
-| 4:30 | Pestaña **Agenda**: badges de riesgo. Tocar un **«Riesgo alto»** para ver la explicación («Estimado con IA»). | El riesgo se calcula solo cada 30 minutos (pg_cron) para los próximos 3 días. Es una estimación para organizar la agenda, no una decisión sobre el paciente. Si el riesgo es alto, el paciente recibe «Confirma tu asistencia», sin ver su nivel de riesgo. |
-| 5:15 | **Extra:** en la cita de Julián (demo) → **Registrar cancelación** → Confirmar. | Para cuando el paciente avisa por teléfono o en recepción. |
-| 5:30 | Esperar el aviso: «… se ofreció a PE · P-XXXXXX de la lista de espera». | El mismo flujo con IA que la cancelación desde la app: ahora el candidato es A, que seguía en espera. |
-| 6:00 | Cierre. | Cupos que se pierden → cupos que se recuperan, con IA explicable y datos mínimos. |
+| 3:00 | **B** vuelve a **Inicio** → toca la card **«Ofertas de cupo»** → se abre el **panel del asistente IA**: «Tu asistente IA ha trabajado para ti», «La IA ha recuperado 1 cita para ti» y el cupo con **«Reasignado por IA»** → **Ver cita**. Cerrar deslizando hacia abajo. (Si fue el respaldo: «TurnoSmart ha trabajado para ti» y «Reasignado por TurnoSmart».) | El paciente ve en un solo lugar lo que el asistente hizo por él, y la app solo menciona la IA cuando la IA de verdad eligió. |
+| 3:30 | **Teléfono 1:** cerrar sesión (Perfil) e ingresar como **staff**. | El mismo login: el rol lo asigna el servidor y el staff solo ve su consultorio. |
+| 4:00 | Panel: métricas (cancelaciones, cupos liberados, **cupos recuperados**, tasa). Pestaña **Cupos**: el cupo de A en «Recuperado» con la oferta «Aceptada». | Así mide la clínica cuántas citas recupera. |
+| 4:45 | Pestaña **Agenda**: badges de riesgo. Tocar un **«Riesgo alto»** para ver la explicación («Estimado con IA»). | El riesgo se calcula solo cada 30 minutos (pg_cron) para los próximos 3 días. Es una estimación para organizar la agenda, no una decisión sobre el paciente. Si el riesgo es alto, el paciente recibe «Confirma tu asistencia», sin ver su nivel de riesgo. |
+| 5:30 | **Extra:** en la cita de Julián (demo) → **Registrar cancelación** → Confirmar. | Para cuando el paciente avisa por teléfono o en recepción. |
+| 5:45 | Esperar el aviso: «… se ofreció a PE · P-XXXXXX de la lista de espera». | El mismo flujo con IA que la cancelación desde la app: ahora el candidato es A, que seguía en espera. |
+| 6:30 | Cierre. | Cupos que se pierden → cupos que se recuperan, con IA explicable y datos mínimos. |
 
 ## Plan B
 
@@ -95,5 +118,8 @@ el permiso concedido (Perfil → alertas activas).
 **Si no hay candidatos** (aviso «No hay pacientes en lista de espera…»):
 volver a ejecutar `preparar_demo_fase5.sql` (B ya aceptó y salió de la lista).
 
-**Para repetir el ensayo:** ejecutar otra vez `preparar_demo_fase5.sql`; crea
-una nueva cita para A y vuelve a poner a A y B en la lista de espera.
+**Para repetir el ensayo:** ejecutar otra vez `preparar_demo_fase5.sql`. Borra
+lo que dejó el ensayo anterior (ofertas, notificaciones y citas de A y B),
+crea una cita nueva de A para mañana a las 10:00 y vuelve a armar la lista de
+espera de Cardiología. Si la app de A o B estaba abierta, cerrar sesión y
+volver a entrar para que no muestre datos viejos.
