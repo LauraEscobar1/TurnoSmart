@@ -39,7 +39,8 @@
         {
           "faceIDPermission": "TurnoSmart usa Face ID para que ingreses sin escribir tu contraseña."
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "icon": "./assets/icon.png",
     "web": {
