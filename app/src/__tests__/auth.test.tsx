@@ -11,6 +11,7 @@ import {
   pacientesCreados,
   pedirConfirmacionDeCorreo,
   insertsIntentados,
+  simularFalloCorreoConfirmacion,
   simularPacientesCaido,
 } from "@/test-utils/supabaseFalso";
 
@@ -176,6 +177,33 @@ describe("authService", () => {
     await expect(
       auth.crearCuenta({ ...datosValidos, email: CUENTA_DEMO.email }, preferencias, { codigo, notificacionesActivas: true })
     ).rejects.toMatchObject({ campo: "email", message: "Ya existe una cuenta con este correo." });
+  });
+
+  // Regresión: con «Confirm email» y el SMTP gratuito de Supabase, signUp
+  // respondía 429 `over_email_send_rate_limit`; la app mostraba «No pudimos
+  // crear tu cuenta» sin decir por qué, y la cuenta no se creaba.
+  it("si se alcanzó el límite de correos de confirmación, lo informa y no crea nada", async () => {
+    pedirConfirmacionDeCorreo(true);
+    simularFalloCorreoConfirmacion("over_email_send_rate_limit", "email rate limit exceeded", 429);
+    const codigo = await auth.enviarCodigo(datosValidos.telefono);
+    const intento = auth.crearCuenta(datosValidos, preferencias, { codigo, notificacionesActivas: true });
+
+    await expect(intento).rejects.not.toBeInstanceOf(auth.ConfirmacionCorreoPendiente);
+    await expect(intento).rejects.toMatchObject({
+      message: "No pudimos enviar el correo de confirmación: se alcanzó el límite de envíos. Inténtalo de nuevo en una hora.",
+    });
+    expect(pacientesCreados.filter((f) => f.email === "laura@correo.com")).toHaveLength(0);
+    expect(await auth.getSesion()).toBeNull();
+  });
+
+  it("si Supabase no envía correos a esa dirección, lo marca en el campo del correo", async () => {
+    pedirConfirmacionDeCorreo(true);
+    simularFalloCorreoConfirmacion("email_address_invalid", 'Email address "laura@correo.com" is invalid');
+    const codigo = await auth.enviarCodigo(datosValidos.telefono);
+    await expect(auth.crearCuenta(datosValidos, preferencias, { codigo, notificacionesActivas: true })).rejects.toMatchObject({
+      campo: "email",
+      message: "No podemos enviar correos a esta dirección. Usa otro correo.",
+    });
   });
 });
 

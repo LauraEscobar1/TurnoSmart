@@ -456,6 +456,8 @@ export const en: Diccionario = {
     noCoinciden: "The passwords don't match.",
     correoSinConfirmar: "Confirm your email before logging in.",
     confirmaCorreo: "We sent you an email to confirm your account. Confirm it and then log in.",
+    limiteCorreos: "We couldn't send the confirmation email: the sending limit was reached. Try again in an hour.",
+    correoNoPermitido: "We can't send emails to this address. Use a different email.",
   },
   login: {
     iniciarSesion: "Log in",

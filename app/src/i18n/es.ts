@@ -458,6 +458,8 @@ export const es = {
     noCoinciden: "Las contraseñas no coinciden.",
     correoSinConfirmar: "Confirma tu correo antes de iniciar sesión.",
     confirmaCorreo: "Te enviamos un correo para confirmar tu cuenta. Confírmalo y después inicia sesión.",
+    limiteCorreos: "No pudimos enviar el correo de confirmación: se alcanzó el límite de envíos. Inténtalo de nuevo en una hora.",
+    correoNoPermitido: "No podemos enviar correos a esta dirección. Usa otro correo.",
   },
   login: {
     iniciarSesion: "Iniciar sesión",

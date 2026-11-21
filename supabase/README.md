@@ -58,7 +58,14 @@ Todas las funciones son `security definer` con `search_path = ''` y usan
    cupos que quedan abiertos se vuelven a ofrecer solos (trigger).
 7. **Correo de recuperación:** la plantilla «Reset password» debe incluir
    `{{ .Token }}` (la app pide el código de 6 dígitos).
-8. **Datos de la clínica:** `profesionales`, `consultorios` y las citas de
+8. **Registro sin correo de confirmación:** «Confirm email» está desactivado
+   (`[auth.email] enable_confirmations = false`, aplicado con
+   `supabase config push` el 2026-11-21). El SMTP gratuito de Supabase envía
+   2 correos por hora y solo a direcciones del equipo, así que signUp
+   respondía `over_email_send_rate_limit` y la cuenta no se creaba. Para
+   volver a activarlo, configurar antes un SMTP propio
+   (Authentication → SMTP Settings).
+9. **Datos de la clínica:** `profesionales`, `consultorios` y las citas de
    reserva directa los carga la clínica (SQL, panel o integración); la app
    no crea citas, solo las recibe al aceptar un cupo.
 
