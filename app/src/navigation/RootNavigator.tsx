@@ -1,5 +1,5 @@
 import React from "react";
-import { DefaultTheme, NavigationContainer, Theme } from "@react-navigation/native";
+import { DefaultTheme, LinkingOptions, NavigationContainer, Theme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import { useTema } from "@/theme/Tema";
@@ -14,6 +14,28 @@ import { useAuth } from "@/auth/AuthContext";
 import { PanelStaffScreen } from "@/screens/Staff/PanelStaffScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+/**
+ * Deep links del esquema `turnosmart://` (app.json → "scheme"):
+ *   turnosmart://oferta/<id>  → detalle de la oferta
+ *   turnosmart://cita/<id>    → detalle de la cita
+ *   turnosmart://             → abre la app (inicio)
+ * Sin sesión abierta esas pantallas no existen y el enlace solo abre la app.
+ */
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ["turnosmart://"],
+  config: {
+    screens: {
+      OfferDetail: "oferta/:ofertaId",
+      Tabs: {
+        screens: {
+          Inicio: "",
+          MisCitas: { screens: { AppointmentDetail: "cita/:citaId" } },
+        },
+      },
+    },
+  },
+};
 
 const temaNavegacion = (colors: Paleta, oscuro: boolean): Theme => ({
   ...DefaultTheme,
@@ -45,7 +67,7 @@ export function RootNavigator() {
   const { colors, oscuro } = useTema();
 
   return (
-    <NavigationContainer theme={temaNavegacion(colors, oscuro)}>
+    <NavigationContainer linking={linking} theme={temaNavegacion(colors, oscuro)}>
       {/* Claro: celeste con texto oscuro. Oscuro: azul Venice con texto claro. */}
       <StatusBar style={colors.barraEstado} />
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.fondoPantalla } }}>
