@@ -54,6 +54,11 @@ let oyentes: Oyente[] = [];
 let codigosRecuperacion: Record<string, string> = {};
 /** «Confirm email» de Supabase Auth: si está activo, signUp no devuelve sesión. */
 let pedirConfirmacion = false;
+/**
+ * Error del envío del correo de confirmación (p. ej. el límite por hora del
+ * SMTP gratuito de Supabase). Si está, signUp falla y no crea el usuario.
+ */
+let errorCorreoConfirmacion: { code: string; message: string; status: number } | null = null;
 /** Filas de `public.pacientes` (las crea el trigger `crear_paciente_desde_auth`). */
 export let pacientesCreados: Fila[] = [];
 /** Tablas que la app intentó usar directamente con `from(...)`. */
@@ -271,6 +276,7 @@ export function reiniciarSupabaseFalso() {
   oyentes = [];
   codigosRecuperacion = {};
   pedirConfirmacion = false;
+  errorCorreoConfirmacion = null;
   pacientesCreados = [];
   cedulasRechazadas = [];
   tablasConsultadas = [];
@@ -446,6 +452,14 @@ export function pedirConfirmacionDeCorreo(activo: boolean) {
   pedirConfirmacion = activo;
 }
 
+/**
+ * El SMTP del proyecto rechaza el correo de confirmación: Supabase responde
+ * con ese error y no crea el usuario (solo con «Confirm email» activo).
+ */
+export function simularFalloCorreoConfirmacion(code: string | null, message = code ?? "", status = 400) {
+  errorCorreoConfirmacion = code ? { code, message, status } : null;
+}
+
 /** El paciente abre el enlace de confirmación que le llegó por correo. */
 export function confirmarCorreoFalso(email: string) {
   const user = usuarios.find((u) => u.email === email);
@@ -479,6 +493,9 @@ const auth = {
       // Con confirmación activa, Supabase no revela el correo: devuelve un usuario sin identidades.
       if (pedirConfirmacion) return { data: { user: { ...existente, identities: [] }, session: null }, error: null };
       return { data: { user: null, session: null }, error: errorAuth("user_already_exists") };
+    }
+    if (pedirConfirmacion && errorCorreoConfirmacion) {
+      return { data: { user: null, session: null }, error: errorAuth(errorCorreoConfirmacion.code, errorCorreoConfirmacion.message, errorCorreoConfirmacion.status) };
     }
     const user = crearUsuario(email, password, options?.data ?? {}, { confirmado: !pedirConfirmacion });
     if (!user) {

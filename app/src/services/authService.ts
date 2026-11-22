@@ -454,6 +454,15 @@ export async function crearCuenta(
       throw new AuthError(tr("errores.correoExiste"), "email");
     }
     if (error.code === "weak_password") throw new AuthError(tr("errores.passwordMinimo"), "password");
+    // Con «Confirm email» activo, signUp envía un correo. El SMTP gratuito de
+    // Supabase permite pocos envíos por hora y algunos dominios no: el
+    // usuario no se crea. Se informa la causa real, no un error genérico.
+    if (error.code === "over_email_send_rate_limit" || error.status === 429) {
+      throw new AuthError(tr("errores.limiteCorreos"));
+    }
+    if (error.code === "email_address_invalid" || error.code === "email_address_not_authorized") {
+      throw new AuthError(tr("errores.correoNoPermitido"), "email");
+    }
     // El trigger crea `pacientes` en la misma transacción que el usuario: si
     // lo rechaza, Supabase no crea la cuenta y responde con este error
     // genérico. Los demás datos ya se validaron en el paso 1, así que la
