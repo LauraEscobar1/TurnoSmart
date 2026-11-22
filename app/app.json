@@ -4,7 +4,7 @@
     "slug": "turnosmart-app",
     "owner": "lauescobar",
     "scheme": "turnosmart",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
@@ -16,7 +16,7 @@
     },
     "android": {
       "package": "com.lauraescobar.turnosmart",
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0250A9"

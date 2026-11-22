@@ -110,14 +110,16 @@ export const paletaClara = {
   fondoBienvenida: BASE.blanco,
   logoSobreFondo: BASE.subnautical,
   logoAcentoSobreFondo: BASE.cobalt,
+  /** Loma de la Bienvenida: sombra suave hacia arriba y línea de luz sobre su borde. */
+  sombraLomaBienvenida: "rgba(1,30,80,0.10)",
+  luzLomaBienvenida: BASE.blanco,
   /**
-   * Logo luminoso de Bienvenida e Iniciar sesión: estetoscopio y «Turno» en
-   * blanco, latido y «Smart» en Merino, con un resplandor marino suave
+   * Logo luminoso de Bienvenida e Iniciar sesión: estetoscopio y
+   * «TurnoSmart» completos en blanco puro, con un resplandor marino suave
    * detrás para que se lean sobre el celeste. Es un logotipo: WCAG 1.4.3 lo
    * exime del mínimo de contraste (el resplandor es lo que lo despega).
    */
   logoMarca: BASE.blanco,
-  logoMarcaAcento: BASE.merino,
   sombraLogoMarca: "rgba(1,30,80,0.42)",
   /**
    * Botón de marca de Bienvenida e Iniciar sesión: el azul claro de la
@@ -127,6 +129,8 @@ export const paletaClara = {
   botonBienvenida: BASE.tractorBeam,
   textoBotonBienvenida: BASE.subnautical,
   bordeBotonBienvenida: BASE.cobalt,
+  /** Borde del botón «Empezar», sobre la zona inferior de la Bienvenida. */
+  bordeBotonZonaBienvenida: BASE.cobalt,
   /** Punto final del titular de la Bienvenida (texto sobre la zona inferior). */
   puntoBienvenida: BASE.blueLobster,
   /** Botón redondo de ajustes sobre el degradado (vidrio blanco suave). */
@@ -309,18 +313,22 @@ export const paletaOscura: Paleta = {
   puntoActivoSobreFondo: BASE.merino,
   divisorSobreFondo: "rgba(245,238,221,0.16)",
   trazoSobreFondo: BASE.merino,
-  fondoBienvenida: BASE.veniceProfundo,
+  // Azul Venice más claro que el final del degradado (≥ 1,5:1 de luminancia): la loma se distingue.
+  fondoBienvenida: "#1E6A92",
+  sombraLomaBienvenida: "rgba(4,24,38,0.35)",
+  luzLomaBienvenida: "rgba(245,238,221,0.45)",
   logoSobreFondo: BASE.merino,
   logoAcentoSobreFondo: BASE.rockBlue,
   logoMarca: BASE.blanco,
-  logoMarcaAcento: "#BFE3F8",
   sombraLogoMarca: "rgba(4,24,38,0.6)",
   // Rock Blue, el azul claro del encabezado en oscuro; el blanco no pasa AA: texto Subnautical.
   botonBienvenida: BASE.rockBlue,
   textoBotonBienvenida: BASE.subnautical,
   // Sobre el azul profundo lo separa su relleno; dentro de la card Rock Blue, el borde marino.
   bordeBotonBienvenida: BASE.subnautical,
-  puntoBienvenida: BASE.rockBlue,
+  // Sobre la zona inferior azul Venice, el borde Merino lo despega (≥ 3:1).
+  bordeBotonZonaBienvenida: BASE.merino,
+  puntoBienvenida: "#D6EEFB",
   botonSobreFondo: "rgba(245,238,221,0.14)",
 
   text: "#0F2A3A",

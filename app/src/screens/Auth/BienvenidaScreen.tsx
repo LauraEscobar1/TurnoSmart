@@ -85,7 +85,8 @@ function useAnimacionesBienvenida(reducir: boolean) {
 /**
  * Bienvenida, igual en los dos modos: arriba el degradado del fondo con
  * líneas de electrocardiograma en movimiento, el logo luminoso y el botón
- * de ajustes, que cierra en una loma suave; abajo, sobre la zona inferior,
+ * de ajustes, que cierra en una loma suave (en oscuro, la zona inferior es
+ * un azul Venice más claro, con una línea de luz en el borde); abajo, sobre ella,
  * titular, bajada y acciones, que entran escalonados después del logo. El
  * botón «Empezar» lleva el azul claro de la parte superior (Tractor Beam en
  * claro, Rock Blue en oscuro) con texto Subnautical, y respira apenas.
@@ -118,6 +119,8 @@ export function BienvenidaScreen({ navigation }: Props) {
           height={cabecera.height}
           color={colors.trazoSobreFondo}
           colorCurva={colors.fondoBienvenida}
+          colorSombraCurva={colors.sombraLomaBienvenida}
+          colorLuzCurva={colors.luzLomaBienvenida}
         />
         <View style={styles.marca}>
           <Animated.View style={animado.logo}>
@@ -127,8 +130,8 @@ export function BienvenidaScreen({ navigation }: Props) {
               wordmark
               disposicion="horizontal"
               color={colors.logoMarca}
-              acento={colors.logoMarcaAcento}
-              acentoNombre={colors.logoMarcaAcento}
+              acento={colors.logoMarca}
+              acentoNombre={colors.logoMarca}
               resplandor={colors.sombraLogoMarca}
               latidoAlEntrar={reducir ? undefined : 520}
             />
@@ -266,7 +269,7 @@ const crearStyles = (colors: Paleta) =>
     paddingHorizontal: 26,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: colors.bordeBotonBienvenida,
+    borderColor: colors.bordeBotonZonaBienvenida,
     backgroundColor: colors.botonBienvenida,
     alignItems: "center",
     justifyContent: "center",

@@ -101,8 +101,8 @@ export function LoginScreen({ navigation, route }: Props) {
           wordmark
           disposicion="horizontal"
           color={colors.logoMarca}
-          acento={colors.logoMarcaAcento}
-          acentoNombre={colors.logoMarcaAcento}
+          acento={colors.logoMarca}
+          acentoNombre={colors.logoMarca}
           resplandor={colors.sombraLogoMarca}
         />
         <Text style={[heading(40, colors.textoSobreFondo), styles.titulo]} accessibilityRole="header">

@@ -13,7 +13,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Defs, G, LinearGradient, Mask, Path, Rect, Stop } from "react-native-svg";
 
 interface OndasPulsoProps {
   width: number;
@@ -22,6 +22,10 @@ interface OndasPulsoProps {
   color: string;
   /** Color de la zona que queda debajo de la loma (el resto de la pantalla). */
   colorCurva: string;
+  /** Sombra suave que sube desde el borde de la loma. */
+  colorSombraCurva?: string;
+  /** Línea de luz sutil sobre el borde de la loma. */
+  colorLuzCurva?: string;
 }
 
 /**
@@ -65,6 +69,13 @@ const ALTO_LOMA = 42;
  * degradado entre la loma y el resto de la pantalla.
  */
 const SOLAPE = 4;
+/**
+ * Las líneas se desvanecen hacia abajo y terminan de apagarse justo antes
+ * de la cima de la loma: el desvanecido empieza `ALTO_DESVANECIDO` px más
+ * arriba. Es vertical, así que el desplazamiento horizontal no lo mueve.
+ */
+const ALTO_DESVANECIDO = 84;
+const HOLGURA_CIMA = 6;
 /** Un ancho de pantalla recorrido, en ms: lento, como un monitor. Las resaltadas, algo más rápido (profundidad). */
 const CICLO_FONDO = 18000;
 const CICLO_RESALTADAS = 12000;
@@ -215,66 +226,103 @@ function LineaResaltada({ trazo, color, retraso, animar }: { trazo: Trazo; color
  * Bienvenida: líneas de electrocardiograma a lo ancho del degradado, cada
  * una con uno o dos latidos en posiciones distintas, que avanzan despacio
  * de derecha a izquierda como en un monitor; en las resaltadas, un destello
- * recorre cada latido. Abajo, una loma suave y redondeada da paso a la zona
- * del texto. Con «Reducir movimiento» las líneas quedan quietas.
+ * recorre cada latido. Las líneas se desvanecen hacia abajo y se apagan
+ * antes de la cima de la loma, suave y redondeada, que da paso a la zona
+ * del texto (con una sombra suave hacia arriba y una línea de luz en el
+ * borde). Con «Reducir movimiento» las líneas quedan quietas.
  */
-export function OndasPulso({ width, height, color, colorCurva }: OndasPulsoProps) {
+export function OndasPulso({ width, height, color, colorCurva, colorSombraCurva, colorLuzCurva }: OndasPulsoProps) {
   const reducir = useReducedMotion();
   const animar = !reducir;
   const fondo = useDesplazamiento(width, CICLO_FONDO, animar);
   const resaltadas = useDesplazamiento(width, CICLO_RESALTADAS, animar);
 
+  // Loma convexa amplia: baja en los bordes, cima redondeada algo a la izquierda del centro.
+  // Con los dos puntos de control a la misma altura, la cima queda `ALTO_LOMA` sobre los bordes.
+  const borde = height - 10;
+  const cima = borde - ALTO_LOMA;
+  const finDesvanecido = cima - HOLGURA_CIMA;
+  const inicioDesvanecido = finDesvanecido - ALTO_DESVANECIDO;
+
   const trazos = useMemo(() => {
     if (width <= 0 || height <= 0) return [];
-    // Las líneas ocupan desde bajo el logo hasta la loma (la loma tapa las últimas).
+    // Las líneas ocupan desde bajo el logo hasta la cima de la loma; las últimas caen en el desvanecido.
     const arriba = Math.min(96, height * 0.2);
-    const separacion = (height - arriba) / LINEAS.length;
+    const separacion = Math.max(0, cima - arriba) / LINEAS.length;
     return LINEAS.map((l, i) => trazar(width, arriba + separacion * (i + 0.5), l));
-  }, [width, height]);
+  }, [width, height, cima]);
 
   if (width <= 0 || height <= 0) return null;
 
-  // Loma convexa amplia: baja en los bordes, cima redondeada algo a la izquierda del centro.
   const abajo = height + SOLAPE;
-  const borde = height - 10;
   const control = borde - ALTO_LOMA / 0.75;
-  const loma =
-    `M0,${abajo} L0,${borde.toFixed(1)} ` +
+  const curva =
+    `M0,${borde.toFixed(1)} ` +
     `C${(width * 0.3).toFixed(1)},${control.toFixed(1)} ${(width * 0.66).toFixed(1)},${control.toFixed(1)} ` +
-    `${width},${borde.toFixed(1)} L${width},${abajo} Z`;
+    `${width},${borde.toFixed(1)}`;
+  const loma = `M0,${abajo} L${curva.slice(1)} L${width},${abajo} Z`;
 
   const lienzo = { width: width * 2, height: abajo };
+  // Máscara vertical: opaca arriba, se apaga antes de la loma (las líneas no se cortan de golpe).
+  const desde = Math.max(0, inicioDesvanecido / abajo);
+  const hasta = Math.max(desde + 0.001, Math.min(1, finDesvanecido / abajo));
+  const mascara = (id: string) => (
+    <Defs>
+      <LinearGradient id={`${id}-grad`} x1="0" y1="0" x2="0" y2={abajo} gradientUnits="userSpaceOnUse">
+        <Stop offset={desde} stopColor="#FFFFFF" stopOpacity={1} />
+        <Stop offset={hasta} stopColor="#FFFFFF" stopOpacity={0} />
+      </LinearGradient>
+      <Mask id={id} x="0" y="0" width={lienzo.width} height={abajo} maskUnits="userSpaceOnUse">
+        <Rect x="0" y="0" width={lienzo.width} height={abajo} fill={`url(#${id}-grad)`} />
+      </Mask>
+    </Defs>
+  );
   return (
     <View style={{ position: "absolute", top: 0, left: 0, width, height: abajo }} pointerEvents="none">
       <Animated.View style={[styles.capa, lienzo, fondo]}>
         <Svg {...lienzo}>
-          {trazos
-            .filter((l) => !l.resaltada)
-            .map((l) => (
-              <Path
-                key={l.d}
-                d={l.d}
-                stroke={color}
-                strokeOpacity={l.opacidad}
-                strokeWidth={l.grosor}
-                fill="none"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            ))}
+          {mascara("desvanecer-fondo")}
+          <G mask="url(#desvanecer-fondo)">
+            {trazos
+              .filter((l) => !l.resaltada)
+              .map((l) => (
+                <Path
+                  key={l.d}
+                  d={l.d}
+                  stroke={color}
+                  strokeOpacity={l.opacidad}
+                  strokeWidth={l.grosor}
+                  fill="none"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              ))}
+          </G>
         </Svg>
       </Animated.View>
       <Animated.View style={[styles.capa, lienzo, resaltadas]}>
         <Svg {...lienzo}>
-          {trazos
-            .filter((l) => l.resaltada)
-            .map((l, i) => (
-              <LineaResaltada key={l.d} trazo={l} color={color} retraso={600 + i * 1100} animar={animar} />
-            ))}
+          {mascara("desvanecer-resaltadas")}
+          <G mask="url(#desvanecer-resaltadas)">
+            {trazos
+              .filter((l) => l.resaltada)
+              .map((l, i) => (
+                <LineaResaltada key={l.d} trazo={l} color={color} retraso={600 + i * 1100} animar={animar} />
+              ))}
+          </G>
         </Svg>
       </Animated.View>
       <Svg width={width} height={abajo} style={StyleSheet.absoluteFill}>
+        {/* Sombra hacia arriba: trazos anchos sobre la curva; el relleno tapa su mitad inferior. */}
+        {colorSombraCurva ? (
+          <>
+            <Path d={curva} stroke={colorSombraCurva} strokeOpacity={0.45} strokeWidth={18} fill="none" />
+            <Path d={curva} stroke={colorSombraCurva} strokeOpacity={0.7} strokeWidth={9} fill="none" />
+            <Path d={curva} stroke={colorSombraCurva} strokeWidth={4} fill="none" />
+          </>
+        ) : null}
         <Path d={loma} fill={colorCurva} />
+        {colorLuzCurva ? <Path d={curva} stroke={colorLuzCurva} strokeWidth={1.5} fill="none" strokeLinecap="round" /> : null}
       </Svg>
     </View>
   );

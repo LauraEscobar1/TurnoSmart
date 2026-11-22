@@ -248,11 +248,13 @@ const PARES: Par[] = [
   // WCAG 1.4.3 lo exime del mínimo de contraste; lo despega su resplandor marino.
   par("textoSobreFondo", "botonAjustesBienvenida", "icono"),
   // Límite del botón de marca: su relleno o su borde se distinguen (≥ 3:1) de lo que lo rodea:
-  // la zona inferior de la Bienvenida, la card de Iniciar sesión y el degradado.
+  // la zona inferior de la Bienvenida («Empezar», con su propio borde), la card de Iniciar sesión y el degradado.
   ...(["bienvenida", "card", "degradado"] as const).map(
     (sobre): Par => ({
       texto: (p, fondo) =>
-        [p.botonBienvenida, p.bordeBotonBienvenida].reduce((a, b) => (contraste(b, fondo) > contraste(a, fondo) ? b : a)),
+        [p.botonBienvenida, sobre === "bienvenida" ? p.bordeBotonZonaBienvenida : p.bordeBotonBienvenida].reduce(
+          (a, b) => (contraste(b, fondo) > contraste(a, fondo) ? b : a)
+        ),
       nombre: "límite del botón de marca",
       sobre,
       tipo: "icono",
@@ -332,6 +334,17 @@ describe("Contraste WCAG AA", () => {
       }
     }
     expect(separacion).toEqual([]);
+  });
+
+  it.each([
+    ["claro", paletaClara],
+    ["oscuro", paletaOscura],
+  ] as const)("modo %s: la zona inferior de la Bienvenida se distingue del degradado sobre la loma (≥ 1,5:1)", (_, p) => {
+    // La loma ocupa el último tramo del degradado: se mide entre el 70 y el 100 % de su alto.
+    const [arriba, abajo] = p.degradadoFondo;
+    const tramo = Array.from({ length: 7 }, (_, i) => componer(abajo, arriba, 0.7 + (i * 0.3) / 6));
+    const pocas = tramo.filter((f) => contraste(p.fondoBienvenida, f) < 1.5);
+    expect(pocas).toEqual([]);
   });
 
   it("ningún texto del tema es gris claro sobre blanco: el secundario en cards es azul oscuro", () => {
